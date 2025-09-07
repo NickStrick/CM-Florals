@@ -55,7 +55,7 @@ export default function Gallery({
               initial={{ opacity: 0, y: 22, scale: 0.98 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.45, ease: 'easeOut', delay: 0.3 }}
+              transition={{ duration: 0.45, ease: 'easeOut', delay: 0.2 }}
               className={`break-inside-avoid overflow-hidden ${rounded} shadow-[0_10px_30px_rgba(0,0,0,.12)] bg-[var(--bg)]`}
             >
               <Image
