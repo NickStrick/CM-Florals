@@ -77,3 +77,4 @@ export default function Gallery({
     </section>
   );
 }
+//new gallery
