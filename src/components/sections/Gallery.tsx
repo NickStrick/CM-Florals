@@ -39,12 +39,12 @@ export default function Gallery({
 
   return (
     <section id={id} className={`section ${backgroundClass}`}>
-      <AnimatedSection className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-6xl">
         {(title || subtitle) && (
-          <div className="text-center max-w-3xl mx-auto mb-8">
+          <AnimatedSection className="text-center max-w-3xl mx-auto mb-8">
             {title && <h2 className="text-4xl md:text-5xl font-extrabold">{title}</h2>}
             {subtitle && <p className="text-muted mt-3">{subtitle}</p>}
-          </div>
+          </AnimatedSection>
         )}
 
         {/* Masonry via CSS columns; each figure uses break-inside-avoid */}
@@ -73,8 +73,7 @@ export default function Gallery({
             </motion.figure>
           ))}
         </div>
-      </AnimatedSection>
+      </div>
     </section>
   );
 }
-//new gallery
