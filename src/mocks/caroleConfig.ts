@@ -45,6 +45,7 @@ export const mockSiteConfig: SiteConfig = {
         { label: "About", href: "#create" },
         { label: "Founder", href: "#about" },
         { label: "Contact", href: "#contact" },
+        { label: "Pay", href: "#pay" },
       ],
       cta: { label: "Call Now", href: phoneHref },
       style: { sticky: true, blur: true, elevation: "sm", transparent: false },
@@ -60,7 +61,7 @@ export const mockSiteConfig: SiteConfig = {
       subtitle:
         "Custom florals for celebrations, weddings, holidays, and everyday gifting. Crafted with warmth and color to fit your story. Founded by Carole Murray.",
       primaryCta: { label: "Call for services", href: phoneHref },
-      secondaryCta: { label: "Find us at Ogilvie / Accenture Tower", href: "#contact" },
+      secondaryCta: { label: "DM on Insta or Tiktok", href: "#socials" },
       imageUrl: logoMain.src,
     },
 
@@ -156,9 +157,10 @@ export const mockSiteConfig: SiteConfig = {
   subtitle: "Want to collaborate? Follow or message me.",
   items: [
     { type: "instagram", href: "https://www.instagram.com/carolemurray37/", label: "Instagram" },
+    { type: "tiktok", href: "https://www.tiktok.com/@carolemurray87", label: "TikTok"  },
     { type: "facebook",  href: "https://www.facebook.com/carole.murray.370/" ,   label: "Facebook" },
     { type: "linkedin",  href: "https://www.linkedin.com/in/carole-murray-61458b20a/",     label: "LinkedIn" },
-    { type: "tiktok", href: "https://www.tiktok.com/@carolemurray87", label: "TikTok"  },
+    
   ],
   style: { background: "band", rounded: "xl", size: "lg", gap: "md", align: "center" }
 },
@@ -179,10 +181,11 @@ export const mockSiteConfig: SiteConfig = {
       id: "contact",
       type: "contact",
       title: "How to Find Us",
-      address: "Ogilvie Transportation Center — Accenture Tower — Chicago, IL",
+      email: "carolemurray37@gmail.com",
+      address: "Greater Chicago area, IL",
         phone: { label: "(773) 209-4805", href: phoneHref },
       backgroundUrl: booth.src,
-      mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus" ,
+      // mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus" ,
       socials: [
         
         { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
@@ -191,6 +194,16 @@ export const mockSiteConfig: SiteConfig = {
         { label: "Facebook", href: "https://www.facebook.com/carole.murray.370/" },
       ],
     },
+     {
+      visible: true,
+      id: "pay",
+      type: "cta",
+      title: "Need to make a payment?",
+      body:
+        "Visit our Venmo page to complete your transaction.",
+      cta: { label: "Pay Now", href: "https://venmo.com/u/Carole-Murray-9" },
+    },
+    
 
     // SHARE (QR)
     {
@@ -218,6 +231,7 @@ export const mockSiteConfig: SiteConfig = {
              { label: "Home", href: "/" },
             { label: "About", href: "#create" },
             { label: "Founder", href: "#about" },
+            { label: "Pay", href: "#pay" },
             { label: "Contact", href: "#contact" },
           ],
         },
@@ -225,8 +239,9 @@ export const mockSiteConfig: SiteConfig = {
           title: "Connect",
           links: [
             { label: "Call (773) 209-4805", href: phoneHref },
-            { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
             { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
+            { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },   
+            { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
           ],
         },
       ],
