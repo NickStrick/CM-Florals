@@ -19,6 +19,8 @@ import flowertable2 from "../../public/carole/flowertable2.jpg";
 import flowerwall from "../../public/carole/flowerwall.jpg";
 import flowerwall2 from "../../public/carole/flowerwall2.jpg";
 import flowerwall3 from "../../public/carole/flowerwall3.jpg";
+import fallDecor1 from "../../public/carole/fallDecor1.jpg";
+import fallDecor2 from "../../public/carole/fallDecor2.jpg";
 import logoMain from "../../public/carole/logo-main.jpg";
 import logo2 from "../../public/carole/logo2.png";
 import carole from "../../public/carole/carole2.jpg";
@@ -146,7 +148,8 @@ export const mockSiteConfig: SiteConfig = {
       { imageUrl: flower9.src,      alt: "Arrangement 9" },
       {imageUrl: logo2.src,      alt: "Arrangement 0" },
       { imageUrl: flower10.src,      alt: "Arrangement 10" },
-    
+      { imageUrl: fallDecor1.src,      alt: "fall decor" },
+      { imageUrl: fallDecor2.src,      alt: "fall decor alt" },
       { imageUrl: flowerwall.src,   alt: "Flower wall" },
         
       { imageUrl: flowertable2.src, alt: "Table setup" },
