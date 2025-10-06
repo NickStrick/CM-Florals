@@ -47,6 +47,7 @@ export type SectionBase = {
     | 'instagram'
     | 'gallery'
     | 'socials'
+    | 'video'
     ;
 
   // visible/editable flags to support your builder UI
@@ -76,6 +77,7 @@ export type AnySection =
   | InstagramSection
   | GallerySection
   | SocialsSection
+  | VideoSection
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -359,17 +361,32 @@ export type GalleryItem = {
 
 export type GalleryStyle = {
   rounded?: 'lg' | 'xl' | '2xl';
-  columns?: 2 | 3 | 4;       // responsive base; auto scales down on small screens
-  gap?: 'sm' | 'md' | 'lg';   // spacing between items
+  columns?: 2 | 3 | 4 | 5;
+  gap?: 'sm' | 'md' | 'lg';
 };
+
+export type GallerySource =
+  | { type: 'static'; items: GalleryItem[] }
+  | {
+      type: 's3';
+      bucket?: string;       // defaults from env
+      prefix?: string;       // e.g. "carole/gallery/"
+      region?: string;       // defaults from env
+      cdnBase?: string;      // e.g. CloudFront domain (optional)
+      limit?: number;        // optional cap
+      recursive?: boolean;   // default true
+    };
 
 export type GallerySection = SectionBase & {
   id: string;
   type: 'gallery';
   title?: string;
   subtitle?: string;
-  items: GalleryItem[];
   style?: GalleryStyle;
+  backgroundClass?: string;
+  /** choose either source or items for backwards-compat */
+  source?: GallerySource;
+  items?: GalleryItem[];
 };
 export type SocialItem = {
   type:
@@ -398,4 +415,44 @@ export type SocialsSection = SectionBase & {
     gap?: 'sm' | 'md' | 'lg';
     align?: 'left' | 'center';
   };
+};
+// ---- Video section types ----
+export type VideoSourceUrl = {
+  type: 'url';
+  href: string;                 // YouTube/Vimeo page or direct mp4
+};
+
+export type VideoSourceLocal = {
+  type: 'local';
+  path: string;                 // e.g., "/videos/intro.mp4" or imported asset src
+};
+
+export type VideoSourceS3 = {
+  type: 's3';
+  key: string;                  // e.g., "configs/carole/videos/intro.mp4"
+  bucket?: string;              // optional override; defaults to S3_DEFAULT_BUCKET
+  cdnBase?: string;             // optional override; defaults to NEXT_PUBLIC_S3_CDN_BASE
+};
+
+export type VideoSource = VideoSourceUrl | VideoSourceLocal | VideoSourceS3;
+
+export type VideoStyle = {
+  aspect?: '16/9' | '9/16' | '4/3' | '1/1';
+  rounded?: 'lg' | 'xl' | '2xl';
+  shadow?: 'sm' | 'md' | 'lg' | 'none';
+  background?: 'default' | 'band';
+};
+
+export type VideoSection = SectionBase & {
+  id: string;
+  type: 'video';
+  title?: string;
+  subtitle?: string;
+  source: VideoSource;
+  posterUrl?: string;           // optional poster image (can be S3 key or full URL)
+  controls?: boolean;
+  autoplay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  style?: VideoStyle;
 };

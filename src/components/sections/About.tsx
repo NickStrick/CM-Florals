@@ -1,4 +1,5 @@
 // src/sections/About.tsx
+'use client';
 import type { AboutSection } from '@/types/site';
 import AnimatedSection from '@/components/AnimatedSection';
 import { motion } from 'framer-motion';

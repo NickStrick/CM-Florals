@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import type { SiteConfig } from '@/types/site';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<SiteConfig>> {
   const data: SiteConfig = {
     theme: { preset: 'ocean', radius: 'xl' },
     meta: { title: 'Site-Crafter Demo', description: 'Composable pages' },

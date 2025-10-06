@@ -3,23 +3,31 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import AnimatedSection from '@/components/AnimatedSection';
-import type { GallerySection } from '@/types/site';
+import type { GalleryItem, GallerySection } from '@/types/site';
 
 // map helpers
-const gaps: Record<string, string> = {
+const gaps = {
   sm: 'gap-3 [&>figure]:mb-3',
   md: 'gap-4 [&>figure]:mb-4',
   lg: 'gap-6 [&>figure]:mb-6',
-};
+} as const;
 
+type GapKey = keyof typeof gaps;
+
+/**
+ * Presentational gallery. It assumes data (items) is already resolved.
+ * Works with both:
+ *  - S3 mode (items passed in by GalleryClient / GalleryServer)
+ *  - Manual/local mode (items provided directly in config)
+ */
 export default function Gallery({
   id,
   title = 'Gallery',
   subtitle,
-  items,
+  items = [],                         // <— default safe for “no items yet”
   style,
   backgroundClass = 'bg-[var(--bg)]',
-}: GallerySection) {
+}: Omit<GallerySection, 'source'> & { items?: GalleryItem[] }) {
   const rounded =
     style?.rounded === '2xl'
       ? 'rounded-3xl'
@@ -35,11 +43,13 @@ export default function Gallery({
       ? 'columns-1 sm:columns-2'
       : 'columns-1 sm:columns-2 md:columns-3'; // default 3
 
-  const gapCls = gaps[style?.gap ?? 'md'];
+  // avoid TS "string | undefined" index issues by narrowing the key
+  const gapKey: GapKey = (style?.gap ?? 'md') as GapKey;
+  const gapCls = gaps[gapKey];
 
   return (
     <section id={id} className={`section ${backgroundClass}`}>
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-[95%] md:max-w-[85%]">
         {(title || subtitle) && (
           <AnimatedSection className="text-center max-w-3xl mx-auto mb-8">
             {title && <h2 className="text-4xl md:text-5xl font-extrabold">{title}</h2>}
@@ -55,7 +65,7 @@ export default function Gallery({
               initial={{ opacity: 0, y: 22, scale: 0.98 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.2 }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.06 * i }}
               className={`break-inside-avoid overflow-hidden ${rounded} shadow-[0_10px_30px_rgba(0,0,0,.12)] bg-[var(--bg)]`}
             >
               <Image
@@ -72,6 +82,13 @@ export default function Gallery({
               )}
             </motion.figure>
           ))}
+
+          {/* Optional empty-state (nice for S3-first loads) */}
+          {items.length === 0 && (
+            <div className="text-center text-muted py-8">
+              <em>No images yet.</em>
+            </div>
+          )}
         </div>
       </div>
     </section>

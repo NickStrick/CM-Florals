@@ -45,7 +45,6 @@ export const mockSiteConfig: SiteConfig = {
         { label: "About", href: "#create" },
         { label: "Founder", href: "#about" },
         { label: "Contact", href: "#contact" },
-        { label: "Pay", href: "#pay" },
       ],
       cta: { label: "Call Now", href: phoneHref },
       style: { sticky: true, blur: true, elevation: "sm", transparent: false },
@@ -61,7 +60,7 @@ export const mockSiteConfig: SiteConfig = {
       subtitle:
         "Custom florals for celebrations, weddings, holidays, and everyday gifting. Crafted with warmth and color to fit your story. Founded by Carole Murray.",
       primaryCta: { label: "Call for services", href: phoneHref },
-      secondaryCta: { label: "DM on Insta or Tiktok", href: "#socials" },
+      secondaryCta: { label: "Find us at Ogilvie / Accenture Tower", href: "#contact" },
       imageUrl: logoMain.src,
     },
 
@@ -95,25 +94,11 @@ export const mockSiteConfig: SiteConfig = {
 
    {
   visible: true,
-  id: 'promo',
-  type: 'video',
-  title: 'Introducing CM Floral Design',
-  subtitle: '',
-  source: { type: 'url', href: 'https://youtu.be/w_Q4mTpHzog?si=lhWk_PGVBpehZIxs' },
-  // posterUrl: 'configs/carole/assets/poster.jpg', // optional (S3 key or full URL)
-  style: { aspect: '16/9', rounded: 'xl', shadow: 'lg', background: 'default' },
-  controls: true,
-  autoplay: false,
-  muted: false,
-  loop: false,
-},
-   {
-  visible: true,
   id: "gallery",
   type: "gallery",
   title: "Gallery",
   subtitle: "Selected work — bouquets and event florals",
-  style: { columns: 4, rounded: "xl", gap: "md" },
+  style: { columns: 3, rounded: "xl", gap: "md" },
   backgroundClass: 'bg-gradient-2',
   // NEW: load dynamically from S3
   // source: {
@@ -151,7 +136,44 @@ export const mockSiteConfig: SiteConfig = {
       { imageUrl: flowertable2.src, alt: "Table setup" },
     ],
 },
-
+{
+  visible: true,
+  id: 'promo',
+  type: 'video',
+  title: 'Behind the blooms',
+  subtitle: 'A quick look at our process.',
+  source: { type: 'url', href: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+  // posterUrl: 'configs/carole/assets/poster.jpg', // optional (S3 key or full URL)
+  style: { aspect: '16/9', rounded: 'xl', shadow: 'lg', background: 'default' },
+  controls: true,
+  autoplay: false,
+  muted: false,
+  loop: false,
+},
+{
+  visible: true,
+  id: 'intro',
+  type: 'video',
+  title: 'Intro video',
+  source: { type: 'local', path: '/videos/intro.mp4' }, // place file under /public/videos
+  posterUrl: '/images/posters/intro.jpg',
+  style: { aspect: '16/9', rounded: 'xl', shadow: 'md', background: 'band' },
+}
+,
+{
+  visible: true,
+  id: 'event-reel',
+  type: 'video',
+  title: 'Event highlights',
+  source: {
+    type: 's3',
+    key: 'configs/carole/videos/event-highlights.mp4', // upload here with Media Picker
+  },
+  posterUrl: 'configs/carole/assets/event-poster.jpg', // uploaded via Media Picker
+  style: { aspect: '16/9', rounded: 'xl', shadow: 'lg' },
+  controls: true
+}
+,
     {
       visible: true,
       id: "floating",
@@ -182,10 +204,9 @@ export const mockSiteConfig: SiteConfig = {
   subtitle: "Want to collaborate? Follow or message me.",
   items: [
     { type: "instagram", href: "https://www.instagram.com/carolemurray37/", label: "Instagram" },
-    { type: "tiktok", href: "https://www.tiktok.com/@carolemurray87", label: "TikTok"  },
     { type: "facebook",  href: "https://www.facebook.com/carole.murray.370/" ,   label: "Facebook" },
     { type: "linkedin",  href: "https://www.linkedin.com/in/carole-murray-61458b20a/",     label: "LinkedIn" },
-    
+    { type: "tiktok", href: "https://www.tiktok.com/@carolemurray87", label: "TikTok"  },
   ],
   style: { background: "band", rounded: "xl", size: "lg", gap: "md", align: "center" }
 },
@@ -206,11 +227,10 @@ export const mockSiteConfig: SiteConfig = {
       id: "contact",
       type: "contact",
       title: "How to Find Us",
-      email: "carolemurray37@gmail.com",
-      address: "Greater Chicago area, IL",
+      address: "Ogilvie Transportation Center — Accenture Tower — Chicago, IL",
         phone: { label: "(773) 209-4805", href: phoneHref },
       backgroundUrl: booth.src,
-      // mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus" ,
+      mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus" ,
       socials: [
         
         { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
@@ -219,16 +239,6 @@ export const mockSiteConfig: SiteConfig = {
         { label: "Facebook", href: "https://www.facebook.com/carole.murray.370/" },
       ],
     },
-     {
-      visible: true,
-      id: "pay",
-      type: "cta",
-      title: "Need to make a payment?",
-      body:
-        "Visit our Venmo page to complete your transaction.",
-      cta: { label: "Pay Now", href: "https://venmo.com/u/Carole-Murray-9" },
-    },
-    
 
     // SHARE (QR)
     {
@@ -256,7 +266,6 @@ export const mockSiteConfig: SiteConfig = {
              { label: "Home", href: "/" },
             { label: "About", href: "#create" },
             { label: "Founder", href: "#about" },
-            { label: "Pay", href: "#pay" },
             { label: "Contact", href: "#contact" },
           ],
         },
@@ -264,9 +273,8 @@ export const mockSiteConfig: SiteConfig = {
           title: "Connect",
           links: [
             { label: "Call (773) 209-4805", href: phoneHref },
-            { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
-            { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },   
             { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
+            { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
           ],
         },
       ],

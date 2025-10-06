@@ -1,5 +1,5 @@
 // src/components/SectionRenderer.tsx
-'use client';
+// 'use client';
 
 import type {
   AnySection,
@@ -23,8 +23,9 @@ import Pricing from "./sections/Pricing";
 import Share from "./sections/Share";
 import  Partners  from './sections/Partners';
 import InstagramEmbed from './sections/Instagram';
-import Gallery from './sections/Gallery';
+import GalleryClient from './sections/Gallery.client'; 
 import Socials from './sections/Socials';
+import Video from './sections/Video';
 
 // Exhaustiveness helper (nice to have)
 function assertNever(x: never): never {
@@ -104,10 +105,13 @@ export function SectionRenderer({ section }: { section: AnySection }) {
       return <InstagramEmbed {...section}/>; 
     }
     case "gallery":{
-      return <Gallery {...section}/>; 
+      return <GalleryClient {...section}/>; 
     }
     case "socials":{
       return <Socials {...section}/>; 
+    }
+    case 'video': {
+      return <Video {...section} />;
     }
     default: {
       // if you ever add a new type and forget to handle it,

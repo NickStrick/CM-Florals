@@ -1,3 +1,4 @@
+'use client';
 import React from "react";
 import type { PricingSection } from "@/types/site";
 import AnimatedSection from "@/components/AnimatedSection";

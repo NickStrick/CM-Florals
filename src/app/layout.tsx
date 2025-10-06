@@ -7,16 +7,20 @@ import { SiteProvider } from "@/context/SiteContext";
 import type { SiteConfig } from "@/types/site";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
+// ✅ Admin UI (client) — keyboard toggle + bar
+import AdminGate from "@/components/admin/AdminGate";
+import AdminBar from "@/components/admin/AdminBar";
+
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
-// import { mockSiteConfig } from "@/mocks/siteConfig"; 
-import { mockSiteConfig } from "@/mocks/caroleConfig"; 
+// import { mockSiteConfig } from "@/mocks/siteConfig";
+import { mockSiteConfig } from "@/mocks/caroleConfig";
 
 export const metadata: Metadata = {
-   title: "CM Florals — Floral Design by Carole Murray",
-    description:
-      "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founded by Carole Murray.",
+  title: "CM Florals — Floral Design by Carole Murray",
+  description:
+    "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founded by Carole Murray.",
 };
 
 async function getSiteConfig(): Promise<SiteConfig> {
@@ -45,10 +49,16 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app   `}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app`}>
         <SiteProvider initial={config}>
           <main className="overflow-hidden">{children}</main>
           {showThemeSwitcher && <ThemeSwitcher />}
+
+          {/* ✅ Admin overlay (toggle with Ctrl/Cmd + Alt + A OR Ctrl/Cmd + Shift + A)
+              Also supports ?admin=1 and persists via localStorage */}
+          <AdminGate>
+            <AdminBar />
+          </AdminGate>
         </SiteProvider>
       </body>
     </html>
