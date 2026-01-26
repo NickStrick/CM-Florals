@@ -30,9 +30,9 @@ const phoneHref = "tel:17732094805";
 export const mockSiteConfig: SiteConfig = {
   theme: { preset: "lavender", radius: "xl" },
   meta: {
-    title: "CM Florals — Floral Design by Carole Murray",
+    title: "CM Florals — Floral Design & Gifts",
     description:
-      "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founded by Carole Murray.",
+      "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founding Florist Carole Murray.",
     favicon: logo2.src,
   },
   sections: [
@@ -58,8 +58,8 @@ export const mockSiteConfig: SiteConfig = {
       visible: true,
       id: "hero",
       type: "hero",
-      eyebrow: "CM Florals • Floral Design",
-      title: "Floral Design for Chicagoans",
+      eyebrow: "CM Florals • Floral Design • Gifts",
+      title: "Floral Design and Gifts for Chicago",
       subtitle:
         "Custom florals for celebrations, weddings, holidays, and everyday gifting. Crafted with warmth and color to fit your story. Founded by Carole Murray.",
       primaryCta: { label: "Call for services", href: phoneHref },
