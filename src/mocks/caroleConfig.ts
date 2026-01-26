@@ -49,7 +49,7 @@ export const mockSiteConfig: SiteConfig = {
         { label: "About", href: "#create" },
         { label: "Founder", href: "#about" },
         { label: "Contact", href: "#contact" },
-        { label: "Pay", href: "#pay" },
+        { label: "Order & Pay", href: "#pay" },
       ],
       cta: { label: "Call Now", href: phoneHref },
       style: { sticky: true, blur: true, elevation: "sm", transparent: false },
@@ -212,7 +212,7 @@ export const mockSiteConfig: SiteConfig = {
       id: "contact",
       type: "contact",
       title: "How to Find Us",
-      email: "carolemurray37@gmail.com",
+      email: "shop@cmfloralsandgifts.com",
       address: "Ogilvie / Accenture Tower, 500 W Madison St, Chicago, IL 60661",
         phone: { label: "(773) 209-4805", href: phoneHref },
       backgroundUrl: booth.src,
@@ -229,7 +229,7 @@ export const mockSiteConfig: SiteConfig = {
       visible: true,
       id: "pay",
       type: "cta",
-      title: "Need to make a payment?",
+      title: "Want to complete an order or make a payment?",
       body:
         "Visit our Venmo page to complete your transaction.",
       cta: { label: "Pay Now", href: "https://venmo.com/u/Carole-Murray-9" },
@@ -278,7 +278,7 @@ export const mockSiteConfig: SiteConfig = {
         {
           title: "Connect",
           links: [
-            { label: "Call (773) 209-4805", href: phoneHref },
+            { label: "shop@cmfloralsandgifts.com", href: 'shop@cmfloralsandgifts.com' },
             { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
             { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },   
             { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
