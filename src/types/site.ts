@@ -104,6 +104,7 @@ export type HeaderSection = SectionBase & {
   links?: { label: string; href: string }[];
   cta?: { label: string; href: string };
   style?: HeaderStyle; // 👈 new
+  logoImage?: string
 };
 
 

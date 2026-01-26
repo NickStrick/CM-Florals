@@ -21,7 +21,8 @@ import flowerwall2 from "../../public/carole/flowerwall2.jpg";
 import flowerwall3 from "../../public/carole/flowerwall3.jpg";
 import fallDecor1 from "../../public/carole/fallDecor1.jpg";
 import fallDecor2 from "../../public/carole/fallDecor2.jpg";
-import logoMain from "../../public/carole/logo-main.jpg";
+import logoMain from "../../public/carole/booth.jpg";
+import logoWhite from "../../public/carole/logo-main.jpg";
 import logo2 from "../../public/carole/logo2.png";
 import carole from "../../public/carole/carole2.jpg";
 
@@ -42,6 +43,7 @@ export const mockSiteConfig: SiteConfig = {
       id: "hdr",
       type: "header",
       logoText: "CM Florals",
+      logoImage: logoWhite.src,
       links: [
         { label: "Home", href: "/" },
         { label: "About", href: "#create" },
