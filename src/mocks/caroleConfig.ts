@@ -268,7 +268,7 @@ export const mockSiteConfig: SiteConfig = {
           title: "Info",
           links: [
             { label: "CM Florals & Gifts", href: '#' },
-            { label: "500 W Madison St, Chicago, IL 60661", href: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus" },
+            { label: "500 W Madison St, Chicago, IL 60661", href: "https://maps.app.goo.gl/uHEar2C6fxQPoHUo6" },
             { label: "(773) 209-4805", href: phoneHref },   
             { label: "Hours: Mon–Fri 9am–5pm", href: "#" },
           ],
