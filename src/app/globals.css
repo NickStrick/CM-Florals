@@ -112,10 +112,10 @@ body[data-theme="candy"] {
   --text-accent: white;
 }
 body[data-theme="lavender"] {
-  --primary: #a66cec;    /* vibrant lavender/purple */
-  --accent:  #d26cec;    /* metallic gold */
-  --bg:      #f9f7fb;    /* soft lavender-tinted white */
-  --bg-2:    #fdeb9b;    /* gentle lavender wash */
+--primary: rgb(255, 39, 190);    /* vibrant lavender/purple */
+  --accent:  #9a01c9;    /* metallic gold */
+  --bg:      #fafce9;    /* soft lavender-tinted white */
+  --bg-2:    #fdb3e9;    /* gentle lavender wash */
   --fg:      #2d2d2d;    /* dark gray for text */
   --muted:   #9b67cc;    /* muted warm gray */
 
@@ -507,10 +507,10 @@ body[data-theme="grove"]  {
     @apply inline-block px-8 py-4 text-[1.1rem] font-bold tracking-wide rounded-full transition duration-300;
       background-image: linear-gradient(
           to right,
-          var(--bg) 0%,
-          var(--bg-2) 40%,
-          var(--bg-2) 50%,
-          var(--bg) 100%
+          var(--primary) 0%,
+          var(--accent) 40%,
+          var(--accent) 50%,
+          var(--primary) 100%
       );
       background-size: calc(200% + 4px) calc(100% + 4px);
       border:2px solid var(--primary);
@@ -518,7 +518,7 @@ body[data-theme="grove"]  {
       background-position: 0% 0%;
       animation: btnunhover 2s ;
       animation-play-state: paused;
-      color:var(--primary);
+      color:var(--text-2);
   }
   .btn-small {
     @apply inline-block px-4 py-2 text-sm font-semibold rounded-full transition duration-300;
