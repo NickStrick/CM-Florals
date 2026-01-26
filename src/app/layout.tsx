@@ -13,15 +13,53 @@ import AdminBar from "@/components/admin/AdminBar";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.cmfloralsandgifts.com";
 
 // import { mockSiteConfig } from "@/mocks/siteConfig";
 import { mockSiteConfig } from "@/mocks/caroleConfig";
+import SeoLocalBusinessSchema from "@/components/SeoLocalBusinessSchema";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.cmfloralsandgifts.com"),
-  title: mockSiteConfig.meta?.title || "CM Florals & Gifts | Chicago Florist",
-  description: mockSiteConfig.meta?.description || "Florals & gifts in Chicago. Weddings, events, and custom arrangements.",
-  alternates: { canonical: "/" },
+  metadataBase: siteUrl,
+  title: {
+    default: "CM Florals & Gifts | Chicago Florist",
+    template: "%s | CM Florals & Gifts",
+  },
+  description:
+    "CM Florals & Gifts in Chicago, IL. Custom arrangements, weddings, events, and thoughtful gifts.",
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      // helps prevent snippet weirdness, not required but solid
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "CM Florals & Gifts",
+    title: "CM Florals & Gifts | Chicago Florist",
+    description:
+      "Custom arrangements, weddings, events, and thoughtful gifts in Chicago, IL.",
+    locale: "en_US",
+      images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "CM Florals & Gifts" }],
+
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CM Florals & Gifts | Chicago Florist",
+    description:
+      "Custom arrangements, weddings, events, and thoughtful gifts in Chicago, IL.",
+    images: ["/og.jpg"],
+  },
 };
 
 
@@ -70,6 +108,7 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
         <meta name="google-site-verification" content="LK3rJ_0mXFfWNK5RGCmh1doBT7wb2ElyJnEmmtvlefQ" />
+        <SeoLocalBusinessSchema />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app`}>
         <SiteProvider initial={config}>
