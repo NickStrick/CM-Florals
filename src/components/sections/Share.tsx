@@ -1,27 +1,14 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-
+import {SeperatorWave} from '@/components/SeperatorWave';
+import type { ShareSection } from '@/types/site';
 /**
  * Share component
  * - Displays a QR code that points to the current page URL (or a provided value)
  * - Handy actions: Share (Web Share API), Copy link, Download PNG
  * - Uses your globals.css classes: .card, .btn, .btn-gradient, .btn-inverted
  */
-
-export type ShareProps = {
-  id?: string;
-  title?: string;
-  subtitle?: string;
-  /** If not provided, we use window.location.href on mount */
-  value?: string;
-  /** QR code size in pixels */
-  size?: number; // default 220
-  /** Add a CTA button to open the link (useful on desktop for preview) */
-  showOpen?: boolean;
-  backgroundClass?: string; // default 'bg-[var(--bg)]'
-};
-
 export default function Share({
   id = "share",
   title = "Share this page",
@@ -30,7 +17,8 @@ export default function Share({
   size = 220,
   showOpen = false,
   backgroundClass = "bg-[var(--bg)]",
-}: ShareProps) {
+  topWaveType,
+}: ShareSection) {
   const [url, setUrl] = useState<string>(value ?? "");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -77,6 +65,8 @@ export default function Share({
   };
 
   return (
+    <div className='relative'>
+          <SeperatorWave type={topWaveType} flip={false} color={'var(--bg-2)'} waveClass={backgroundClass.includes('bg-gradient') ? backgroundClass + '-svg' : ''}/>
     <section id={id} className={`section ${backgroundClass}`}>
       <div className="mx-auto max-w-4xl px-4">
         <header className="mb-8 text-center">
@@ -108,9 +98,9 @@ export default function Share({
               {/* <h3 className="text-xl font-semibold">Quick actions</h3> */}
               <div className=" flex justify-center flex-wrap gap-3">
                 <button onClick={onCopy} className="btn btn-gradient">Copy Link</button>
-                <button onClick={onDownload} className="btn btn-inverted">Download PNG</button>
+                <button onClick={onDownload} className="btn btn-gradient-inverted">Download PNG</button>
                 {showOpen && (
-                  <a href={url} target="_blank" rel="noreferrer" className="btn btn-inverted">
+                  <a href={url} target="_blank" rel="noreferrer" className="btn btn-gradient-inverted">
                     Open Link
                   </a>
                 )}
@@ -120,5 +110,6 @@ export default function Share({
         </div>
       </div>
     </section>
+    </div>
   );
 }

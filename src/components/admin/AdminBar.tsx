@@ -4,24 +4,24 @@ import { useMemo, useState } from 'react';
 import { useSite } from '@/context/SiteContext';
 import MediaPicker from './MediaPicker';
 import { getSiteId } from '@/lib/siteId';
+import ConfigModal from './ConfigModal';
 
 type PickerKind = 'generic' | 'video-files' | 'video-posters';
 
 export default function AdminBar() {
   const { config } = useSite();
-  const [open, setOpen] = useState(false);
+  const [openPicker, setOpenPicker] = useState(false);
   const [kind, setKind] = useState<PickerKind>('generic');
+  const [showConfig, setShowConfig] = useState(false);
 
   const siteId = getSiteId();
   const bucket = process.env.NEXT_PUBLIC_S3_DEFAULT_BUCKET;
 
-  // Does config include a video section?
   const hasVideo = useMemo(
     () => !!config?.sections?.some(s => s.type === 'video' && s.visible !== false),
     [config?.sections]
   );
 
-  // compute prefix by kind
   const prefix = useMemo(() => {
     switch (kind) {
       case 'video-files':
@@ -39,27 +39,33 @@ export default function AdminBar() {
         <div className="card px-4 py-3 flex items-center gap-3">
           <span className="font-semibold">Admin Mode</span>
 
-          {/* Generic picker (kept from earlier) */}
           <button
-            className="btn btn-inverted"
-            onClick={() => { setKind('generic'); setOpen(true); }}
+            className="btn btn-primary"
+            onClick={() => setShowConfig(true)}
+            title="Edit site config (sections, fields, media links)"
           >
-            Media Picker
+            Edit Sections
           </button>
 
-          {/* Show these only if a video section exists */}
+          <button
+            className="btn btn-inverted"
+            onClick={() => { setKind('generic'); setOpenPicker(true); }}
+          >
+            Media Files
+          </button>
+
           {hasVideo && (
             <>
               <button
                 className="btn btn-primary"
-                onClick={() => { setKind('video-files'); setOpen(true); }}
+                onClick={() => { setKind('video-files'); setOpenPicker(true); }}
                 title="Upload/select MP4 files for Video sections"
               >
                 Manage Video Files
               </button>
               <button
                 className="btn btn-primary"
-                onClick={() => { setKind('video-posters'); setOpen(true); }}
+                onClick={() => { setKind('video-posters'); setOpenPicker(true); }}
                 title="Upload/select poster images for Video sections"
               >
                 Manage Video Posters
@@ -69,11 +75,12 @@ export default function AdminBar() {
         </div>
       </div>
 
-      {open && (
+      {/* Media Picker modal */}
+      {openPicker && (
         <div className="fixed inset-0 z-[1100] bg-black/50 flex items-center justify-center p-4">
-          <div className="card p-4 relative w-fit !max-w-full pr-[70px]">
+          <div className="card p-4 relative w-fit !max-w-full pr-[70px] max-h-[100vh] overflow-auto">
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => setOpenPicker(false)}
               className="absolute right-3 top-3 btn btn-ghost"
               aria-label="Close"
             >
@@ -84,14 +91,16 @@ export default function AdminBar() {
               bucket={bucket}
               prefix={prefix}
               onPick={(key) => {
-                // For now: just log. In the config editor, this would set field values (source.key or posterUrl).
                 console.log(`[${kind}] picked:`, key);
-                setOpen(false);
+                setOpenPicker(false);
               }}
             />
           </div>
         </div>
       )}
+
+      {/* Config editor modal */}
+      {showConfig && <ConfigModal onClose={() => setShowConfig(false)} />}
     </>
   );
 }

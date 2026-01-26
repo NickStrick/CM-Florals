@@ -15,6 +15,8 @@ import {
 import { faEnvelope, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import type { SocialsSection, SocialItem } from '@/types/site';
 
+import {SeperatorWave} from '@/components/SeperatorWave';
+
 const ICONS: Record<SocialItem['type'], IconDefinition> = {
   instagram: faInstagram,
   facebook: faFacebook,
@@ -44,6 +46,8 @@ export default function Socials({
   subtitle,
   items,
   style,
+  topWaveType,
+  bottomWaveType
 }: SocialsSection) {
   const rounded =
     style?.rounded === '2xl' ? '!rounded-full' : style?.rounded === 'lg' ? '!rounded-full' : '!rounded-full';
@@ -52,6 +56,8 @@ export default function Socials({
   const align = style?.align ?? 'center';
 
   return (
+    <div className='relative'>
+      <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section
       id={id}
       className={[
@@ -91,7 +97,7 @@ export default function Socials({
                 className={`group inline-flex flex-col items-center ${gapCls}`}
               >
                 <span
-                  className={`card-ink ${rounded} ${iconSizeCls} text-4xl inline-flex items-center justify-center !shadow-[var(--elev-2)] transition-transform duration-200 group-hover:scale-[1.04]`}
+                  className={`btn-gradient btn-gradient-icon ${rounded} ${iconSizeCls} text-4xl inline-flex items-center justify-center !shadow-[var(--elev-2)] bg-[length:150%] transition-border duration-200 border-[2px] border-transparent hover:border-white`}
                   aria-label={s.label ?? s.type}
                 >
                   <FontAwesomeIcon icon={ICONS[s.type]} />
@@ -103,7 +109,11 @@ export default function Socials({
             </motion.li>
           ))}
         </motion.ul>
+        
       </AnimatedSection>
+      
     </section>
+    <SeperatorWave type={bottomWaveType} flip={true} color={'var(--bg)'}/>
+    </div>
   );
 }

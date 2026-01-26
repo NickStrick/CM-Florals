@@ -17,10 +17,11 @@
     "framer-motion": "^12.16.0",
     "geist": "^1.2.0",
     "lucide-react": "^0.513.0",
-    "next": "^15.3.3",
+    "next": "^16.1.2",
     "qrcode.react": "^4.2.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

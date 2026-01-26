@@ -7,6 +7,7 @@ import type { TestimonialsSection } from '@/types/site';
 import { useRef, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faStar } from '@fortawesome/free-solid-svg-icons';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
 
 // Small helper to render a fixed 5‑star rating
@@ -25,9 +26,10 @@ export function Testimonials({
   subtitle,
   items,
   style,
+  id
 }: TestimonialsSection) {
   const {
-    variant = 'card',
+    variant = 'carousel',
     columns = 3,
     showQuoteIcon = true,
     rounded = 'xl',
@@ -35,9 +37,9 @@ export function Testimonials({
   } = style || {};
 
   const cardBase =
-    'p-6 md:p-7 bg-accent-1 shadow-md';
+    'p-6 md:p-7 card-2 card-outline-2 shadow-md';
   const cardInk =
-    'p-6 md:p-7 text-[var(--text-1)] bg-[var(--primary)] shadow-lg';
+    'p-6 md:p-7 text-[var(--text-1)] card-2 card-outline-2 shadow-lg';
   const radius =
     rounded === '2xl' ? 'rounded-3xl' : rounded === 'lg' ? 'rounded-xl' : 'rounded-2xl';
 
@@ -65,6 +67,7 @@ export function Testimonials({
 
   return (
     <section
+    id={id}
       className={[
         'section !pb-[6rem]',
         background === 'band'
@@ -93,7 +96,9 @@ export function Testimonials({
                 scroll-smooth
               "
             >
-              {items.map((t, i) => (
+              {items.map((t, i) => {
+                const aviUrl = resolveAssetUrl(t.avatarUrl);
+                return (
                 <motion.figure
                   key={`${t.name}-${i}`}
                   initial={{ opacity: 1, y: 0, x: 0 }}
@@ -107,9 +112,9 @@ export function Testimonials({
                   {showQuoteIcon && <div className="text-2xl mb-3 opacity-70">“</div>}
                   <blockquote className="text-[1.05rem] leading-relaxed">{t.quote}</blockquote>
                   <figcaption className="flex items-center gap-3 mt-6">
-                    {t.avatarUrl ? (
+                    {aviUrl ? (
                       <Image
-                        src={t.avatarUrl}
+                        src={aviUrl}
                         alt={t.name}
                         width={44}
                         height={44}
@@ -125,7 +130,7 @@ export function Testimonials({
                   </figcaption>
                   <div className="absolute bottom-4 right-4"><Stars /></div>
                 </motion.figure>
-              ))}
+              )})}
             </div>
 
             {/* mobile dots */}
@@ -153,7 +158,9 @@ export function Testimonials({
 
         {/* ---------- DESKTOP/TABLET: grid (always) ---------- */}
         <div className={`hidden md:grid gap-6 md:gap-8 ${gridCols}`}>
-          {items.map((t, i) => (
+          {items.map((t, i) => {
+            const aviUrl = resolveAssetUrl(t.avatarUrl);
+            return (
             <motion.figure
               key={`${t.name}-${i}`}
               initial={{ opacity: 0, y: 24 }}
@@ -167,9 +174,9 @@ export function Testimonials({
               <blockquote className="text-[1.05rem] leading-relaxed">{t.quote}</blockquote>
 
               <figcaption className="flex items-center gap-3 mt-6">
-                {t.avatarUrl ? (
+                {aviUrl ? (
                   <Image
-                    src={t.avatarUrl}
+                    src={aviUrl}
                     alt={t.name}
                     width={44}
                     height={44}
@@ -194,7 +201,7 @@ export function Testimonials({
               </figcaption>
               <div className="absolute bottom-4 right-4"><Stars /></div>
             </motion.figure>
-          ))}
+          )})}
         </div>
       </AnimatedSection>
     </section>

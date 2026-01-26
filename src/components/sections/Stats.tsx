@@ -51,6 +51,7 @@ export function Stats({
   subtitle,
   items,
   style,
+  id
 }: StatsSection) {
   const {
     align = 'center',
@@ -81,7 +82,7 @@ export function Stats({
   const inView = useInView(gridRef, { once: true, amount: 0.2 });
 
   return (
-    <section className="section">
+    <section id={id} className="section">
       <AnimatedSection className="mx-auto max-w-6xl">
         {(title || subtitle) && (
           <div className={`mb-10 ${alignCls}`}>

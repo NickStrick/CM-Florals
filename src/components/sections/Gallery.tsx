@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import AnimatedSection from '@/components/AnimatedSection';
 import type { GalleryItem, GallerySection } from '@/types/site';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
 // map helpers
 const gaps = {
@@ -65,11 +66,11 @@ export default function Gallery({
               initial={{ opacity: 0, y: 22, scale: 0.98 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.25, ease: 'easeOut', delay: 0.06  }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: 0.06 * i }}
               className={`break-inside-avoid overflow-hidden ${rounded} shadow-[0_10px_30px_rgba(0,0,0,.12)] bg-[var(--bg)]`}
             >
               <Image
-                src={img.imageUrl}
+                src={`${resolveAssetUrl(img.imageUrl)}`}
                 alt={img.alt ?? 'Gallery image'}
                 width={1200}
                 height={1600}

@@ -58,7 +58,7 @@ export default function Navbar() {
         <nav className="mx-auto max-w-6xl h-[4rem] px-4 md:px-6 flex items-center">
           {/* Left: Logo */}
           <div className="min-w-0 flex-1">
-            <Link href="/" className="text-lg font-semibold hover:opacity-90 text-[var(--text-1)]">
+            <Link href="/" className="text-lg font-semibold hover:opacity-90 text-[var(--text-1)] gradient-text">
               {header.logoText ?? 'Site-Crafter'}
             </Link>
           </div>
@@ -67,7 +67,7 @@ export default function Navbar() {
           <ul className="hidden md:flex flex-1 justify-center gap-6 text-muted">
             {(header.links ?? []).map(l => (
               <li key={l.href}>
-                <Link href={l.href} className="hover:text-fg transition-colors">
+                <Link href={l.href} className="hover:text-fg transition-colors  text-nowrap">
                   {l.label}
                 </Link>
               </li>
@@ -109,7 +109,7 @@ export default function Navbar() {
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="block py-2 text-fg/80 hover:text-fg"
+                  className="block py-2 text-fg/80 hover:text-fg  text-nowrap"
                   onClick={onNav}
                 >
                   {l.label}

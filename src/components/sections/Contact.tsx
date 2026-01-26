@@ -75,9 +75,11 @@ export function Contact({
 
             {socials?.map((s, i) => {
               const key = toSocialType(s.label);
-              return key ? (
+              const icon = s.customIcon ? s.customIcon : key ? SOCIAL_ICONS[key] : faLink;
+              console.log('Rendering social link:', s.label, 'with icon:', icon);
+              return icon ? (
                 <li key={i} className="flex items-center gap-3">
-                  <FontAwesomeIcon icon={SOCIAL_ICONS[key]} className="w-5 h-5" />
+                  <FontAwesomeIcon icon={icon} className="w-5 h-5" />
                   <a href={s.href} target="_blank" rel="noopener noreferrer" className="underline">
                     {s.label}
                   </a>

@@ -45,24 +45,24 @@ const MobileNavbar = () => {
         <nav className="md:hidden bg-white w-full shadow-md">
           <ul className="flex flex-col items-start gap-4 px-6 py-4 text-lg font-medium">
             <li>
-              <Link className="nav-btn transition-all" href="/" onClick={() => setOpen(false)}>
+              <Link className="nav-btn transition-all text-nowrap" href="/" onClick={() => setOpen(false)}>
                 Custom
               </Link>
             </li>
             <li>
               
-              <Link className="nav-btn" href="/#About" onClick={() => setOpen(false)}>
+              <Link className="nav-btn text-nowrap" href="/#About" onClick={() => setOpen(false)}>
                 Custom
               </Link>
             </li>
             <li>
-              <Link className="nav-btn transition-all" href="/#events" onClick={() => setOpen(false)}>
+              <Link className="nav-btn transition-all  text-nowrap" href="/#events" onClick={() => setOpen(false)}>
                 Custom
               </Link>
             </li>
             
             <li>
-              <Link className="nav-btn" href="/founders" onClick={() => setOpen(false)}>
+              <Link className="nav-btn  text-nowrap" href="/founders" onClick={() => setOpen(false)}>
                 Custom
               </Link>
             </li>

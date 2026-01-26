@@ -1,7 +1,7 @@
 // src/mocks/caroleConfig.ts
 import type { SiteConfig } from "@/types/site";
 
-// ---- Image imports ----           // Hero/banner image
+// ---- Image imports ----
 import booth from "../../public/carole/booth.jpg";
 import cart from "../../public/carole/cart.png";
 import flower2 from "../../public/carole/flower2.png";
@@ -34,7 +34,9 @@ export const mockSiteConfig: SiteConfig = {
     favicon: logo2.src,
   },
   sections: [
+    // ======================
     // HEADER
+    // ======================
     {
       visible: true,
       id: "hdr",
@@ -42,15 +44,19 @@ export const mockSiteConfig: SiteConfig = {
       logoText: "CM Florals",
       links: [
         { label: "Home", href: "/" },
-        { label: "About", href: "#create" },
+        { label: "What We Create", href: "#create" },
         { label: "Founder", href: "#about" },
+        { label: "Gallery", href: "#gallery" },
+        { label: "Shop", href: "#products" },
         { label: "Contact", href: "#contact" },
       ],
       cta: { label: "Call Now", href: phoneHref },
       style: { sticky: true, blur: true, elevation: "sm", transparent: false },
     },
 
+    // ======================
     // HERO
+    // ======================
     {
       visible: true,
       id: "hero",
@@ -64,7 +70,9 @@ export const mockSiteConfig: SiteConfig = {
       imageUrl: logoMain.src,
     },
 
-    // WHAT WE CREATE
+    // ======================
+    // FEATURES (What We Create)
+    // ======================
     {
       visible: true,
       id: "create",
@@ -76,104 +84,119 @@ export const mockSiteConfig: SiteConfig = {
           body:
             "Wedding parties, holidays, and special events — designed with warmth and color to fit your story.",
           imageUrl: flowertable.src,
+          imageSize: "lg",
+          meta: [
+            { label: "Lead Time", value: "2–4 weeks" },
+            { label: "Min. Order", value: "$300" },
+          ],
         },
         {
           title: "Bouquets & Gifting",
           body:
             "Handcrafted bouquets and arrangements for friends and loved ones — same-day options available.",
           imageUrl: flowerwall.src,
+          imageSize: "md",
+          link: "#products",
         },
         {
           title: "Plants & Accents",
           body:
             "Potted plants, seasonal stems, and textural greenery to brighten homes and workplaces.",
           imageUrl: cart.src,
+          imageSize: "md",
         },
       ],
     },
 
-   {
-  visible: true,
-  id: "gallery",
-  type: "gallery",
-  title: "Gallery",
-  subtitle: "Selected work — bouquets and event florals",
-  style: { columns: 3, rounded: "xl", gap: "md" },
-  backgroundClass: 'bg-gradient-2',
-  // NEW: load dynamically from S3
-  // source: {
-  //   type: "s3",
-  //   // bucket: "my-bucket-name",
-  //   prefix: "configs/carole/assets/",
-  //   // region: "us-east-2",
-  //   // cdnBase: "https://dxxxxx.cloudfront.net",
-  //   limit: 200,
-  //   recursive: true,
-  // },
-    items: [
-      { imageUrl: booth.src,        alt: "Booth display" },
-      { imageUrl: flowerwall3.src,  alt: "Flower wall 3" },
-      { imageUrl: flowerwall2.src,  alt: "Flower wall 2" },
-      
-      { imageUrl: flower8.src,      alt: "Arrangement 7" },
-      
-      { imageUrl: flower2.src,      alt: "Arrangement 1" },
-      
-      { imageUrl: flower3.src,      alt: "Arrangement 2" },
-      { imageUrl: flower4.src,      alt: "Arrangement 3" },
-      { imageUrl: flower5.src,      alt: "Arrangement 4" },
-      { imageUrl: flower6.src,      alt: "Arrangement 5" },
-      { imageUrl: flower7.src,      alt: "Arrangement 6" },
-    
-      
-      { imageUrl: flower11.src,      alt: "Arrangement 11" },
-      { imageUrl: flower9.src,      alt: "Arrangement 9" },
-      {imageUrl: logo2.src,      alt: "Arrangement 0" },
-      { imageUrl: flower10.src,      alt: "Arrangement 10" },
-    
-      { imageUrl: flowerwall.src,   alt: "Flower wall" },
-        
-      { imageUrl: flowertable2.src, alt: "Table setup" },
-    ],
-},
-{
-  visible: true,
-  id: 'promo',
-  type: 'video',
-  title: 'Behind the blooms',
-  subtitle: 'A quick look at our process.',
-  source: { type: 'url', href: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-  // posterUrl: 'configs/carole/assets/poster.jpg', // optional (S3 key or full URL)
-  style: { aspect: '16/9', rounded: 'xl', shadow: 'lg', background: 'default' },
-  controls: true,
-  autoplay: false,
-  muted: false,
-  loop: false,
-},
-{
-  visible: true,
-  id: 'intro',
-  type: 'video',
-  title: 'Intro video',
-  source: { type: 'local', path: '/videos/intro.mp4' }, // place file under /public/videos
-  posterUrl: '/images/posters/intro.jpg',
-  style: { aspect: '16/9', rounded: 'xl', shadow: 'md', background: 'band' },
-}
-,
-{
-  visible: true,
-  id: 'event-reel',
-  type: 'video',
-  title: 'Event highlights',
-  source: {
-    type: 's3',
-    key: 'configs/carole/videos/event-highlights.mp4', // upload here with Media Picker
-  },
-  posterUrl: 'configs/carole/assets/event-poster.jpg', // uploaded via Media Picker
-  style: { aspect: '16/9', rounded: 'xl', shadow: 'lg' },
-  controls: true
-}
-,
+    // ======================
+    // GALLERY
+    // ======================
+    {
+      visible: true,
+      id: "gallery",
+      type: "gallery",
+      title: "Gallery",
+      subtitle: "Selected work — bouquets and event florals",
+      style: { columns: 3, rounded: "xl", gap: "md" },
+      backgroundClass: "bg-gradient-2",
+      items: [
+        { imageUrl: booth.src, alt: "Booth display" },
+        { imageUrl: flowerwall3.src, alt: "Flower wall 3" },
+        { imageUrl: flowerwall2.src, alt: "Flower wall 2" },
+        { imageUrl: flower8.src, alt: "Arrangement 8" },
+        { imageUrl: flower2.src, alt: "Arrangement 2" },
+        { imageUrl: flower3.src, alt: "Arrangement 3" },
+        { imageUrl: flower4.src, alt: "Arrangement 4" },
+        { imageUrl: flower5.src, alt: "Arrangement 5" },
+        { imageUrl: flower6.src, alt: "Arrangement 6" },
+        { imageUrl: flower7.src, alt: "Arrangement 7" },
+        { imageUrl: flower11.src, alt: "Arrangement 11" },
+        { imageUrl: flower9.src, alt: "Arrangement 9" },
+        { imageUrl: logo2.src, alt: "Logo" },
+        { imageUrl: flower10.src, alt: "Arrangement 10" },
+        { imageUrl: flowerwall.src, alt: "Flower wall" },
+        { imageUrl: flowertable2.src, alt: "Table setup" },
+      ],
+      // Example S3 source (disabled)
+      // source: {
+      //   type: "s3",
+      //   prefix: "configs/carole/assets/",
+      //   limit: 200,
+      //   recursive: true,
+      // },
+    },
+
+    // ======================
+    // VIDEO (URL)
+    // ======================
+    {
+      visible: true,
+      id: "promo",
+      type: "video",
+      title: "Behind the blooms",
+      subtitle: "A quick look at our process.",
+      source: { type: "url", href: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      style: { aspect: "16/9", rounded: "xl", shadow: "lg", background: "default" },
+      controls: true,
+      autoplay: false,
+      muted: false,
+      loop: false,
+    },
+
+    // ======================
+    // VIDEO (LOCAL)
+    // ======================
+    {
+      visible: true,
+      id: "intro",
+      type: "video",
+      title: "Intro video",
+      source: { type: "local", path: "/videos/intro.mp4" },
+      posterUrl: "/images/posters/intro.jpg",
+      style: { aspect: "16/9", rounded: "xl", shadow: "md", background: "band" },
+      controls: true,
+    },
+
+    // ======================
+    // VIDEO (S3)
+    // ======================
+    {
+      visible: true,
+      id: "event-reel",
+      type: "video",
+      title: "Event highlights",
+      source: {
+        type: "s3",
+        key: "configs/carole/videos/event-highlights.mp4",
+      },
+      posterUrl: "configs/carole/assets/event-poster.jpg",
+      style: { aspect: "16/9", rounded: "xl", shadow: "lg" },
+      controls: true,
+    },
+
+    // ======================
+    // SECTIONAL
+    // ======================
     {
       visible: true,
       id: "floating",
@@ -182,10 +205,14 @@ export const mockSiteConfig: SiteConfig = {
       body: "Floral design that brings joy to everyday life.",
       backgroundUrl: booth.src,
       overlay: true,
+      align: "center",
       height: "md",
+      motion: { direction: "y", offset: 18, duration: 0.8 },
     },
 
-    // ABOUT FOUNDER
+    // ======================
+    // ABOUT
+    // ======================
     {
       visible: true,
       id: "about",
@@ -194,53 +221,164 @@ export const mockSiteConfig: SiteConfig = {
       body:
         "Grew up in the Chicago suburbs, inspired by the natural prairie fields of Illinois. I have worked in the Chicago floral industry for 45 years — from neighborhood shops to destination assignments in Las Vegas and Hawaii. I love training beginners and getting them excited to enter the world of floral design. I look at life as an opportunity to make people smile.",
       imageUrl: carole.src,
-      backgroundClass: 'bg-gradient-1',
+      bullets: [
+        "45 years in floral design",
+        "Neighborhood shops to destination work",
+        "Mentor & trainer for newcomers",
+      ],
+      align: "left",
+      backgroundClass: "bg-gradient-1",
     },
+
+    // ======================
+    // SOCIALS
+    // ======================
     {
-  visible: true,
-  id: "socials",
-  type: "socials",
-  title: "Connect With Me",
-  subtitle: "Want to collaborate? Follow or message me.",
-  items: [
-    { type: "instagram", href: "https://www.instagram.com/carolemurray37/", label: "Instagram" },
-    { type: "facebook",  href: "https://www.facebook.com/carole.murray.370/" ,   label: "Facebook" },
-    { type: "linkedin",  href: "https://www.linkedin.com/in/carole-murray-61458b20a/",     label: "LinkedIn" },
-    { type: "tiktok", href: "https://www.tiktok.com/@carolemurray87", label: "TikTok"  },
-  ],
-  style: { background: "band", rounded: "xl", size: "lg", gap: "md", align: "center" }
-},
+      visible: true,
+      id: "socials",
+      type: "socials",
+      title: "Connect With Me",
+      subtitle: "Want to collaborate? Follow or message me.",
+      items: [
+        { type: "instagram", href: "https://www.instagram.com/carolemurray37/", label: "Instagram" },
+        { type: "facebook", href: "https://www.facebook.com/carole.murray.370/", label: "Facebook" },
+        { type: "linkedin", href: "https://www.linkedin.com/in/carole-murray-61458b20a/", label: "LinkedIn" },
+        { type: "tiktok", href: "https://www.tiktok.com/@carolemurray87", label: "TikTok" },
+        { type: "email", href: "mailto:hello@cmflorals.com", label: "Email" },
+        { type: "website", href: "https://cmflorals.example.com", label: "Website" },
+      ],
+      style: { background: "band", rounded: "xl", size: "lg", gap: "md", align: "center" },
+    },
+
+    // ======================
+    // CTA
+    // ======================
     {
       visible: true,
       id: "book",
       type: "cta",
       title: "Ready to start?",
-      body:
-        "Text or call to set up your event space.",
+      body: "Text or call to set up your event space.",
       cta: { label: "Call Now", href: phoneHref },
     },
-    
 
-    // CONTACT
+    // ======================
+    // TESTIMONIALS
+    // ======================
     {
       visible: true,
-      id: "contact",
-      type: "contact",
-      title: "How to Find Us",
-      address: "Ogilvie Transportation Center — Accenture Tower — Chicago, IL",
-        phone: { label: "(773) 209-4805", href: phoneHref },
-      backgroundUrl: booth.src,
-      mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus" ,
-      socials: [
-        
-        { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
-        { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },
-        { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
-        { label: "Facebook", href: "https://www.facebook.com/carole.murray.370/" },
+      id: "testimonials",
+      type: "testimonials",
+      title: "Kind words",
+      subtitle: "A few notes from our clients",
+      items: [
+        {
+          quote:
+            "Carole made our wedding florals unforgettable — rich color and perfect style.",
+          name: "Emily H.",
+          role: "Bride",
+          avatarUrl: logo2.src,
+        },
+        {
+          quote:
+            "We order bouquets every month. Always bright, always on time.",
+          name: "Quartet Café",
+          role: "Manager",
+        },
+        {
+          quote:
+            "She transformed our office lobby with seasonal arrangements.",
+          name: "James R.",
+          role: "Office Admin",
+        },
+      ],
+      style: {
+        variant: "ink",
+        columns: 3,
+        showQuoteIcon: true,
+        rounded: "xl",
+        background: "band",
+      },
+    },
+
+    // ======================
+    // STATS
+    // ======================
+    {
+      visible: true,
+      id: "stats",
+      type: "stats",
+      title: "By the numbers",
+      subtitle: "A quick snapshot of our work",
+      items: [
+        { value: 45, label: "Years Experience", suffix: "+", decimals: 0 },
+        { value: 1200, label: "Events", suffix: "+", decimals: 0 },
+        { value: 5000, label: "Bouquets", suffix: "+", decimals: 0 },
+        { value: 98, label: "Satisfaction", suffix: "%", decimals: 0 },
+      ],
+      style: { align: "center", columns: 4, compact: false, divider: "dot", color: "primary" },
+    },
+
+    // ======================
+    // SKILLS
+    // ======================
+    {
+      visible: true,
+      id: "skills",
+      type: "skills",
+      title: "Craft & Capabilities",
+      subtitle: "Techniques we love",
+      items: [
+        { title: "Color harmonies", body: "Curated palettes for mood & tone", imageUrl: flower4.src },
+        { title: "Seasonal sourcing", body: "Local, fresh-forward blooms", imageUrl: flower5.src },
+        { title: "Sculptural forms", body: "Shape and balance for impact", imageUrl: flower6.src },
+        { title: "Installations", body: "Arches, walls, and immersive pieces", imageUrl: flower7.src },
+      ],
+      columns: 4,
+    },
+
+    // ======================
+    // PRICING
+    // ======================
+    {
+      visible: true,
+      id: "pricing",
+      type: "pricing",
+      title: "Packages",
+      subtitle: "Flexible options for any event",
+      plans: [
+        {
+          name: "Petite",
+          price: "$99",
+          period: "per bouquet",
+          description: "Perfect for gifting and small celebrations.",
+          features: ["Hand-tied bouquet", "Seasonal stems", "Pickup or delivery"],
+          cta: { label: "Select", href: "#contact" },
+          badge: "Popular",
+          featured: true,
+        },
+        {
+          name: "Event",
+          price: "$799",
+          period: "starting",
+          description: "Ceremonies, receptions, and décor.",
+          features: ["On-site setup", "Custom palette", "Consultation included"],
+          cta: { label: "Get quote", href: "#contact" },
+        },
+        {
+          name: "Corporate",
+          price: "$1499",
+          period: "per install",
+          description: "Lobbies, offices, and seasonal refreshes.",
+          features: ["Design plan", "Maintenance options", "Volume pricing"],
+          cta: { label: "Inquire", href: "#contact" },
+        },
       ],
     },
 
+    // ======================
     // SHARE (QR)
+    // ======================
     {
       visible: true,
       id: "share",
@@ -249,12 +387,280 @@ export const mockSiteConfig: SiteConfig = {
       subtitle: "Scan on your phone or send to a friend.",
       style: { variant: "band", align: "center", actions: true },
       items: [
-        { label: "Website (this page)" },
+        { label: "Website (this page)" }, // value omitted -> use current site URL
+        { label: "Contact", value: "https://cmflorals.example.com/#contact", size: 180 },
       ],
       backgroundClass: "bg-gradient-2-top",
     },
 
+    // ======================
+    // PARTNERS
+    // ======================
+    {
+      visible: true,
+      id: "partners",
+      type: "partners",
+      title: "Partners",
+      subtitle: "Friends and collaborators",
+      style: { variant: "cards", columns: 3, rounded: "xl", background: "band" },
+      items: [
+        {
+          name: "Quartet Café",
+          description: "Monthly lobby arrangements & holiday décor",
+          logoUrl: logo2.src,
+          links: [
+            { type: "website", href: "https://quartet.example.com" },
+            { type: "instagram", href: "https://instagram.com/quartetcafe" },
+          ],
+        },
+        {
+          name: "Ogilvie Market",
+          description: "Seasonal pop-ups & gift sets",
+          logoUrl: logo2.src,
+          links: [
+            { type: "website", href: "https://ogilviemarket.example.com" },
+            { type: "facebook", href: "https://facebook.com/ogilviemarket" },
+          ],
+        },
+        {
+          name: "West Loop Events",
+          description: "Venue installations & arches",
+          logoUrl: logo2.src,
+          links: [{ type: "website", href: "https://westloop.events" }],
+        },
+      ],
+    },
+
+    // ======================
+    // INSTAGRAM
+    // ======================
+    {
+      visible: true,
+      id: "instagram",
+      type: "instagram",
+      title: "Latest on Instagram",
+      subtitle: "Follow @carolemurray37",
+      items: [
+        { url: "https://www.instagram.com/p/Cv6h2Y8LkXY/" },
+        { url: "https://www.instagram.com/p/CuZt2nAFmY1/" },
+        { url: "https://www.instagram.com/p/CsQ9bP9D3eK/" },
+      ],
+      align: "center",
+      maxWidth: 640,
+      rounded: "xl",
+      columns: 3,
+      orientation: "landscape",
+    },
+
+    // ======================
+    // NEWSLETTER
+    // ======================
+    {
+      visible: true,
+      id: "newsletter",
+      type: "newsletter",
+      title: "Get seasonal updates",
+      body: "Occasional notes with fresh arrivals and holiday specials.",
+      googleFormEmbedUrl:
+        "https://docs.google.com/forms/d/e/1FAIpQLScMockFormPrefill/viewform?embedded=true",
+    },
+
+    // ======================
+    // SCHEDULING
+    // ======================
+    {
+      visible: true,
+      id: "scheduling",
+      type: "scheduling",
+      title: "Book a consultation",
+      body: "15–30 minute chats to plan your colors, stems, and scope.",
+      calendlyUrl: "https://calendly.com/example-user/consult",
+    },
+
+    // ======================
+    // CONTACT
+    // ======================
+    {
+      visible: true,
+      id: "contact",
+      type: "contact",
+      title: "How to Find Us",
+      address: "Ogilvie Transportation Center — Accenture Tower — Chicago, IL",
+      phone: { label: "(773) 209-4805", href: phoneHref },
+      email: "hello@cmflorals.com",
+      backgroundUrl: booth.src,
+      mapEmbedUrl:
+        "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus",
+      socials: [
+        { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
+        { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },
+        { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
+        { label: "Facebook", href: "https://www.facebook.com/carole.murray.370/" },
+      ],
+    },
+
+    // ======================
+    // DISCLAIMER
+    // ======================
+    {
+      visible: true,
+      id: "disclaimer",
+      type: "disclaimer",
+      title: "Disclaimer",
+      body:
+        "All images are representative. Seasonal availability may affect final selections. Prices subject to change.",
+      enabled: true,
+    },
+
+    // ======================
+    // PRODUCT LISTINGS
+    // ======================
+    {
+      visible: true,
+      id: "products",
+      type: "productListings",
+      title: "Shop Arrangements",
+      subtitle: "Handcrafted florals — pickup or delivery",
+      style: { columns: 3, cardVariant: "default", showBadges: true },
+      showAllThreshold: 3,
+      buyCtaFallback: "Buy Now",
+      products: [
+        {
+          id: "spring-bright",
+          name: "Spring Bright",
+          subtitle: "Citrus & tulip medley",
+          sku: "SPRG-001",
+          price: 6500,
+          compareAtPrice: 7500,
+          currency: "USD",
+          thumbnailUrl: flower8.src,
+          images: [
+            { url: flower8.src, alt: "Spring Bright 1" },
+            { url: flower4.src, alt: "Spring Bright 2" },
+            { url: flower5.src, alt: "Spring Bright 3" },
+          ],
+          summary: "Zesty color palette for kitchens & entryways.",
+          description:
+            "Tulips, ranunculus, and citrus accents arranged in our signature vase.",
+          features: ["Seasonal blooms", "Hand-tied & vased", "Gift note included"],
+          specs: [
+            { label: "Approx. Height", value: "14–16 in" },
+            { label: "Vase", value: "Glass" },
+          ],
+          badges: ["Bestseller", "Spring"],
+          tags: ["spring", "bright", "gift"],
+          stock: "in_stock",
+          quantityAvailable: 12,
+          digital: false,
+          weightKg: 1.2,
+          widthCm: 24,
+          heightCm: 36,
+          depthCm: 24,
+          shippingClass: "fragile",
+          purchaseUrl: "https://checkout.example.com/spring-bright",
+          ctaLabel: "Buy Now",
+          colors: [
+            { name: "Citrus", hex: "#F4A261" },
+            { name: "Berry", hex: "#E76F51" },
+          ],
+          sizes: [
+            { label: "Classic" },
+            { label: "Grand" },
+            { label: "Luxe" },
+          ],
+          maxQuantity: 5,
+        },
+        {
+          id: "peony-blush",
+          name: "Peony Blush",
+          subtitle: "Soft pinks & creams",
+          sku: "PNY-002",
+          price: 9500,
+          currency: "USD",
+          thumbnailUrl: flower11.src,
+          images: [
+            { url: flower11.src, alt: "Peony Blush 1" },
+            { url: flower9.src, alt: "Peony Blush 2" },
+          ],
+          summary: "Romantic tones perfect for gifting.",
+          description:
+            "Peonies, garden roses, and eucalyptus in a soft, airy arrangement.",
+          features: ["Romantic tones", "Giftable size", "Premium stems"],
+          specs: [
+            { label: "Approx. Height", value: "16–18 in" },
+            { label: "Vase", value: "Ceramic" },
+          ],
+          badges: ["New"],
+          tags: ["romantic", "peony"],
+          stock: "low_stock",
+          quantityAvailable: 4,
+          digital: false,
+          purchaseUrl: "https://checkout.example.com/peony-blush",
+          colors: [{ name: "Blush", hex: "#F8C8DC" }],
+          sizes: [{ label: "Classic" }, { label: "Luxe" }],
+          maxQuantity: 3,
+        },
+        {
+          id: "green-lobby",
+          name: "Green Lobby",
+          subtitle: "Office install",
+          sku: "OFF-003",
+          price: 149900,
+          currency: "USD",
+          thumbnailUrl: booth.src,
+          images: [
+            { url: booth.src, alt: "Green Lobby 1" },
+            { url: flowerwall2.src, alt: "Green Lobby 2" },
+          ],
+          summary: "Sculptural greenery installation for corporate spaces.",
+          description:
+            "Design plan, install, and optional maintenance. Price varies by scope.",
+          features: ["Design consultation", "Delivery & setup", "Maintenance options"],
+          specs: [
+            { label: "Lead Time", value: "3–6 weeks" },
+            { label: "Contract", value: "12-week minimum" },
+          ],
+          badges: ["Install"],
+          tags: ["corporate", "install"],
+          stock: "in_stock",
+          quantityAvailable: 2,
+          digital: false,
+          purchaseUrl: "https://checkout.example.com/green-lobby",
+          ctaLabel: "Request Install",
+          colors: [{ name: "Evergreen", hex: "#2A9D8F" }],
+          sizes: [{ label: "Standard" }, { label: "Large" }],
+          maxQuantity: 2,
+        },
+        {
+          id: "winter-white",
+          name: "Winter White",
+          subtitle: "Creamy neutrals",
+          sku: "WNT-004",
+          price: 8200,
+          currency: "USD",
+          thumbnailUrl: flower10.src,
+          images: [{ url: flower10.src, alt: "Winter White 1" }],
+          summary: "A serene neutral arrangement.",
+          description:
+            "White hydrangea, roses, and silver dollar eucalyptus with subtle texture.",
+          features: ["Neutral palette", "All-season", "Gift note included"],
+          specs: [{ label: "Vase", value: "Glass cylinder" }],
+          badges: ["Winter"],
+          tags: ["neutral", "winter"],
+          stock: "out_of_stock",
+          quantityAvailable: 0,
+          digital: false,
+          purchaseUrl: "https://checkout.example.com/winter-white",
+          colors: [{ name: "Pearl", hex: "#F6F6F6" }],
+          sizes: [{ label: "Classic" }],
+          maxQuantity: 5,
+        },
+      ],
+    },
+
+    // ======================
     // FOOTER
+    // ======================
     {
       visible: true,
       id: "ftr",
@@ -263,10 +669,11 @@ export const mockSiteConfig: SiteConfig = {
         {
           title: "Explore",
           links: [
-             { label: "Home", href: "/" },
-            { label: "About", href: "#create" },
+            { label: "Home", href: "/" },
+            { label: "What We Create", href: "#create" },
             { label: "Founder", href: "#about" },
-            { label: "Contact", href: "#contact" },
+            { label: "Gallery", href: "#gallery" },
+            { label: "Shop", href: "#products" },
           ],
         },
         {

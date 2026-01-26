@@ -15,26 +15,45 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 // import { mockSiteConfig } from "@/mocks/siteConfig";
-import { mockSiteConfig } from "@/mocks/caroleConfig";
+import { mockSiteConfig } from "@/mocks/markConfig";
 
 export const metadata: Metadata = {
-  title: "CM Florals — Floral Design by Carole Murray",
-  description:
-    "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founded by Carole Murray.",
+  title: mockSiteConfig.meta?.title || "Stricker Digital Websites",
+  description: mockSiteConfig.meta?.description || "Stricker Digital Websites",
 };
+
 
 async function getSiteConfig(): Promise<SiteConfig> {
   const useMock = process.env.NEXT_PUBLIC_USE_MOCK === "1";
-
-  if (useMock) {
-    return mockSiteConfig;
-  }
+  if (useMock) return mockSiteConfig;
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-  const res = await fetch(`${base}/api/site`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to load site config");
-  return res.json();
+  const site = process.env.NEXT_PUBLIC_SITE_ID ?? "carole";
+  const prefer = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? "published") as "draft" | "published";
+  const fallback = prefer === "draft" ? "published" : "draft";
+
+  async function fetchJSON(url: string) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.warn(`[config] ${url} -> ${res.status}`, text?.slice(0, 200));
+      return null;
+    }
+    return (await res.json()) as SiteConfig;
+  }
+
+  // try preferred variant for this site id
+  const primary = await fetchJSON(`${base}/api/config?variant=${prefer}&site=${encodeURIComponent(site)}`);
+  if (primary) return primary;
+
+  // then the other variant
+  const secondary = await fetchJSON(`${base}/api/config?variant=${fallback}&site=${encodeURIComponent(site)}`);
+  if (secondary) return secondary;
+
+  console.warn("[config] Falling back to mockSiteConfig");
+  return mockSiteConfig;
 }
+
 
 export default async function RootLayout({
   children,
@@ -48,7 +67,6 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.ico" />
-        <meta name="google-site-verification" content="LK3rJ_0mXFfWNK5RGCmh1doBT7wb2ElyJnEmmtvlefQ" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app`}>
         <SiteProvider initial={config}>

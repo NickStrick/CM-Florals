@@ -4,8 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import AnimatedSection from '@/components/AnimatedSection';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
 export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, imageUrl }: HeroSection) {
+  console.log('Hero imageUrl:', imageUrl);
+  const imgUrl = resolveAssetUrl(imageUrl);
   return (
     <section id={id} className="section curve bg-app bg-gradient-1">
       <AnimatedSection>
@@ -36,7 +39,7 @@ export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, i
             </motion.div>
           </div>
 
-          {imageUrl ? (
+          {imgUrl ? (
             <motion.div
               initial={{ opacity: 0, scale: .94, y: 16 }}
               whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -46,7 +49,7 @@ export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, i
               {/* soft blob shadow */}
               <div className="absolute -inset-6 rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] blur-2xl -z-10" />
               <div className="overflow-hidden rounded-full max-h-[380px] max-w-[380px] sm:min-w-[380px] sm:min-h-[380px] ">
-                <Image src={imageUrl} alt="" width={980} height={740} className="w-full h-auto sm:min-w-[380px] sm:min-h-[380px]" loading='eager' />
+                <Image src={imgUrl} alt="" width={980} height={740} className="w-full h-auto sm:min-w-[380px] sm:min-h-[380px]" loading='eager' />
               </div>
             </motion.div>
           ) : null}

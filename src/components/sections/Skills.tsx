@@ -30,8 +30,9 @@ export default function Skills({
         >
           {items.map((skill, i) => (
             <AnimatedSection key={i} delay={i * 0.08}
-              className="skill-item flex flex-col items-center text-center p-6 rounded-xl shadow-sm bg-white/70 backdrop-blur"
+              className=" card-glow flex flex-col items-center text-center  rounded-xl  backdrop-blur"
             >
+              <div className='skill-item rounded-xl  flex-col items-center text-center backdrop-blur h-[100%] w-[100%] p-6'>
               {skill.imageUrl && (
                 <Image
                 width={60}
@@ -47,6 +48,7 @@ export default function Skills({
               {skill.body && (
                 <p className="text-[var(--fg)]/80 mt-2">{skill.body}</p>
               )}
+              </div>
             </AnimatedSection>
           ))}
         </div>

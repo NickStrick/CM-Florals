@@ -3,6 +3,7 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
 // If you want to use a static import from /public, you can pass that .src into backgroundUrl.
 // Example: import bg from '../../../public/colorsky.jpg';
@@ -35,6 +36,7 @@ export default function Sectional({
   useEffect(() => {
     return () => {};
   }, []);
+   const bgUrl = resolveAssetUrl(backgroundUrl);
 
   // height classes (simple mapping, no clsx)
   const heightClass =
@@ -62,8 +64,8 @@ export default function Sectional({
     <section
       className={`hero-section bg-fixed bg-cover bg-center relative flex items-center ${heightClass}`}
       style={
-        backgroundUrl
-          ? { backgroundImage: `url(${backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+        bgUrl
+          ? { backgroundImage: `url(${bgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
           : undefined
       }
     >

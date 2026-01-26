@@ -7,7 +7,7 @@ export function ThemeSwitcher() {
   const presets = ['ocean','sunset','forest','slate','festival','candy','neon', 'grove'] as const;
 
   return (
-    <div className="fixed bottom-4 right-4 flex gap-2">
+    <div className="fixed bottom-4 right-4 flex gap-2 bg-[var(--bg)] p-2 rounded-full z-50">
       {(presets).map(p => (
         <button
           key={p}
@@ -17,12 +17,12 @@ export function ThemeSwitcher() {
           {p}
         </button>
       ))}
-      <button
+      {/* <button
         className="btn btn-primary"
         onClick={() => setStyle({ primary: '#7c3aed' })}
       >
         Purple
-      </button>
+      </button> */}
     </div>
   );
 }
