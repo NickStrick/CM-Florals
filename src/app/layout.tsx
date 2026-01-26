@@ -18,8 +18,10 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 import { mockSiteConfig } from "@/mocks/caroleConfig";
 
 export const metadata: Metadata = {
-  title: mockSiteConfig.meta?.title || "Stricker Digital Websites",
-  description: mockSiteConfig.meta?.description || "Stricker Digital Websites",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.cmfloralsandgifts.com"),
+  title: mockSiteConfig.meta?.title || "CM Florals & Gifts | Chicago Florist",
+  description: mockSiteConfig.meta?.description || "Florals & gifts in Chicago. Weddings, events, and custom arrangements.",
+  alternates: { canonical: "/" },
 };
 
 
