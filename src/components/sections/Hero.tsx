@@ -12,7 +12,7 @@ export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, i
   return (
     <section id={id} className="section curve bg-app bg-gradient-1">
       <AnimatedSection>
-        <div className="mx-auto max-w-6xl grid md:grid-cols-2 gap-[4rem] md:gap-[10rem] items-center">
+        <div className="mx-auto max-w-7xl grid md:grid-cols-2 gap-[4rem] md:gap-[10rem] items-center">
           <div>
             {eyebrow ? <p className="h-eyebrow mb-3">{eyebrow}</p> : null}
             <motion.h1
@@ -48,9 +48,12 @@ export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, i
             >
               {/* soft blob shadow */}
               <div className="absolute -inset-6 rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] blur-2xl -z-10" />
-              <div className="overflow-hidden rounded-full max-h-[480px] max-w-[480px] sm:min-w-[480px] sm:min-h-[480px] ">
+              {/* <div className="overflow-hidden rounded-full max-h-[480px] max-w-[480px] sm:min-w-[480px] sm:min-h-[480px] ">
                 <Image src={imgUrl} alt="" width={980} height={740} className="w-full h-auto sm:min-w-[480px] sm:min-h-[480px]" loading='eager' />
-              </div>
+              </div> */}
+              <div className="overflow-hidden rounded-full max-h-[600px] max-w-[600px] mx-auto aspect-square">
+                              <Image src={imgUrl} alt="" width={980} height={740} className="w-full h-auto" />
+                            </div>
             </motion.div>
           ) : null}
         </div>

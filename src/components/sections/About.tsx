@@ -50,7 +50,7 @@ export function About({ id, title = 'About', body, imageUrl, bullets, align = 'l
             >
               {/* soft blob shadow */}
               {/* <div className="absolute -inset-6 rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] blur-2xl -z-10" /> */}
-              <div className="overflow-hidden rounded-full max-h-[380px] max-w-[380px] mx-auto">
+              <div className="overflow-hidden rounded-full max-h-[600px] max-w-[600px] mx-auto">
                 <Image src={imgUrl} alt="" width={980} height={740} className="w-full h-auto" />
               </div>
             </motion.div>
