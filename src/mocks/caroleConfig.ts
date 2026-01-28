@@ -50,9 +50,10 @@ export const mockSiteConfig: SiteConfig = {
       links: [
         { label: "Home", href: "#top" },
         { label: "About", href: "#create" },
-        { label: "Founder", href: "#about" },
+        { label: "Previous Work", href: "#gallery" },
+        { label: "Testimonials", href: "#testimonials" },
         { label: "Contact", href: "#contact" },
-        { label: "Order & Pay", href: "#pay" },
+        { label: "Order", href: "#pay" },
       ],
       cta: { label: "Call Now", href: phoneHref },
       style: { sticky: true, blur: true, elevation: "sm", transparent: false },
@@ -119,8 +120,8 @@ export const mockSiteConfig: SiteConfig = {
   visible: true,
   id: "gallery",
   type: "gallery",
-  title: "Gallery",
-  subtitle: "Selected work — bouquets and event florals",
+  title: "Previous Work",
+  subtitle: "bouquets, gifts and event florals",
   style: { columns: 4, rounded: "xl", gap: "md" },
   backgroundClass: 'bg-gradient-2',
   // NEW: load dynamically from S3
@@ -202,7 +203,7 @@ export const mockSiteConfig: SiteConfig = {
           quote:
             "The Love and care that Carole puts into her bouquets is apparent from their beauty, creativeness, and quality! You can expect exactly what she promises, gorgeous and creative mastery of the art of florals through decades of experience!",
           name: "Nick Stricker",
-          role: "Customer & Partner",
+          role: "Customer & Business Partner",
           avatarUrl: review2.src
         },
         {
@@ -313,10 +314,12 @@ columns: 2,
         {
           title: "Explore",
           links: [
-             { label: "Home", href: "/" },
+            { label: "Home", href: "/" },
             { label: "About", href: "#create" },
             { label: "Founder", href: "#about" },
-            { label: "Pay", href: "#pay" },
+            { label: "Previous Work", href: "#gallery" },
+            { label: "Testimonials", href: "#testimonials" },
+            { label: "Order", href: "#pay" },
             { label: "Contact", href: "#contact" },
           ],
         },
