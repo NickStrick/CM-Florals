@@ -30,6 +30,10 @@ import review1 from "../../public/carole/reveiw1.png"
 import review2 from "../../public/carole/review2.png"
 
 const phoneHref = "tel:17732094805";
+const tiktokHref = "https://www.tiktok.com/@carolemurray87_group7?is_from_webapp=1&sender_device=pc";
+const instagramHref = "https://www.instagram.com/cm_florals/";
+const facebookHref = "https://www.facebook.com/carole.murray.370/";
+const linkedinHref = "https://www.linkedin.com/in/carole-murray-61458b20a/";
 
 export const mockSiteConfig: SiteConfig = {
   theme: { preset: "lavender", radius: "xl" },
@@ -241,10 +245,10 @@ columns: 2,
   title: "Connect With Me",
   subtitle: "Want to collaborate? Follow or message me.",
   items: [
-    { type: "instagram", href: "https://www.instagram.com/cm_florals/", label: "Instagram" },
-    { type: "tiktok", href: "https://www.tiktok.com/@carolemurray87", label: "TikTok"  },
-    { type: "facebook",  href: "https://www.facebook.com/carole.murray.370/" ,   label: "Facebook" },
-    { type: "linkedin",  href: "https://www.linkedin.com/in/carole-murray-61458b20a/",     label: "LinkedIn" },
+    { type: "instagram", href: instagramHref, label: "Instagram" },
+    { type: "tiktok", href: tiktokHref, label: "TikTok"  },
+    { type: "facebook",  href: facebookHref ,   label: "Facebook" },
+    { type: "linkedin",  href: linkedinHref,     label: "LinkedIn" },
     
   ],
   style: { background: "band", rounded: "xl", size: "lg", gap: "md", align: "center" }
@@ -274,10 +278,10 @@ columns: 2,
       mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus" ,
       socials: [
         
-        { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
-        { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },
-        { label: "Instagram", href: "https://www.instagram.com/cm_florals/" },
-        { label: "Facebook", href: "https://www.facebook.com/carole.murray.370/" },
+        { label: "LinkedIn", href: linkedinHref },
+        { label: "TikTok", href: tiktokHref },
+        { label: "Instagram", href: instagramHref },
+        { label: "Facebook", href: facebookHref },
       ],
     },
      {
@@ -336,12 +340,13 @@ columns: 2,
           title: "Connect",
           links: [
             { label: "shop@cmfloralsandgifts.com", href: 'mailto:shop@cmfloralsandgifts.com' },
-            { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
-            { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },   
-            { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
+            { label: "Instagram", href: instagramHref },
+            { label: "TikTok", href: tiktokHref },   
+            { label: "LinkedIn", href: linkedinHref },
           ],
         },
       ],
+       
       legal: "© 2025 CM Florals. All rights reserved.",
     },
   ],
