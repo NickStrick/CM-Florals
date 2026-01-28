@@ -5,18 +5,16 @@ import AnimatedSection from '@/components/AnimatedSection';
 import { motion } from 'framer-motion';
 import Image from "next/image";
 import { resolveAssetUrl } from '@/lib/assetUrl';
+import {SeperatorWave} from '@/components/SeperatorWave';
 
-export function About({ id, title = 'About', body, imageUrl, bullets, align = 'left', backgroundClass = 'bg-[var(--bg)' }: AboutSection) {
+export function About({ id, title = 'About', body, imageUrl, bullets, align = 'left', backgroundClass = 'bg-[var(--bg)', topWaveType, bottomWaveType }: AboutSection) {
   const imageFirst = align === 'left';
   const imgUrl = resolveAssetUrl(imageUrl);
   const hasWaves = backgroundClass.includes('bg-solid-primary');
-  return (
+  return (<>
+    <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className={`relative  !py-6 !pt-12 ${backgroundClass} !pb-8`}>
-      {hasWaves && <div className="text-[var(--bg-2)] top-wave" aria-hidden>
-        <svg viewBox="0 0 1440 140" className="w-full h-[70px]" preserveAspectRatio="none">
-          <path d="M0,80 C240,140 480,0 720,60 C960,120 1200,20 1440,80 L1440,140 L0,140 Z" fill="var(--primary)" />
-        </svg>
-      </div>}
+      
       <div className={`section container mx-auto px-4 grid gap-10 ${imgUrl?'md:grid-cols-2':'md:grid-cols-1'} items-center ${hasWaves?'!text-[var(--text-2)]':''}`}>
         {imgUrl && imageFirst && (
           <motion.div
@@ -26,7 +24,7 @@ export function About({ id, title = 'About', body, imageUrl, bullets, align = 'l
               className="relative w-fit mx-auto"
             >
             {/* <div className="absolute -inset-6 rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] blur-2xl z-0" /> */}
-            <div className="overflow-hidden rounded-full max-h-[600px] max-w-[600px] z-2 relative">
+            <div className="overflow-hidden rounded-full max-h-[600px] max-w-[600px] z-2 relative aspect-square">
               <Image width={600} height={600} src={imgUrl} alt={title} className="w-full rounded-xl object-cover" />
             </div>
           </motion.div>
@@ -62,5 +60,7 @@ export function About({ id, title = 'About', body, imageUrl, bullets, align = 'l
         </svg>
       </div>}
     </section>
+    <SeperatorWave type={bottomWaveType} flip={true} color={'var(--bg)'} />
+    </>
   );
 }

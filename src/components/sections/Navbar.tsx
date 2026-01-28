@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useSite } from '@/context/SiteContext';
 import type { HeaderSection } from '@/types/site';
+import Image from 'next/image';
 
 export default function Navbar() {
   const { config } = useSite();
   const [open, setOpen] = useState(false);
+  const [activeHref, setActiveHref] = useState<string>('');
 
   const header = useMemo<HeaderSection>(() => {
     const fromConfig = config?.sections.find(s => s.type === 'header') as HeaderSection | undefined;
@@ -18,6 +20,7 @@ export default function Navbar() {
         id: 'hdr',
         type: 'header',
         logoText: 'Site-Crafter',
+        logoImage: '',
         links: [
           { label: 'Features', href: '#features' },
           { label: 'Newsletter', href: '#newsletter' },
@@ -27,6 +30,71 @@ export default function Navbar() {
       }
     );
   }, [config]);
+  useEffect(() => {
+    if (!activeHref && (header.links?.length ?? 0) > 0) {
+      setActiveHref(header.links![0].href);
+    }
+  }, [activeHref, header.links]);
+
+  useEffect(() => {
+    const links = (header.links ?? []);
+    if (links.length === 0) return;
+    const homeHref =
+      header.links?.find(l => l.href === '/' || l.href === '#home' || l.href === '#top')?.href ??
+      links[0].href;
+
+    const sections = links
+      .map(l => {
+        if(!l.href.includes('#')) l.href = '#top'
+        return({ href: l.href, el: document.querySelector(l.href) as HTMLElement | null })
+      })
+      // .filter(s => s.el);
+
+    if (sections.length === 0) return;
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        if (window.scrollY <= 1) {
+          if (homeHref !== activeHref) setActiveHref(homeHref);
+          ticking = false;
+          return;
+        }
+        const activeLine = sticky ? 64 : 0;
+        const measured = sections.map(s => ({
+          href: s.href,
+          rect: s.el!.getBoundingClientRect(),
+        }));
+
+        const crossing = measured.filter(
+          s => s.rect.top <= activeLine && s.rect.bottom > activeLine
+        );
+
+        const above = measured.filter(s => s.rect.top <= activeLine);
+
+        const nextHref =
+          (crossing.length > 0 ? crossing[crossing.length - 1].href
+          : above.length > 0 ? above[above.length - 1].href
+          : sections[0].href);
+
+        if (nextHref !== activeHref) {
+          setActiveHref(nextHref);
+        }
+        ticking = false;
+      });
+    };
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [activeHref, header.links]);
 
   const { sticky = true, blur = true, elevation = 'sm', transparent = false } = header.style ?? {};
 
@@ -57,8 +125,13 @@ export default function Navbar() {
       >
         <nav className="mx-auto max-w-6xl h-[4rem] px-4 md:px-6 flex items-center">
           {/* Left: Logo */}
-          <div className="min-w-0 flex-1">
-            <Link href="/" className="text-lg font-semibold hover:opacity-90 text-[var(--text-1)] gradient-text">
+          <div className="min-w-0 flex-1 relative">
+            <Link href="/" className="absolute left-[-70px] top-[-15px] rounded-full overflow-hidden w-[60px] h-[60px]">
+            {header.logoImage&&header.logoImage.length?
+              <Image src={header.logoImage} alt="logo" width={140} height={60}  />
+              :<></>}</Link>
+            <Link href="/" className="text-lg font-semibold hover:opacity-90 text-[var(--text-1)] gradient-text ">
+              
               {header.logoText ?? 'Site-Crafter'}
             </Link>
           </div>
@@ -67,8 +140,20 @@ export default function Navbar() {
           <ul className="hidden md:flex flex-1 justify-center gap-6 text-muted">
             {(header.links ?? []).map(l => (
               <li key={l.href}>
-                <Link href={l.href} className="hover:text-fg transition-colors  text-nowrap nav-text">
-                  {l.label}
+                <Link
+                  href={l.href}
+                  className="relative inline-flex flex-col items-center gap-2 hover:text-fg transition-colors text-nowrap"
+                  onClick={() => setActiveHref(l.href)}
+                >
+                  <span>{l.label}</span>
+                  <div
+                    className={[
+                      'h-[4px] w-full rounded-full',
+                      'bg-gradient-to-r from-amber-400 via-[var(--primary)] to-[var(--accent)]',
+                      'transition-transform duration-300 ease-out origin-left',
+                      activeHref === l.href ? 'scale-x-100' : 'scale-x-0',
+                    ].join(' ')}
+                  />
                 </Link>
               </li>
             ))}
@@ -109,10 +194,23 @@ export default function Navbar() {
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="block py-2 text-fg/80 hover:text-fg  text-nowrap"
-                  onClick={onNav}
+                  className="block py-2 text-fg/80 hover:text-fg text-nowrap"
+                  onClick={() => {
+                    setActiveHref(l.href);
+                    onNav();
+                  }}
                 >
-                  {l.label}
+                  <span className="inline-flex flex-col items-start gap-2">
+                    {l.label}
+                    <div
+                      className={[
+                        'h-[2px] w-full rounded-full',
+                        'bg-gradient-to-r from-amber-400 via-[var(--primary)] to-[var(--accent)]',
+                        'transition-transform duration-300 ease-out origin-left',
+                        activeHref === l.href ? 'scale-x-100' : 'scale-x-0',
+                      ].join(' ')}
+                    />
+                  </span>
                 </Link>
               </li>
             ))}

@@ -112,7 +112,7 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app`}>
         <SiteProvider initial={config}>
-          <main className="overflow-hidden">{children}</main>
+          <main className="overflow-hidden"><div id="top"></div>{children}</main>
           {showThemeSwitcher && <ThemeSwitcher />}
 
           {/* ✅ Admin overlay (toggle with Ctrl/Cmd + Alt + A OR Ctrl/Cmd + Shift + A)

@@ -101,10 +101,10 @@ export type HeaderStyle = {
 export type HeaderSection = SectionBase & {
   type: 'header';
   logoText?: string;
+  logoImage?: string;
   links?: { label: string; href: string }[];
   cta?: { label: string; href: string };
   style?: HeaderStyle; // 👈 new
-  logoImage?: string
 };
 
 

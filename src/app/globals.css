@@ -233,15 +233,15 @@ body[data-theme="grove"]  {
     .card-2 { background-image: linear-gradient(
           to bottom right,
           var(--bg) 0%,
-          var(--accent) 40%,
-          var(--accent) 70%,
-          var(--accent) 100%
+          var(--primary) 40%,
+          var(--primary) 70%,
+          var(--primary) 100%
       );
       background-size: calc(200% + 4px) calc(100% + 4px);
       background-position: 0% 100%; max-width: 400px; margin: 0 auto;
       border-radius: var(--round-xl);
       box-shadow: var(--elev-2);
-      border: 2px solid var(--accent);
+      border: 2px solid var(--primary);
     }
     .card-invert { background-image: linear-gradient(
           to bottom right,
@@ -454,7 +454,7 @@ body[data-theme="grove"]  {
   }
   .bg-gradient-2 {
     background-image: linear-gradient(to bottom, var(--bg) 50%, var(--bg-2) 100%);
-    background-size: calc(200% + 4px) calc(160% + 4px);
+    background-size: calc(200% + 4px) calc(100% + 4px);
       background-position: 0% 28%;
   }
   .bg-gradient-2-top {
@@ -507,10 +507,10 @@ body[data-theme="grove"]  {
     @apply inline-block px-8 py-4 text-[1.1rem] font-bold tracking-wide rounded-full transition duration-300;
       background-image: linear-gradient(
           to right,
-          var(--primary) 0%,
-          var(--accent) 40%,
-          var(--accent) 50%,
-          var(--primary) 100%
+          var(--bg) 0%,
+          var(--bg-2) 40%,
+          var(--bg-2) 50%,
+          var(--bg) 100%
       );
       background-size: calc(200% + 4px) calc(100% + 4px);
       border:2px solid var(--primary);
@@ -518,7 +518,7 @@ body[data-theme="grove"]  {
       background-position: 0% 0%;
       animation: btnunhover 2s ;
       animation-play-state: paused;
-      color:var(--text-2);
+      color:var(--primary);
   }
   .btn-small {
     @apply inline-block px-4 py-2 text-sm font-semibold rounded-full transition duration-300;
@@ -648,4 +648,3 @@ max-height: calc(100vh - 135px);
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-

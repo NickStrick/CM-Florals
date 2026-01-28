@@ -8,6 +8,7 @@ import { useRef, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faStar } from '@fortawesome/free-solid-svg-icons';
 import { resolveAssetUrl } from '@/lib/assetUrl';
+import {SeperatorWave} from '@/components/SeperatorWave';
 
 
 // Small helper to render a fixed 5‑star rating
@@ -26,7 +27,9 @@ export function Testimonials({
   subtitle,
   items,
   style,
-  id
+  id,
+  topWaveType,
+  bottomWaveType
 }: TestimonialsSection) {
   const {
     variant = 'carousel',
@@ -64,21 +67,23 @@ export function Testimonials({
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, [variant, items.length]);
+  console.log('topWaveType', topWaveType)
 
-  return (
+  return (<>
+  <SeperatorWave type={topWaveType} flip={false} color={'var(--bg-2)'} />
     <section
     id={id}
       className={[
         'section !pb-[6rem]',
         background === 'band'
-          ? 'bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]'
+          ? 'bg-[var(--bg-2)]'
           : '',
       ].join(' ')}
     >
       <AnimatedSection className="mx-auto max-w-6xl">
         <div className="text-center max-w-3xl mx-auto mb-10">
           {title && <h2 className="text-4xl md:text-5xl font-extrabold">{title}</h2>}
-          {subtitle && <p className="text-muted mt-3">{subtitle}</p>}
+          {subtitle && <p className="mt-3">{subtitle}</p>}
         </div>
 
         {/* ---------- MOBILE: swipeable carousel when variant === 'carousel' ---------- */}
@@ -107,11 +112,11 @@ export function Testimonials({
                   transition={{ duration: 0.4, ease: 'easeOut', delay: i * 0.04 }}
                   className={`${
                     cardBase
-                  } ${radius} snap-center shrink-0 w-[86%] relative`}
+                  } ${radius} snap-center shrink-0 w-[86%] relative flex flex-col `}
                 >
                   {showQuoteIcon && <div className="text-2xl mb-3 opacity-70">“</div>}
                   <blockquote className="text-[1.05rem] leading-relaxed">{t.quote}</blockquote>
-                  <figcaption className="flex items-center gap-3 mt-6">
+                  <figcaption className="flex items-center gap-3 mt-auto pt-6 mb-4">
                     {aviUrl ? (
                       <Image
                         src={aviUrl}
@@ -121,11 +126,11 @@ export function Testimonials({
                         className="rounded-full object-cover"
                       />
                     ) : (
-                      <FontAwesomeIcon icon={faUser} className="w-5 h-5 text-[var(--primary)" />
+                       <FontAwesomeIcon icon={faUser} className="w-11 h-11 overflow-hidden rounded-full bg-[var(--bg)] text-[var(--bg-2)]" />
                     )}
                     <div>
                       <div className="font-semibold">{t.name}</div>
-                      {t.role && <div className="text-sm text-muted">{t.role}</div>}
+                      {t.role && <div className="text-sm">{t.role}</div>}
                     </div>
                   </figcaption>
                   <div className="absolute bottom-4 right-4"><Stars /></div>
@@ -141,7 +146,7 @@ export function Testimonials({
                   className={`w-2.5 h-2.5 rounded-full transition-colors ${
                     i === active
                       ? 'bg-[var(--primary)]'
-                      : 'bg-[color-mix(in_srgb,var(--fg)_25%,transparent)]'
+                      : 'bg-[var(--bg-2)]'
                   }`}
                   aria-label={`Go to slide ${i + 1}`}
                   onClick={() => {
@@ -167,13 +172,13 @@ export function Testimonials({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, ease: 'easeOut', delay: i * 0.05 }}
-              className={`relative ${variant === 'ink' ? cardInk : cardBase} ${radius}`}
+              className={`relative  flex flex-col ${variant === 'ink' ? cardInk : cardBase} ${radius}`}
             >
               {showQuoteIcon && <div className="text-2xl mb-3 opacity-70">“</div>}
 
               <blockquote className="text-[1.05rem] leading-relaxed">{t.quote}</blockquote>
 
-              <figcaption className="flex items-center gap-3 mt-6">
+              <figcaption className="flex items-center gap-3 mt-auto pt-6 mb-4">
                 {aviUrl ? (
                   <Image
                     src={aviUrl}
@@ -183,7 +188,7 @@ export function Testimonials({
                     className="rounded-full object-cover"
                   />
                 ) : (
-                  <FontAwesomeIcon icon={faUser} className="w-11 h-11 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--bg)_40%,transparent)] text-[var(--bg-2)]" />
+                  <FontAwesomeIcon icon={faUser} className="w-11 h-11 overflow-hidden rounded-full bg-[var(--bg)] text-[var(--bg-2)]" />
                 )} 
                 {/* w-11 h-11 rounded-full bg-[color-mix(in_srgb,var(--fg)_20%,transparent)] */}
                 <div>
@@ -191,7 +196,7 @@ export function Testimonials({
                   {t.role && (
                     <div
                       className={`text-sm ${
-                        variant === 'ink' ? 'text-[var(--text)]/85' : 'text-muted'
+                        variant === 'ink' ? 'text-[var(--text)]/85' : 'opacity-75'
                       }`}
                     >
                       {t.role}
@@ -205,5 +210,7 @@ export function Testimonials({
         </div>
       </AnimatedSection>
     </section>
+    <SeperatorWave type={bottomWaveType} flip={true} color={'var(--bg-2)'} />
+    </>
   );
 }

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import AnimatedSection from '@/components/AnimatedSection';
 import type { GalleryItem, GallerySection } from '@/types/site';
 import { resolveAssetUrl } from '@/lib/assetUrl';
+import {SeperatorWave} from '@/components/SeperatorWave';
 
 // map helpers
 const gaps = {
@@ -28,6 +29,8 @@ export default function Gallery({
   items = [],                         // <— default safe for “no items yet”
   style,
   backgroundClass = 'bg-[var(--bg)]',
+  topWaveType,
+  bottomWaveType
 }: Omit<GallerySection, 'source'> & { items?: GalleryItem[] }) {
   const rounded =
     style?.rounded === '2xl'
@@ -49,6 +52,8 @@ export default function Gallery({
   const gapCls = gaps[gapKey];
 
   return (
+    <>
+    <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className={`section ${backgroundClass}`}>
       <div className="mx-auto max-w-[95%] md:max-w-[85%]">
         {(title || subtitle) && (
@@ -93,5 +98,7 @@ export default function Gallery({
         </div>
       </div>
     </section>
+    <SeperatorWave type={bottomWaveType} flip={true} color={'var(--bg-2)'} />
+    </>
   );
 }

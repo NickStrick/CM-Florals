@@ -26,6 +26,9 @@ import logoWhite from "../../public/carole/logo-main.jpg";
 import logo2 from "../../public/carole/logo2.png";
 import carole from "../../public/carole/carole2.jpg";
 
+import review1 from "../../public/carole/reveiw1.png"
+import review2 from "../../public/carole/review2.png"
+
 const phoneHref = "tel:17732094805";
 
 export const mockSiteConfig: SiteConfig = {
@@ -45,7 +48,7 @@ export const mockSiteConfig: SiteConfig = {
       logoText: "CM Florals",
       logoImage: logoWhite.src,
       links: [
-        { label: "Home", href: "/" },
+        { label: "Home", href: "#top" },
         { label: "About", href: "#create" },
         { label: "Founder", href: "#about" },
         { label: "Contact", href: "#contact" },
@@ -156,6 +159,7 @@ export const mockSiteConfig: SiteConfig = {
         
       { imageUrl: flowertable2.src, alt: "Table setup" },
     ],
+    bottomWaveType: "1-hill",
 },
 
     {
@@ -168,7 +172,55 @@ export const mockSiteConfig: SiteConfig = {
       overlay: true,
       height: "md",
     },
-
+     // ======================
+    // TESTIMONIALS
+    // ======================
+    {
+      visible: true,
+      id: "testimonials",
+      type: "testimonials",
+      title: "What Customers Experience",
+      topWaveType: "1-hill",
+      bottomWaveType: "1-hill",
+      subtitle: "We strive to help our cusomters connect with loved ones through the art of gift giving.",
+      items: [
+        {
+          quote:
+            "Carole is true artist! Even in a pinch, she arranges the most beautiful combination of flowers and colors, making every bouquet lovely and truly unique. Her flowers are fresh and long-lasting. CM is our go-to!",
+          name: "Maggie Ghobrial",
+          role: "Customer",
+          avatarUrl: review1.src
+        },
+        
+        {
+          quote:
+            "Carole makes amazing bouquets! My girlfriend loves them ❤️❤️❤️❤️",
+          name: "Arnav Sinha",
+          role: "Customer",
+        },
+        {
+          quote:
+            "The Love and care that Carole puts into her bouquets is apparent from their beauty, creativeness, and quality! You can expect exactly what she promises, gorgeous and creative mastery of the art of florals through decades of experience!",
+          name: "Nick Stricker",
+          role: "Customer & Partner",
+          avatarUrl: review2.src
+        },
+        {
+          quote:
+            "I know very little about flowers, but I said it's my wife's birthday, I said she likes hydrangeas, set my budget, and I received an absolutely stunning bouquet a few minutes later. My wife loves them! I'm so thankful that we UP commuters have such a gifted florist at OTC!",
+          name: "Jonathan Walker",
+          role: "Customer",
+        },
+        
+      ],
+      style: {
+        variant: "carousel",
+columns: 2,
+        showQuoteIcon: true,
+        rounded: "xl",
+        background: "band",
+      },
+    },
     // ABOUT FOUNDER
     {
       visible: true,
@@ -179,6 +231,7 @@ export const mockSiteConfig: SiteConfig = {
         "Grew up in the Chicago suburbs, inspired by the natural prairie fields of Illinois. I have worked in the Chicago floral industry for 45 years — from neighborhood shops to destination assignments in Las Vegas and Hawaii. I love training beginners and getting them excited to enter the world of floral design. I look at life as an opportunity to make people smile.",
       imageUrl: carole.src,
       backgroundClass: 'bg-gradient-1',
+      
     },
     {
   visible: true,
@@ -195,6 +248,7 @@ export const mockSiteConfig: SiteConfig = {
   ],
   style: { background: "band", rounded: "xl", size: "lg", gap: "md", align: "center" }
 },
+
     {
       visible: true,
       id: "book",
@@ -269,7 +323,7 @@ export const mockSiteConfig: SiteConfig = {
          {
           title: "Info",
           links: [
-            { label: "CM Florals & Gifts", href: '#' },
+            { label: "CM Florals & Gifts", href: '/' },
             { label: "500 W Madison St, Chicago, IL 60661", href: "https://maps.app.goo.gl/uHEar2C6fxQPoHUo6" },
             { label: "(773) 209-4805", href: phoneHref },   
             { label: "Hours: Mon–Fri 9am–5pm", href: "#" },
@@ -278,7 +332,7 @@ export const mockSiteConfig: SiteConfig = {
         {
           title: "Connect",
           links: [
-            { label: "shop@cmfloralsandgifts.com", href: 'shop@cmfloralsandgifts.com' },
+            { label: "shop@cmfloralsandgifts.com", href: 'mailto:shop@cmfloralsandgifts.com' },
             { label: "Instagram", href: "https://www.instagram.com/carolemurray37/" },
             { label: "TikTok", href: "https://www.tiktok.com/@carolemurray87" },   
             { label: "LinkedIn", href: "https://www.linkedin.com/in/carole-murray-61458b20a/" },
