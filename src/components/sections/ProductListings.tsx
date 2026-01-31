@@ -126,7 +126,7 @@ export default function ProductListings({
                   </header>
 
                   {/* Actions */}
-                  <div className="grid grid-cols-2 gap-2 mt-auto">
+                  <div className="flex gap-2 mt-auto">
                     {detailsEnabled?<button
                       className={cls(
                         'btn mt-6 w-full justify-center',
