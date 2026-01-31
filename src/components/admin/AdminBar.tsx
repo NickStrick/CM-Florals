@@ -35,8 +35,8 @@ export default function AdminBar() {
 
   return (
     <>
-      <div className="fixed right-4 top-4 z-[1000]">
-        <div className="card px-4 py-3 flex items-center gap-3">
+      <div className="fixed right-4 top-4 z-[10000]">
+        <div className="card px-4 py-3 flex flex-wrap items-center gap-3">
           <span className="font-semibold">Admin Mode</span>
 
           <button

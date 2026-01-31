@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { SiteProvider } from "@/context/SiteContext";
+import { CartProvider } from "@/context/CartContext";
 import type { SiteConfig } from "@/types/site";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
@@ -112,14 +113,16 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app`}>
         <SiteProvider initial={config}>
-          <main className="overflow-hidden"><div id="top"></div>{children}</main>
-          {showThemeSwitcher && <ThemeSwitcher />}
+          <CartProvider>
+            <main className="overflow-hidden"><div id="top"></div>{children}</main>
+            {showThemeSwitcher && <ThemeSwitcher />}
 
           {/* ✅ Admin overlay (toggle with Ctrl/Cmd + Alt + A OR Ctrl/Cmd + Shift + A)
               Also supports ?admin=1 and persists via localStorage */}
-          <AdminGate>
-            <AdminBar />
-          </AdminGate>
+            <AdminGate>
+              <AdminBar />
+            </AdminGate>
+          </CartProvider>
         </SiteProvider>
       </body>
     </html>

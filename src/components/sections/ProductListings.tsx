@@ -8,6 +8,10 @@ import { motion } from 'framer-motion';
 import ProductDetailModal from './ProductDetailModal';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 
+import CartModal from '../payments/CartModal';
+import PaymentPage from '../payments/PaymentPage';
+import { useCart } from '@/context/CartContext';
+
 function cls(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
 }
@@ -18,18 +22,25 @@ function formatPrice(cents: number, currency = 'USD') {
     currency,
   }).format(cents / 100);
 }
-
 export default function ProductListings({
   id,
   title,
   subtitle,
   products,
+  detailsEnabled,
+  cartActive,
+  checkoutInputs,
+  googleFormUrl,
+  googleFormOptions,
+  paymentType,
+  externalPaymentUrl,
   style,
   showAllThreshold = 3,
   buyCtaFallback = 'Buy Now',
 }: ProductListingsSection) {
   const [showAll, setShowAll] = useState(false);
   const [selected, setSelected] = useState<Product | null>(null);
+  const { addItem, openCart } = useCart();
 
   const hasOverflow = (products?.length ?? 0) > showAllThreshold;
   const visible = useMemo(
@@ -41,6 +52,17 @@ export default function ProductListings({
   const cols = style?.columns ?? 3; // only affects small screens; lg caps at 3
 
   return (
+    <>
+    {cartActive && <CartModal />}
+    {cartActive && (
+      <PaymentPage
+        checkoutInputs={checkoutInputs}
+        googleFormUrl={googleFormUrl}
+        googleFormOptions={googleFormOptions}
+        paymentType={paymentType}
+        externalPaymentUrl={externalPaymentUrl}
+      />
+    )}
     <section id={id} className="section sectionAboveWavePad">
       <div className="mx-auto max-w-6xl px-4">
         <motion.div
@@ -69,7 +91,7 @@ export default function ProductListings({
             return (
               <AnimatedSection key={p.id + '-' + i}>
                 <div className={cls(
-                  'relative h-full p-6 sm:p-7 md:p-8 card card-interactive flex flex-col',
+                  'relative h-full p-6 sm:p-7 md:p-8 card-ink card-interactive flex flex-col',
                   cardInk && 'card-ink'
                 )}>
                   {/* Badge row */}
@@ -105,7 +127,7 @@ export default function ProductListings({
 
                   {/* Actions */}
                   <div className="grid grid-cols-2 gap-2 mt-auto">
-                    <button
+                    {detailsEnabled?<button
                       className={cls(
                         'btn mt-6 w-full justify-center',
                         cardInk ? 'btn-gradient btn-white-outline' : 'btn-gradient-inverted'
@@ -114,16 +136,27 @@ export default function ProductListings({
                       aria-label={`View details for ${p.name}`}
                     >
                       Details
-                    </button>
+                    </button>: null}
                     {p.purchaseUrl && (
                       <a
                         href={p.purchaseUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn mt-6 btn-gradient w-full justify-center"
+                        className="btn mt-6 btn-gradient btn-white-outline w-full justify-center"
                       >
                         {p.ctaLabel ?? buyCtaFallback}
                       </a>
+                    )}
+                    {cartActive && (
+                      <button
+                      className={cls(
+                        'btn mt-6 w-full justify-center', 'btn-gradient btn-white-outline' 
+                      )}
+                      onClick={() => { addItem({ id: p.id, name: p.name, price: p.price, currency: p.currency, imageUrl: thumb ?? undefined }); openCart(); }}
+                      aria-label={`Add ${p.name} to cart`}
+                    >
+                        Add to Cart
+                      </button>
                     )}
                   </div>
                 </div>
@@ -134,7 +167,7 @@ export default function ProductListings({
 
         {hasOverflow && (
           <div className="mt-8 text-center">
-            <button className="btn btn-inverted" onClick={() => setShowAll((x) => !x)}>
+            <button className="btn btn-gradient" onClick={() => setShowAll((x) => !x)}>
               {showAll ? 'Show Less' : 'Show All'}
             </button>
           </div>
@@ -148,5 +181,6 @@ export default function ProductListings({
         />
       )}
     </section>
+    </>
   );
 }
