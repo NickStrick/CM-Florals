@@ -78,6 +78,7 @@ export default function CartModal() {
             </>
           )}
         </div>
+        <button className="w-full btn-gradient text-white py-4 rounded-xl font-bold transition-all" onClick={() => { closeCart(); window.location.href = '#products'; }}>{items.length !== 0 ? "View More Products" : "View Our Products"}</button>
           {items.length !== 0 ? (
         <button 
           onClick={() => { closeCart(); openCheckout(); }}
@@ -89,7 +90,7 @@ export default function CartModal() {
         : (<><div className="text-center text-gray-600">Add items to your cart to proceed to checkout.</div>
           
         </>)}
-        <button className="w-full btn-gradient text-white py-4 rounded-xl font-bold transition-all" onClick={() => { closeCart(); window.location.href = '#products'; }}>View More Products</button>
+        
       </div>
     </div></>
   );
