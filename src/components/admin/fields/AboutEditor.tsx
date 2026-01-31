@@ -2,6 +2,7 @@
 
 import type { AboutSection } from '@/types/site';
 import type { EditorProps } from './types';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 
@@ -53,6 +54,19 @@ export function EditAbout({
       {/* Image URL + Picker */}
       <div className="space-y-2">
         <label className="block text-sm font-medium">Image URL</label>
+        <div className="h-28 w-28 aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+          {section.imageUrl ? (
+            <img
+              src={resolveAssetUrl(section.imageUrl) ?? section.imageUrl}
+              alt="Image preview"
+              className="admin-image-preview"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-xs text-muted">
+              No image selected
+            </div>
+          )}
+        </div>
         <div className="flex gap-2">
           <input
             className="input flex-1"

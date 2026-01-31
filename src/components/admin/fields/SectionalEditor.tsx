@@ -1,6 +1,7 @@
 'use client';
 
 import type { SectionalSection } from '@/types/site';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 // ⬇️ Adjust this import if your shared types file lives elsewhere
 import type { EditorProps } from './types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -82,6 +83,19 @@ export function EditSectional({
       {/* Background URL + Picker */}
       <div className="space-y-2">
         <label className="block text-sm font-medium">Background URL</label>
+        <div className="h-28 w-28 aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+          {section.backgroundUrl ? (
+            <img
+              src={resolveAssetUrl(section.backgroundUrl) ?? section.backgroundUrl}
+              alt="Image preview"
+              className="admin-image-preview"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-xs text-muted">
+              No image selected
+            </div>
+          )}
+        </div>
         <div className="flex gap-2">
           <input
             className="input flex-1"

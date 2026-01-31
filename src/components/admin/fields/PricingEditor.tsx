@@ -160,7 +160,7 @@ export default function EditPricing({
       {/* Plans list */}
       <div className="space-y-4">
         {plans.map((p, i) => (
-          <div key={`plan-${i}`} className="card p-4 space-y-4">
+          <div key={`plan-${i}`} className="card card-solid p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="font-semibold">{p.name || 'Untitled plan'}</div>
               <div className="flex items-center gap-2">

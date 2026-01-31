@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import type { PersonsSection, PersonsStyle, PersonItem } from '@/types/site';
 import type { EditorProps } from './types';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 
@@ -199,7 +200,7 @@ export default function EditPersons({
       {/* Persons list */}
       <div className="space-y-4">
         {items.map((person, idx) => (
-          <div key={`person-${idx}`} className="card p-4 space-y-4">
+          <div key={`person-${idx}`} className="card card-solid p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="font-medium">{person.name || 'New Person'}</div>
               <div className="flex items-center gap-2">
@@ -247,8 +248,21 @@ export default function EditPersons({
               </div>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <label className="block text-sm font-medium">Avatar URL</label>
+              <div className="h-28 w-28 aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                {person.avatarUrl ? (
+                  <img
+                    src={resolveAssetUrl(person.avatarUrl) ?? person.avatarUrl}
+                    alt="Image preview"
+                    className="admin-image-preview"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-xs text-muted">
+                    No image selected
+                  </div>
+                )}
+              </div>
               <div className="flex gap-2">
                 <input
                   className="input flex-1"

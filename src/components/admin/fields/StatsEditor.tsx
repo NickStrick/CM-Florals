@@ -174,7 +174,7 @@ export default function EditStats({
       {/* Items list */}
       <div className="space-y-3">
         {items.map((it, idx) => (
-          <div key={`stat-${idx}`} className="card p-4 space-y-3">
+          <div key={`stat-${idx}`} className="card card-solid p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="font-medium">{it.label || 'New Stat'}</div>
               <div className="flex items-center gap-2">

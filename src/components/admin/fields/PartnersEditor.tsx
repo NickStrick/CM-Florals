@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import type { PartnersSection, PartnersStyle, PartnerItem, PartnerLink } from '@/types/site';
 import type { EditorProps } from './types';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 // small immutable helper (keeps parity with your other editors)
@@ -222,7 +223,7 @@ export default function EditPartners({
       {/* Partners list */}
       <div className="space-y-4">
         {items.map((p, idx) => (
-          <div key={`partner-${idx}`} className="card p-4 space-y-4">
+          <div key={`partner-${idx}`} className="card card-solid p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="font-medium">{p.name || 'New Partner'}</div>
               <div className="flex items-center gap-2">
@@ -258,8 +259,21 @@ export default function EditPartners({
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <label className="block text-sm font-medium">Logo URL</label>
+                <div className="h-28 w-28 aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                  {p.logoUrl ? (
+                    <img
+                      src={resolveAssetUrl(p.logoUrl) ?? p.logoUrl}
+                      alt="Image preview"
+                      className="admin-image-preview"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-xs text-muted">
+                      No image selected
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <input
                     className="input flex-1"

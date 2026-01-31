@@ -283,8 +283,8 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
   const selected = draft.sections[selectedIndex];
 
   return (
-    <div className="fixed edit-modal inset-0 z-[1200] bg-black/50 flex items-center justify-center p-4">
-      <div className="card p-4 relative w-fit !max-w-full pr-[70px] overflow-hidden card-screen-height">
+    <div className="fixed edit-modal inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
+      <div className="card card-solid p-4 relative w-fit !max-w-full pr-[70px] overflow-hidden card-screen-height">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="font-semibold text-lg">Edit Site Content</div>
@@ -314,7 +314,7 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
                     // type="button"
                     onClick={() => setSelectedIndex(i)}
                     className={[
-                      'card p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
+                      'card card-solid p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
                       isSelected ? 'outline outline-2 outline-primary bg-black/5' : 'hover:bg-black/5',
                     ].join(' ')}
                     aria-current={isSelected ? 'true' : undefined}
@@ -382,7 +382,7 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
           {/* Right: Only the selected editor */}
           <div className="md:col-span-2 p-4 space-y-4 right-editor-container">
             {selected ? (
-              <div key={selected.id} className="card p-4 space-y-3 right-editor-card">
+              <div key={selected.id} className="card card-solid p-4 space-y-3 right-editor-card">
                 {renderEditor(selected, selectedIndex, (next) => updateSection(selectedIndex, next))}
               </div>
             ) : (
@@ -395,7 +395,7 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
       {/* Media Picker Overlay */}
       {pickerOpen && (
         <div className="fixed inset-0 z-[1300] bg-black/60 flex items-center justify-center p-4">
-          <div className="card p-4 relative w-fit max-w-[95vw] pr-[70px] max-h-[90vh] overflow-auto">
+          <div className="card card-solid p-4 relative w-fit max-w-[95vw] pr-[70px] max-h-[90vh] overflow-auto">
             <button
               onClick={handleCancelPick}
               className="absolute right-3 top-3 btn btn-ghost"

@@ -4,7 +4,7 @@
 
 /* src/app/globals.css  (append to yours) */
 :root {
- --primary: rgb(255, 39, 190);    /* vibrant lavender/purple */
+--primary: rgb(255, 39, 190);    /* vibrant lavender/purple */
   --accent:  #9a01c9;    /* metallic gold */
   --bg:      #fafce9;    /* soft lavender-tinted white */
   --bg-2:    #fdb3e9;    /* gentle lavender wash */
@@ -17,6 +17,7 @@
   --text-1: #2d2d2d;     /* primary text */
   --text-2: white;       /* inverted text */
   --text-accent: #d4af37;/* gold as text accent */
+
 }
 
 .loading-span{
@@ -688,4 +689,17 @@ button:disabled,
 button[disabled]{
   background-color: gray !important;
   cursor: not-allowed !important;
+}
+.admin-image-preview{
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.feature-image{
+  max-height: 300px;
+    object-fit: cover;
+}
+.card-solid{
+    background-color: var(--bg);
+    color: var(--text-1);
 }

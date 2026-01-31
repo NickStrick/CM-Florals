@@ -3,6 +3,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import type { Product, ProductListingsSection } from '@/types/site';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 import ProductImagesEditor from './ProductImagesEditor';
 import ProductFeaturesEditor from './ProductFeaturesEditor';
 import ProductSpecsEditor from './ProductSpecsEditor';
@@ -91,7 +92,7 @@ export default function ProductCardEditor({
   };
 
   return (
-    <div className="card p-4 space-y-4">
+    <div className="card card-solid p-4 space-y-4">
       <div className="flex items-center gap-2">
         <div className="font-semibold">{product.name || 'Untitled Product'}</div>
         <div className="text-xs opacity-70">({product.id})</div>
@@ -187,6 +188,19 @@ export default function ProductCardEditor({
       {/* Thumbnail */}
       <div className="space-y-2">
         <label className="block text-sm font-medium">Thumbnail URL</label>
+        <div className="h-28 w-28 aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+          {product.thumbnailUrl ? (
+            <img
+              src={resolveAssetUrl(product.thumbnailUrl) ?? product.thumbnailUrl}
+              alt="Image preview"
+              className="admin-image-preview"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-xs text-muted">
+              No image selected
+            </div>
+          )}
+        </div>
         <div className="flex gap-2">
           <input
             className="input flex-1"

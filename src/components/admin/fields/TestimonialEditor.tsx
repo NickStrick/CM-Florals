@@ -1,5 +1,6 @@
 // --- add near your other imports ---
 import type { AnySection, TestimonialsSection, TestimonialItem } from '@/types/site';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 // If you already have EditorProps / EditorSharedProps and deepClone in this file, reuse them.
@@ -101,7 +102,7 @@ export function EditTestimonials({
       {/* Items list */}
       <div className="space-y-3">
         {items.map((it, i) => (
-          <div key={`${i}-${'item'}`} className="card p-3 space-y-3">
+          <div key={`${i}-${'item'}`} className="card card-solid p-3 space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-sm opacity-70">Item #{i + 1}</div>
               <div className="flex gap-2">
@@ -163,8 +164,21 @@ export function EditTestimonials({
                 />
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 space-y-2">
                 <label className="block text-sm font-medium">Avatar URL</label>
+                <div className="h-28 w-28 aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                  {it.avatarUrl ? (
+                    <img
+                      src={resolveAssetUrl(it.avatarUrl) ?? it.avatarUrl}
+                      alt="Image preview"
+                      className="admin-image-preview"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-xs text-muted">
+                      No image selected
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <input
                     className="input flex-1"

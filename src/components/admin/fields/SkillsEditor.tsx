@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import type { SkillsSection, SkillItem } from '@/types/site';
 import type { EditorProps } from './types';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 // small immutable helper (kept consistent with your other editors)
@@ -117,7 +118,7 @@ export default function EditSkills({
       {/* Items list */}
       <div className="space-y-3">
         {items.map((it, i) => (
-          <div key={`skill-${i}`} className="card p-3 space-y-3">
+          <div key={`skill-${i}`} className="card card-solid p-3 space-y-3">
             <div className="grid md:grid-cols-[1fr_auto_auto_auto] gap-2">
               <input
                 className="input"
@@ -160,8 +161,21 @@ export default function EditSkills({
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <label className="block text-sm font-medium">Image URL (optional)</label>
+              <div className="h-28 w-28 aspect-square overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                {it.imageUrl ? (
+                  <img
+                    src={resolveAssetUrl(it.imageUrl) ?? it.imageUrl}
+                    alt="Image preview"
+                    className="admin-image-preview"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-xs text-muted">
+                    No image selected
+                  </div>
+                )}
+              </div>
               <div className="flex gap-2">
                 <input
                   className="input flex-1"

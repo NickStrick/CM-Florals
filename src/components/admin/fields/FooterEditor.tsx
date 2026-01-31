@@ -161,7 +161,7 @@ export default function EditFooter({
         {columns.map((col, ci) => {
           const links = col.links ?? [];
           return (
-            <div key={`footer-col-${ci}`} className="card p-3 space-y-3">
+            <div key={`footer-col-${ci}`} className="card card-solid p-3 space-y-3">
               <div className="flex items-center gap-2">
                 <input
                   className="input flex-1"

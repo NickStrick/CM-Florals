@@ -22,7 +22,7 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
                 <div className={`p-7 ${ink ? 'card-ink' : 'card'}`}>
                   {fimgUrl ? (
                     <div className={` rounded-[var(--round-xl)] aspect-square overflow-hidden mb-4 mx-auto ${fimgUrl === 'sm' ? 'w-16 h-16' : fimgUrl === 'md' ? 'w-24 h-24' : fimgUrl === 'lg' ? 'w-[100%] h-auto' : 'w-full h-full' }`}>
-                      <Image src={fimgUrl} alt="" width={980} height={740} className="w-full h-auto" loading='eager' />
+                      <Image src={fimgUrl} alt="" width={980} height={740} className="w-full h-auto feature-image" loading='eager' />
                       </div>) : null}
                   <div className={`text-2xl font-bold mb-2 ${ink ? 'text-[var(--text-2)]' : 'text-[var(--text-1)]'}`}>{f.title}</div>
                   {f.body ? <p className={`${ink ? 'text-[var(--text-2)]/90' : 'text-[var(--text-1)]'}`}>{f.body}</p> : null}
