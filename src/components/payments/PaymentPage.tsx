@@ -176,7 +176,7 @@ export default function PaymentPage({
                   })}
                 </div>
 
-                {googleFormUrl && (
+                {/* {googleFormUrl && (
                   <div className="mt-4 text-sm text-gray-600">
                     Optional: also submit these details via Google Form.
                     <a
@@ -188,7 +188,7 @@ export default function PaymentPage({
                       Open Form
                     </a>
                   </div>
-                )}
+                )} */}
               </div>
             )}
 
