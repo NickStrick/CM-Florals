@@ -35,11 +35,13 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
   // Working copy (nullable until config is ready)
   const [draft, setDraft] = useState<SiteConfig | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const originalRef = useRef<SiteConfig | null>(null);
 
   useEffect(() => {
     if (config) {
       const copy = deepClone(config);
       setDraft(copy);
+      originalRef.current = copy;
       setSelectedIndex(0); // default to first section on open/load
     }
   }, [config]);
@@ -52,6 +54,10 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDirty = useMemo(() => {
+    if (!draft || !originalRef.current) return false;
+    return JSON.stringify(draft) !== JSON.stringify(originalRef.current);
+  }, [draft]);
 
   // ---------------------------
   // MediaPicker bridge (Promise-based)
@@ -190,6 +196,7 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
 
       const saved: SiteConfig = await res.json();
       setConfig(saved);
+      originalRef.current = deepClone(saved);
       onClose();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to save.';
@@ -198,6 +205,13 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
       setSaving(false);
     }
   }, [draft, onClose, setConfig, siteId]);
+
+  const onRestore = useCallback(() => {
+    if (!originalRef.current) return;
+    const restored = deepClone(originalRef.current);
+    setDraft(restored);
+    setSelectedIndex(0);
+  }, []);
 
   // ---------------------------
   // Single-section editor renderer
@@ -290,6 +304,11 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
           <div className="font-semibold text-lg">Edit Site Content</div>
           <div className="flex items-center gap-2 save-config-btns">
             {error && <div className="text-red-600 text-sm mr-3">{error}</div>}
+            {isDirty && (
+              <button className="btn btn-ghost" onClick={onRestore}>
+                Restore
+              </button>
+            )}
             <button className="btn btn-ghost" onClick={onClose}>
               Cancel
             </button>
