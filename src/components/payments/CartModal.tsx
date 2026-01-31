@@ -87,8 +87,9 @@ export default function CartModal() {
           Proceed to Secure Checkout
         </button>)
         : (<><div className="text-center text-gray-600">Add items to your cart to proceed to checkout.</div>
-          <button className="w-full btn-gradient text-white py-4 rounded-xl font-bold transition-all" onClick={() => { closeCart(); window.location.href = '/#products'; }}>View Products</button>
+          
         </>)}
+        <button className="w-full btn-gradient text-white py-4 rounded-xl font-bold transition-all" onClick={() => { closeCart(); window.location.href = '#products'; }}>View More Products</button>
       </div>
     </div></>
   );
