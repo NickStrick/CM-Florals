@@ -584,9 +584,11 @@ export type ProductListingsSection = SectionBase & {
   cartActive?: boolean;        // default false
   checkoutInputs?: CheckoutInput[];
   googleFormUrl?: string;
-  paymentType?: 'converge' | 'externalLink';
+  paymentType?: 'converge' | 'clover' | 'externalLink';
   externalPaymentUrl?: string;
   googleFormOptions?: GoogleFormOptions;
+  supportEmail?: string;
+  supportPhone?: { label: string; href: string };
 };
 
 export type PersonItem = {

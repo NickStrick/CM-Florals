@@ -99,7 +99,9 @@ export const mockSiteConfig: SiteConfig = {
       showAllThreshold: 20,
       buyCtaFallback: "Buy Now",
       cartActive: true,
-      paymentType: "externalLink",
+      paymentType: "clover",
+      supportEmail: "shop@cmfloralsandgifts.com",
+      supportPhone: {label: "Call us at 773-209-4805", href: phoneHref},
       googleFormOptions:{
         addItemToGForm: true,
         itemsEntryId: "entry.918647669",
@@ -670,7 +672,7 @@ columns: 2,
           ],
         },
         {
-          title: "Connect",
+          title: "Support and Connect",
           links: [
             { label: "shop@cmfloralsandgifts.com", href: 'mailto:shop@cmfloralsandgifts.com' },
             { label: "Instagram", href: instagramHref },

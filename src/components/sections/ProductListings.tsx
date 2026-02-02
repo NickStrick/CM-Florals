@@ -34,6 +34,8 @@ export default function ProductListings({
   googleFormOptions,
   paymentType,
   externalPaymentUrl,
+  supportEmail,
+  supportPhone,
   style,
   showAllThreshold = 3,
   buyCtaFallback = 'Buy Now',
@@ -61,6 +63,8 @@ export default function ProductListings({
         googleFormOptions={googleFormOptions}
         paymentType={paymentType}
         externalPaymentUrl={externalPaymentUrl}
+        supportEmail={supportEmail}
+        supportPhone={supportPhone}
       />
     )}
     <section id={id} className="section sectionAboveWavePad">

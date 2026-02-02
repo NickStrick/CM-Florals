@@ -384,9 +384,10 @@ export default function EditProductListings({
             <select
               className="select w-full"
               value={section.paymentType ?? 'converge'}
-              onChange={(e) => setSectionField('paymentType', e.target.value as 'converge' | 'externalLink')}
+              onChange={(e) => setSectionField('paymentType', e.target.value as 'converge' | 'clover' | 'externalLink')}
             >
               <option value="converge">converge</option>
+              <option value="clover">clover</option>
               <option value="externalLink">externalLink</option>
             </select>
           </div>

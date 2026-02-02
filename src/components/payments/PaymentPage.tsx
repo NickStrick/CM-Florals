@@ -3,7 +3,7 @@
 
 import { useState, type ChangeEvent } from 'react';
 import PaymentForm from './PaymentForm';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, CheckCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { CheckoutInput, GoogleFormOptions } from '@/types/site';
 
@@ -21,17 +21,29 @@ export default function PaymentPage({
   googleFormOptions,
   paymentType = 'converge',
   externalPaymentUrl,
+  supportEmail,
+  supportPhone,
 }: {
   token?: string;
   checkoutInputs?: CheckoutInput[];
   googleFormUrl?: string;
   googleFormOptions?: GoogleFormOptions;
-  paymentType?: 'converge' | 'externalLink';
+  paymentType?: 'converge' | 'clover' | 'externalLink';
   externalPaymentUrl?: string;
+  supportEmail?: string;
+  supportPhone?: { label: string; href: string };
 }) {
   const { items, totalCents, currency, isCheckoutOpen, closeCheckout, addItem, removeItem } = useCart();
   const convergeToken = token ?? process.env.NEXT_PUBLIC_CONVERGE_TOKEN ?? '';
+  const cloverToken = process.env.NEXT_PUBLIC_CLOVER_TOKEN ?? '';
+  const convergeScriptUrl = process.env.NEXT_PUBLIC_CONVERGE_IFRAME_URL ?? '';
+  const cloverScriptUrl = process.env.NEXT_PUBLIC_CLOVER_IFRAME_URL ?? '';
+  const paymentToken = paymentType === 'clover' ? cloverToken : convergeToken;
+  const paymentScriptUrl = paymentType === 'clover' ? cloverScriptUrl : convergeScriptUrl;
+  const missingPaymentConfig =
+    paymentType !== 'externalLink' && (!paymentToken || !paymentScriptUrl);
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  const [purchaseComplete, setPurchaseComplete] = useState(false);
   const requiredFields = (checkoutInputs ?? []).filter((f) => f.required);
   const missingRequired = requiredFields.some((f) => {
     const value = (customValues[f.id] ?? '').trim();
@@ -39,6 +51,35 @@ export default function PaymentPage({
   });
 
   if (!isCheckoutOpen) return null;
+
+  const submitCloverPayment = async (sourceToken: string) => {
+    const payload = {
+      amount: totalCents,
+      currency,
+      source: sourceToken,
+      items,
+      customer: customValues,
+    };
+
+    const res = await fetch('/api/payments/clover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      let message = 'Clover payment failed.';
+      try {
+        const data = await res.json();
+        if (data?.error) message = data.error;
+      } catch {
+        // ignore json parsing failures
+      }
+      throw new Error(message);
+    }
+
+    setPurchaseComplete(true);
+  };
 
   const submitToGoogleForm = async () => {
     if (!googleFormUrl) return;
@@ -74,9 +115,59 @@ export default function PaymentPage({
       // no-op: form submission is best-effort in no-cors mode
     }
   };
-
+  console.log('PaymentPage config:', { paymentType, paymentToken, paymentScriptUrl });
   return (
     <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      {purchaseComplete && (
+        <div className="fixed inset-0 z-[7000] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-md mx-4 rounded-3xl bg-white p-8 shadow-2xl text-center">
+            <button
+              onClick={() => {
+                setPurchaseComplete(false);
+                closeCheckout();
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-black"
+              aria-label="Close purchase complete"
+            >
+              <X size={20} />
+            </button>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+              <CheckCircle size={28} className="text-emerald-600" />
+            </div>
+            <h3 className="mt-4 text-2xl font-bold">Purchase complete</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Thanks for your order! If you need help with your purchase, reach us below.
+            </p>
+            <div className="mt-5 space-y-2 text-sm">
+              {supportEmail && (
+                <div>
+                  Email:{' '}
+                  <a className="text-emerald-700 hover:text-emerald-800 underline" href={`mailto:${supportEmail}`}>
+                    {supportEmail}
+                  </a>
+                </div>
+              )}
+              {supportPhone?.label && supportPhone?.href && (
+                <div>
+                  Phone:{' '}
+                  <a className="text-emerald-700 hover:text-emerald-800 underline" href={supportPhone.href}>
+                    {supportPhone.label}
+                  </a>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setPurchaseComplete(false);
+                closeCheckout();
+              }}
+              className="mt-6 w-full rounded-2xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <div className="relative w-full max-w-5xl mx-4 bg-white rounded-3xl shadow-2xl p-1 md:p-10 max-h-[100vh] overflow-y-auto checkout-container">
         <button
           onClick={closeCheckout}
@@ -132,9 +223,6 @@ export default function PaymentPage({
                 </div>
               </div>
             )}
-          </section>
-
-          <section className="max-w-[100%]">
             {checkoutInputs && checkoutInputs.length > 0 && (
               <div className="mb-8 rounded-2xl border border-gray-100 p-6">
                 <h2 className="text-2xl font-bold mb-4">Order Details</h2>
@@ -191,8 +279,19 @@ export default function PaymentPage({
                 )} */}
               </div>
             )}
+          </section>
+
+          <section className="max-w-[100%]">
+            
 
             <h2 className="text-2xl font-bold mb-4 ml-4 md:ml-1">Payment</h2>
+            {missingPaymentConfig && (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                Payment configuration is missing. Set the {paymentType === 'clover'
+                  ? 'NEXT_PUBLIC_CLOVER_TOKEN and NEXT_PUBLIC_CLOVER_IFRAME_URL'
+                  : 'NEXT_PUBLIC_CONVERGE_TOKEN and NEXT_PUBLIC_CONVERGE_IFRAME_URL'} env vars.
+              </div>
+            )}
             {paymentType === 'externalLink' ? (
               <button
                 type="button"
@@ -208,11 +307,17 @@ export default function PaymentPage({
               >
                 Continue to Payment
               </button>
-            ) : (
-              <PaymentForm token={convergeToken} onPay={submitToGoogleForm} disabled={missingRequired} />
-            )}
+            ) : !missingPaymentConfig ? (
+              <PaymentForm
+                token={paymentToken}
+                paymentType={paymentType}
+                onPay={submitToGoogleForm}
+                onCloverToken={paymentType === 'clover' ? submitCloverPayment : undefined}
+                disabled={missingRequired}
+              />
+            ) : null}
           </section>
-        </div>
+        </div>  
       </div>
     </div>
   );
