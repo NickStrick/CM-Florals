@@ -101,7 +101,7 @@ export const mockSiteConfig: SiteConfig = {
       cartActive: true,
       paymentType: "clover",
       supportEmail: "shop@cmfloralsandgifts.com",
-      supportPhone: {label: "Call us at 773-209-4805", href: phoneHref},
+      supportPhone: {label: "Call or Text 773-209-4805", href: phoneHref},
       googleFormOptions:{
         addItemToGForm: true,
         itemsEntryId: "entry.918647669",
