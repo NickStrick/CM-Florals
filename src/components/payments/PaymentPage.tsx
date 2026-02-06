@@ -366,7 +366,7 @@ export default function PaymentPage({
                         className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
                           fulfillment === 'pickup'
                             ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            : 'border-[var(--accent)] text-gray-600 hover:border-[var(--primary)]'
                         }`}
                       >
                         
@@ -379,7 +379,7 @@ export default function PaymentPage({
                         className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
                           fulfillment === 'delivery'
                             ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            : 'border-[var(--accent)] text-gray-600 hover:border-[var(--primary)]'
                         }`}
                       >
                         
