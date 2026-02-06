@@ -34,7 +34,7 @@ export default function AdminBar() {
   }, [kind, siteId]);
 
   return (
-    <>
+    <div data-admin-ui="true">
       <div className="fixed right-4 top-4 z-[10000]">
         <div className="card card-solid px-4 py-3 flex flex-wrap items-center gap-3">
           <span className="font-semibold">Admin Mode</span>
@@ -101,6 +101,6 @@ export default function AdminBar() {
 
       {/* Config editor modal */}
       {showConfig && <ConfigModal onClose={() => setShowConfig(false)} />}
-    </>
+    </div>
   );
 }

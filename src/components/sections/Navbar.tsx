@@ -6,6 +6,7 @@ import { Menu, X } from 'lucide-react';
 import { useSite } from '@/context/SiteContext';
 import type { HeaderSection } from '@/types/site';
 import Image from 'next/image';
+import { handleHashClick } from '@/lib/scrollToHash';
 
 export default function Navbar() {
   const { config } = useSite();
@@ -111,6 +112,11 @@ export default function Navbar() {
 
   // Close menu on nav click (mobile)
   const onNav = () => setOpen(false);
+  const handleAnchorClick = (href: string, closeMenu: boolean) =>
+    handleHashClick(href, {
+      setActiveHref,
+      onAfterScroll: closeMenu ? onNav : undefined,
+    });
 
   return (
     <>
@@ -143,7 +149,7 @@ export default function Navbar() {
                 <Link
                   href={l.href}
                   className="relative inline-flex flex-col items-center gap-2 hover:text-fg transition-colors text-nowrap"
-                  onClick={() => setActiveHref(l.href)}
+                  onClick={handleAnchorClick(l.href, false)}
                 >
                   <span>{l.label}</span>
                   <div
@@ -195,10 +201,7 @@ export default function Navbar() {
                 <Link
                   href={l.href}
                   className="block py-2 text-fg/80 hover:text-fg text-nowrap"
-                  onClick={() => {
-                    setActiveHref(l.href);
-                    onNav();
-                  }}
+                  onClick={handleAnchorClick(l.href, true)}
                 >
                   <span className="inline-flex flex-col items-start gap-2">
                     {l.label}

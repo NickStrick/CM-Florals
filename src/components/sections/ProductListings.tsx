@@ -36,6 +36,8 @@ export default function ProductListings({
   externalPaymentUrl,
   supportEmail,
   supportPhone,
+  taxes,
+  delivery,
   style,
   showAllThreshold = 3,
   buyCtaFallback = 'Buy Now',
@@ -65,6 +67,8 @@ export default function ProductListings({
         externalPaymentUrl={externalPaymentUrl}
         supportEmail={supportEmail}
         supportPhone={supportPhone}
+        taxes={taxes}
+        delivery={delivery}
       />
     )}
     <section id={id} className="section sectionAboveWavePad">
@@ -156,7 +160,19 @@ export default function ProductListings({
                       className={cls(
                         'btn mt-6 w-full justify-center', 'btn-gradient btn-white-outline' 
                       )}
-                      onClick={() => { addItem({ id: p.id, name: p.name, price: p.price, currency: p.currency, imageUrl: thumb ?? undefined }); openCart(); }}
+                      onClick={() => {
+                        const defaultTaxable = taxes?.defaultProductTaxable === true;
+                        const taxable = typeof p.taxable === 'boolean' ? p.taxable : defaultTaxable;
+                        addItem({
+                          id: p.id,
+                          name: p.name,
+                          price: p.price,
+                          currency: p.currency,
+                          imageUrl: thumb ?? undefined,
+                          taxable,
+                        });
+                        openCart();
+                      }}
                       aria-label={`Add ${p.name} to cart`}
                     >
                         Add to Cart

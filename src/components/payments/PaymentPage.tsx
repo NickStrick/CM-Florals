@@ -1,9 +1,9 @@
 // src/components/payments/PaymentPage.tsx
 'use client';
 
-import { useState, type ChangeEvent } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import PaymentForm from './PaymentForm';
-import { X, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { X, Plus, Trash2, CheckCircle, Check, ArrowBigLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { CheckoutInput, GoogleFormOptions } from '@/types/site';
 
@@ -23,6 +23,8 @@ export default function PaymentPage({
   externalPaymentUrl,
   supportEmail,
   supportPhone,
+  taxes,
+  delivery,
 }: {
   token?: string;
   checkoutInputs?: CheckoutInput[];
@@ -32,6 +34,26 @@ export default function PaymentPage({
   externalPaymentUrl?: string;
   supportEmail?: string;
   supportPhone?: { label: string; href: string };
+  taxes?: {
+    enabled?: boolean;
+    ratePercent?: number;
+    taxShipping?: boolean;
+    defaultProductTaxable?: boolean;
+  };
+  delivery?: {
+    enabled?: boolean;
+    appsScriptUrl?: string;
+    type?: 'flat' | 'uber' | 'doordash';
+    flatFeeCents?: number;
+    mode?: 'pickup' | 'delivery' | 'both';
+    addressCapture?: {
+      enabled?: boolean;
+      required?: boolean;
+      method?: 'googleForm' | 's3';
+      googleFormEntryId?: string;
+      s3Prefix?: string;
+    };
+  };
 }) {
   const { items, totalCents, currency, isCheckoutOpen, closeCheckout, addItem, removeItem } = useCart();
   const convergeToken = token ?? process.env.NEXT_PUBLIC_CONVERGE_TOKEN ?? '';
@@ -44,17 +66,84 @@ export default function PaymentPage({
     paymentType !== 'externalLink' && (!paymentToken || !paymentScriptUrl);
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [purchaseComplete, setPurchaseComplete] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const requiredFields = (checkoutInputs ?? []).filter((f) => f.required);
   const missingRequired = requiredFields.some((f) => {
     const value = (customValues[f.id] ?? '').trim();
     return value.length === 0;
   });
+  const hasDetailsStep = Boolean(checkoutInputs && checkoutInputs.length > 0);
+  const steps = ([
+    hasDetailsStep ? { key: 'details', label: 'Details' } : null,
+    { key: 'payment', label: 'Payment' },
+  ].filter(Boolean) as Array<{ key: 'details' | 'payment'; label: string }>);
+  const [stepIndex, setStepIndex] = useState(0);
+
+  const taxableSubtotalCents = items.reduce((sum, item) => {
+    const taxable = typeof item.taxable === 'boolean' ? item.taxable : taxes?.defaultProductTaxable === true;
+    return taxable ? sum + item.price * item.quantity : sum;
+  }, 0);
+  const taxRate = Math.max(0, Number(taxes?.ratePercent ?? 0));
+  const deliveryMode = delivery?.mode ?? 'both';
+  const [fulfillment, setFulfillment] = useState<'pickup' | 'delivery'>(
+    deliveryMode === 'delivery' ? 'delivery' : 'pickup'
+  );
+  useEffect(() => {
+    if (deliveryMode === 'pickup') setFulfillment('pickup');
+    if (deliveryMode === 'delivery') setFulfillment('delivery');
+  }, [deliveryMode]);
+
+  useEffect(() => {
+    if (stepIndex >= steps.length) {
+      setStepIndex(Math.max(0, steps.length - 1));
+    }
+  }, [stepIndex, steps.length]);
 
   if (!isCheckoutOpen) return null;
 
+  const addressCaptureEnabled = delivery?.addressCapture?.enabled === true;
+  const addressRequired = delivery?.addressCapture?.required !== false;
+  const needsDeliveryAddress =
+    delivery?.enabled && addressCaptureEnabled && fulfillment === 'delivery';
+  const missingDeliveryAddress =
+    needsDeliveryAddress &&
+    (deliveryAddress.trim().length === 0 || !deliveryConfirmed) &&
+    addressRequired;
+  const deliveryFeeCents =
+    delivery?.enabled &&
+    deliveryMode !== 'pickup' &&
+    fulfillment === 'delivery' &&
+    delivery?.type === 'flat'
+      ? Math.max(0, Number(delivery.flatFeeCents ?? 0))
+      : 0;
+  const taxBaseCents = taxableSubtotalCents + (taxes?.taxShipping ? deliveryFeeCents : 0);
+  const taxCents = taxes?.enabled ? Math.round(taxBaseCents * (taxRate / 100)) : 0;
+  const totalWithFeesCents = totalCents + taxCents + deliveryFeeCents;
+
+  const submitDeliveryAddress = async () => {
+    if (!needsDeliveryAddress) return;
+    const method = delivery?.addressCapture?.method ?? 'googleForm';
+    if (method !== 's3') return;
+
+    const payload = {
+      address: deliveryAddress.trim(),
+      confirmed: deliveryConfirmed,
+      fulfillment,
+      siteId: process.env.NEXT_PUBLIC_SITE_ID ?? '',
+      s3Prefix: delivery?.addressCapture?.s3Prefix ?? '',
+    };
+
+    await fetch('/api/orders/delivery-address', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  };
+
   const submitCloverPayment = async (sourceToken: string) => {
     const payload = {
-      amount: totalCents,
+      amount: totalWithFeesCents,
       currency,
       source: sourceToken,
       items,
@@ -93,6 +182,13 @@ export default function PaymentPage({
       }
     });
 
+    if (needsDeliveryAddress && delivery?.addressCapture?.method === 'googleForm') {
+      const entryId = delivery?.addressCapture?.googleFormEntryId;
+      if (entryId) {
+        formData.append(entryId, deliveryAddress.trim());
+      }
+    }
+
     if (googleFormOptions?.addItemToGForm) {
       if (googleFormOptions.itemsEntryId) {
         const itemsPayload = items.map((item) => ({
@@ -105,7 +201,7 @@ export default function PaymentPage({
         formData.append(googleFormOptions.itemsEntryId, JSON.stringify(itemsPayload));
       }
       if (googleFormOptions.totalEntryId) {
-        formData.append(googleFormOptions.totalEntryId, (totalCents / 100).toFixed(2));
+        formData.append(googleFormOptions.totalEntryId, (totalWithFeesCents / 100).toFixed(2));
       }
     }
 
@@ -114,6 +210,10 @@ export default function PaymentPage({
     } catch {
       // no-op: form submission is best-effort in no-cors mode
     }
+  };
+  const submitCheckoutSideEffects = async () => {
+    await submitToGoogleForm();
+    await submitDeliveryAddress();
   };
   console.log('PaymentPage config:', { paymentType, paymentToken, paymentScriptUrl });
   return (
@@ -202,7 +302,7 @@ export default function PaymentPage({
                       {formatPrice(item.price * item.quantity, item.currency ?? currency)}
                     </span>
                     <button
-                      onClick={() => addItem({ id: item.id, name: item.name, price: item.price, currency: item.currency, imageUrl: item.imageUrl })}
+                      onClick={() => addItem({ id: item.id, name: item.name, price: item.price, currency: item.currency, imageUrl: item.imageUrl, taxable: item.taxable })}
                       className="text-gray-400 hover:text-emerald-600 transition-colors"
                       aria-label={`Add one more ${item.name}`}
                     >
@@ -217,17 +317,87 @@ export default function PaymentPage({
                     </button>
                   </div>
                 ))}
-                <div className="flex justify-between border-t pt-3 text-lg font-semibold">
-                  <span>Total</span>
-                  <span>{formatPrice(totalCents, currency)}</span>
+                <div className="border-t pt-3 space-y-2 text-sm">
+                  {taxes?.enabled || delivery?.enabled ? (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="font-medium">{formatPrice(totalCents, currency)}</span>
+                    </div>
+                  ) : null}
+                  {taxes?.enabled && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tax</span>
+                      <span className="font-medium">{formatPrice(taxCents, currency)}</span>
+                    </div>
+                  )}
+                  {delivery?.enabled && delivery?.type === 'flat' && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Delivery</span>
+                      <span className="font-medium">{formatPrice(deliveryFeeCents, currency)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-semibold pt-2">
+                    <span>Total</span>
+                    <span>{formatPrice(totalWithFeesCents, currency)}</span>
+                  </div>
                 </div>
               </div>
             )}
-            {checkoutInputs && checkoutInputs.length > 0 && (
-              <div className="mb-8 rounded-2xl border border-gray-100 p-6">
+            
+          </section>
+
+          <section className="max-w-[100%]" id="checkout-right-section">
+            {steps[stepIndex]?.key === 'details' && hasDetailsStep && (
+              <div className="mb-8 rounded-2xl border border-gray-100 p-6" id="checkout-details-form">
                 <h2 className="text-2xl font-bold mb-4">Order Details</h2>
+                {delivery?.enabled && deliveryMode === 'both' && (
+                  <div className="mb-4 rounded-xl border border-gray-100 p-4">
+                    <div className="text-sm font-semibold mb-2">Fulfillment</div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFulfillment('pickup')}
+                        className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
+                          fulfillment === 'pickup'
+                            ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        
+                        Pickup
+                        {fulfillment === 'pickup' && <Check size={22} className="text-emerald-600 payment-check" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFulfillment('delivery')}
+                        className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
+                          fulfillment === 'delivery'
+                            ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        
+                        Delivery
+                        {fulfillment === 'delivery' && <Check size={22} className="text-emerald-600 payment-check" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {delivery?.enabled && fulfillment === 'delivery' && addressCaptureEnabled && (
+                  <div className="mb-4 rounded-xl border border-gray-100 p-4">
+                    <div className="text-sm font-semibold mb-2">Delivery Address</div>
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                      placeholder="Enter delivery address"
+                      autoComplete="street-address"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                    />
+                  </div>
+                )}
                 <div className="grid gap-4">
-                  {checkoutInputs.map((field) => {
+                  {checkoutInputs?.map((field) => {
                     const commonProps = {
                       id: field.id,
                       name: field.id,
@@ -264,27 +434,30 @@ export default function PaymentPage({
                   })}
                 </div>
 
-                {/* {googleFormUrl && (
-                  <div className="mt-4 text-sm text-gray-600">
-                    Optional: also submit these details via Google Form.
-                    <a
-                      href={googleFormUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-2 text-emerald-700 hover:text-emerald-800 font-medium"
-                    >
-                      Open Form
-                    </a>
-                  </div>
-                )} */}
+                  <button
+                    type="button"
+                    onClick={() => setStepIndex(Math.min(stepIndex + 1, steps.length - 1))}
+                    disabled={missingRequired || missingDeliveryAddress}
+                    aria-disabled={missingRequired || missingDeliveryAddress}
+                    className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all"
+                  >
+                    Continue to Payment
+                  </button>
               </div>
             )}
-          </section>
-
-          <section className="max-w-[100%]">
-            
-
+            {steps[stepIndex]?.key === 'payment' && (
+              <div id="checkout-payment-section">
             <h2 className="text-2xl font-bold mb-4 ml-4 md:ml-1">Payment</h2>
+            {hasDetailsStep && (
+              <button
+                type="button"
+                onClick={() => setStepIndex(Math.max(0, stepIndex - 1))}
+                className="flex justify-center items-center mb-4 text-sm font-medium text-emerald-700 hover:text-emerald-800"
+              >
+                <ArrowBigLeft size={28} className="text-emerald-700" />
+                <span className="ml-1 flex justify-center items-center">Back to details</span> 
+              </button>
+            )}
             {missingPaymentConfig && (
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                 Payment configuration is missing. Set the {paymentType === 'clover'
@@ -296,13 +469,13 @@ export default function PaymentPage({
               <button
                 type="button"
                 onClick={async () => {
-                  await submitToGoogleForm();
+                  await submitCheckoutSideEffects();
                   if (externalPaymentUrl) {
                     window.open(externalPaymentUrl, '_blank', 'noopener,noreferrer');
                   }
                 }}
-                disabled={missingRequired}
-                aria-disabled={missingRequired}
+                disabled={missingRequired || missingDeliveryAddress}
+                aria-disabled={missingRequired || missingDeliveryAddress}
                 className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all"
               >
                 Continue to Payment
@@ -311,11 +484,13 @@ export default function PaymentPage({
               <PaymentForm
                 token={paymentToken}
                 paymentType={paymentType}
-                onPay={submitToGoogleForm}
+                onPay={submitCheckoutSideEffects}
                 onCloverToken={paymentType === 'clover' ? submitCloverPayment : undefined}
-                disabled={missingRequired}
+                disabled={missingRequired || missingDeliveryAddress}
               />
             ) : null}
+              </div>
+            )}
           </section>
         </div>  
       </div>

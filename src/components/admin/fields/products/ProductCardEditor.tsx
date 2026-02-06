@@ -367,6 +367,16 @@ export default function ProductCardEditor({
           </select>
         </div>
       </div>
+      <div className="grid md:grid-cols-3 gap-3">
+        <label className="flex items-end gap-2">
+          <input
+            type="checkbox"
+            checked={product.taxable === true}
+            onChange={(e) => onUpdate({ taxable: e.target.checked })}
+          />
+          <span>Taxable</span>
+        </label>
+      </div>
 
       <div className="grid md:grid-cols-4 gap-3">
         <div>

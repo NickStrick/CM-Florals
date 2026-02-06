@@ -10,6 +10,7 @@ export type CartItem = {
   currency?: string;
   imageUrl?: string;
   quantity: number;
+  taxable?: boolean;
 };
 
 type CartCtx = {

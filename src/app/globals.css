@@ -4,7 +4,7 @@
 
 /* src/app/globals.css  (append to yours) */
 :root {
- --primary: rgb(255, 39, 190);    /* vibrant lavender/purple */
+  --primary: rgb(255, 39, 190);    /* vibrant lavender/purple */
   --accent:  #9a01c9;    /* metallic gold */
   --bg:      #fafce9;    /* soft lavender-tinted white */
   --bg-2:    #fdb3e9;    /* gentle lavender wash */
@@ -702,4 +702,18 @@ button[disabled]{
 .card-solid{
     background-color: var(--bg);
     color: var(--text-1);
+}
+.payment-check{
+  position: absolute;
+    top: 50%;
+    right: 15%;
+    transform: translate(-50%, -50%);
+}
+@media (max-width: 928px) {
+    .payment-check{
+      position: static;
+      display: inline;
+      transform: none;
+      margin-left: 6px;
+  }
 }

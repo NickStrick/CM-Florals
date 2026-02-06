@@ -413,6 +413,239 @@ export default function EditProductListings({
           />
         </div>
 
+        <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+          <div className="text-sm font-semibold">Taxes</div>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={section.taxes?.enabled === true}
+              onChange={(e) =>
+                setSectionField('taxes', {
+                  ...section.taxes,
+                  enabled: e.target.checked,
+                })
+              }
+            />
+            <span>Enable taxes</span>
+          </label>
+          <div className="grid md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium">Tax rate %</label>
+              <input
+                type="number"
+                className="input w-full"
+                value={section.taxes?.ratePercent ?? 0}
+                onChange={(e) =>
+                  setSectionField('taxes', {
+                    ...section.taxes,
+                    ratePercent: Number(e.target.value) || 0,
+                  })
+                }
+                placeholder="0"
+              />
+            </div>
+            <label className="flex items-end gap-2">
+              <input
+                type="checkbox"
+                checked={section.taxes?.taxShipping === true}
+                onChange={(e) =>
+                  setSectionField('taxes', {
+                    ...section.taxes,
+                    taxShipping: e.target.checked,
+                  })
+                }
+              />
+              <span>Tax shipping/delivery fee</span>
+            </label>
+            <label className="flex items-end gap-2">
+              <input
+                type="checkbox"
+                checked={section.taxes?.defaultProductTaxable === true}
+                onChange={(e) =>
+                  setSectionField('taxes', {
+                    ...section.taxes,
+                    defaultProductTaxable: e.target.checked,
+                  })
+                }
+              />
+              <span>Default product taxable</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-gray-200 p-4 space-y-3">
+          <div className="text-sm font-semibold">Delivery</div>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={section.delivery?.enabled === true}
+              onChange={(e) =>
+                setSectionField('delivery', {
+                  ...section.delivery,
+                  enabled: e.target.checked,
+                })
+              }
+            />
+            <span>Enable merchant delivery</span>
+          </label>
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium">Delivery Type</label>
+              <select
+                className="select w-full"
+                value={section.delivery?.type ?? 'flat'}
+                onChange={(e) =>
+                  setSectionField('delivery', {
+                    ...section.delivery,
+                    type: e.target.value as 'flat' | 'uber' | 'doordash',
+                  })
+                }
+              >
+                <option value="flat">Flat</option>
+                <option value="uber">Uber</option>
+                <option value="doordash">DoorDash</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Delivery Mode</label>
+              <select
+                className="select w-full"
+                value={section.delivery?.mode ?? 'both'}
+                onChange={(e) =>
+                  setSectionField('delivery', {
+                    ...section.delivery,
+                    mode: e.target.value as 'pickup' | 'delivery' | 'both',
+                  })
+                }
+              >
+                <option value="both">Pickup + Delivery</option>
+                <option value="pickup">Pickup only</option>
+                <option value="delivery">Delivery only</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Apps Script Web App URL</label>
+              <input
+                className="input w-full"
+                value={section.delivery?.appsScriptUrl ?? ''}
+                onChange={(e) =>
+                  setSectionField('delivery', {
+                    ...section.delivery,
+                    appsScriptUrl: e.target.value,
+                  })
+                }
+                placeholder="https://script.google.com/macros/s/..."
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Delivery fee (cents)</label>
+            <input
+              type="number"
+              className="input w-full"
+              value={section.delivery?.flatFeeCents ?? 0}
+              onChange={(e) =>
+                setSectionField('delivery', {
+                  ...section.delivery,
+                  flatFeeCents: Math.max(0, Number(e.target.value) || 0),
+                })
+              }
+              placeholder="0"
+            />
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-3 space-y-3">
+            <div className="text-sm font-semibold">Delivery Address</div>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={section.delivery?.addressCapture?.enabled === true}
+                onChange={(e) =>
+                  setSectionField('delivery', {
+                    ...section.delivery,
+                    addressCapture: {
+                      ...section.delivery?.addressCapture,
+                      enabled: e.target.checked,
+                    },
+                  })
+                }
+              />
+              <span>Enable delivery address</span>
+            </label>
+            <div className="grid md:grid-cols-3 gap-3">
+              <label className="flex items-end gap-2">
+                <input
+                  type="checkbox"
+                  checked={section.delivery?.addressCapture?.required === true}
+                  onChange={(e) =>
+                    setSectionField('delivery', {
+                      ...section.delivery,
+                      addressCapture: {
+                        ...section.delivery?.addressCapture,
+                        required: e.target.checked,
+                      },
+                    })
+                  }
+                />
+                <span>Required</span>
+              </label>
+              <div>
+                <label className="block text-sm font-medium">Save Method</label>
+                <select
+                  className="select w-full"
+                  value={section.delivery?.addressCapture?.method ?? 'googleForm'}
+                  onChange={(e) =>
+                    setSectionField('delivery', {
+                      ...section.delivery,
+                      addressCapture: {
+                        ...section.delivery?.addressCapture,
+                        method: e.target.value as 'googleForm' | 's3',
+                      },
+                    })
+                  }
+                >
+                  <option value="googleForm">Google Form</option>
+                  <option value="s3">S3</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Google Form Entry ID</label>
+                <input
+                  className="input w-full"
+                  value={section.delivery?.addressCapture?.googleFormEntryId ?? ''}
+                  onChange={(e) =>
+                    setSectionField('delivery', {
+                      ...section.delivery,
+                      addressCapture: {
+                        ...section.delivery?.addressCapture,
+                        googleFormEntryId: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="entry.123456"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">S3 Prefix (optional)</label>
+              <input
+                className="input w-full"
+                value={section.delivery?.addressCapture?.s3Prefix ?? ''}
+                onChange={(e) =>
+                  setSectionField('delivery', {
+                    ...section.delivery,
+                    addressCapture: {
+                      ...section.delivery?.addressCapture,
+                      s3Prefix: e.target.value,
+                    },
+                  })
+                }
+                placeholder="orders/{siteId}/delivery/"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-3">
           <label className="flex items-center gap-2">
             <input

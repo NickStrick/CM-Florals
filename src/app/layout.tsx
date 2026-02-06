@@ -7,6 +7,7 @@ import { SiteProvider } from "@/context/SiteContext";
 import { CartProvider } from "@/context/CartContext";
 import type { SiteConfig } from "@/types/site";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import GlobalHashLinkHandler from "@/components/GlobalHashLinkHandler";
 
 // ✅ Admin UI (client) — keyboard toggle + bar
 import AdminGate from "@/components/admin/AdminGate";
@@ -114,6 +115,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app`}>
         <SiteProvider initial={config}>
           <CartProvider>
+            <GlobalHashLinkHandler />
             <main className="overflow-hidden"><div id="top"></div>{children}</main>
             {showThemeSwitcher && <ThemeSwitcher />}
 

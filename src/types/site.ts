@@ -533,6 +533,7 @@ export type Product = {
    colors?: ProductColor[];
   sizes?: ProductSize[];           // e.g. ['S','M','L','XL']
   maxQuantity?: number;          // default 10
+  taxable?: boolean;             // optional override if taxes enabled
 };
 
 export type ProductListingsStyle = {
@@ -589,6 +590,26 @@ export type ProductListingsSection = SectionBase & {
   googleFormOptions?: GoogleFormOptions;
   supportEmail?: string;
   supportPhone?: { label: string; href: string };
+  taxes?: {
+    enabled?: boolean;
+    ratePercent?: number; // e.g. 8.25
+    taxShipping?: boolean;
+    defaultProductTaxable?: boolean;
+  };
+  delivery?: {
+    enabled?: boolean;
+    appsScriptUrl?: string;
+    type?: 'flat' | 'uber' | 'doordash';
+    flatFeeCents?: number;
+    mode?: 'pickup' | 'delivery' | 'both';
+    addressCapture?: {
+      enabled?: boolean;
+      required?: boolean;
+      method?: 'googleForm' | 's3';
+      googleFormEntryId?: string;
+      s3Prefix?: string;
+    };
+  };
 };
 
 export type PersonItem = {
