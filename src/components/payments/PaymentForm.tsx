@@ -23,7 +23,6 @@ export default function PaymentForm({
   const cloverMerchantId = process.env.NEXT_PUBLIC_CLOVER_MERCHANT_ID ?? '';
   const scriptUrl = paymentType === 'converge' ? convergeScriptUrl : cloverScriptUrl;
   const missingConfig = !scriptUrl || !token;
-  console.log('PaymentForm config:', { paymentType, scriptUrl, token });
   const cloverRef = useRef<any>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
