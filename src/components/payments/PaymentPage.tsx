@@ -365,8 +365,8 @@ export default function PaymentPage({
                         onClick={() => setFulfillment('pickup')}
                         className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
                           fulfillment === 'pickup'
-                            ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
-                            : 'border-[var(--accent)] text-gray-600 hover:border-[var(--primary)]'
+                            ? 'border-emerald-700 text-emerald-900 bg-emerald-100 rounded-[999px]'
+                            : 'btn-small text-nowrap btn-gradient'
                         }`}
                       >
                         
@@ -378,8 +378,8 @@ export default function PaymentPage({
                         onClick={() => setFulfillment('delivery')}
                         className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
                           fulfillment === 'delivery'
-                            ? 'border-emerald-600 text-emerald-700 bg-emerald-50'
-                            : 'border-[var(--accent)] text-gray-600 hover:border-[var(--primary)]'
+                            ? 'border-emerald-700 text-emerald-900 bg-emerald-100 rounded-[999px]' 
+                            : 'btn-small text-nowrap btn-gradient'
                         }`}
                       >
                         
