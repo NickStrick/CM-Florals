@@ -67,12 +67,7 @@ export default function PaymentPage({
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [purchaseComplete, setPurchaseComplete] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
-  const requiredFields = (checkoutInputs ?? []).filter((f) => f.required);
-  const missingRequired = requiredFields.some((f) => {
-    const value = (customValues[f.id] ?? '').trim();
-    return value.length === 0;
-  });
+  const [deliveryConfirmed, setDeliveryConfirmed] = useState(true);
   const hasDetailsStep = Boolean(checkoutInputs && checkoutInputs.length > 0);
   const steps = ([
     hasDetailsStep ? { key: 'details', label: 'Details' } : null,
@@ -110,6 +105,17 @@ export default function PaymentPage({
     needsDeliveryAddress &&
     (deliveryAddress.trim().length === 0 || !deliveryConfirmed) &&
     addressRequired;
+  const requiredFields = (checkoutInputs ?? []).filter((f) => f.required);
+  if (addressRequired && needsDeliveryAddress) {
+    requiredFields.push({ id: 'deliveryAddress', required: true } as CheckoutInput);
+  }
+  const missingRequired = requiredFields.some((f) => {
+    if (f.id === 'deliveryAddress') {
+      return deliveryAddress.trim().length === 0 || !deliveryConfirmed;
+    }
+    const value = (customValues[f.id] ?? '').trim();
+    return value.length === 0;
+  });
   const deliveryFeeCents =
     delivery?.enabled &&
     deliveryMode !== 'pickup' &&
@@ -385,7 +391,7 @@ export default function PaymentPage({
                 )}
                 {delivery?.enabled && fulfillment === 'delivery' && addressCaptureEnabled && (
                   <div className="mb-4 rounded-xl border border-gray-100 p-4">
-                    <div className="text-sm font-semibold mb-2">Delivery Address</div>
+                    <div className="text-sm font-semibold mb-2">Delivery Address{addressRequired?<span className="text-red-500"> *</span>:null}</div>
                     <input
                       type="text"
                       className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
