@@ -267,7 +267,7 @@ export default function PaymentPage({
                 setPurchaseComplete(false);
                 closeCheckout();
               }}
-              className="mt-6 w-full rounded-2xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700"
+              className="mt-6 w-full rounded-[999px] bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700"
             >
               Close
             </button>
@@ -363,7 +363,7 @@ export default function PaymentPage({
                       <button
                         type="button"
                         onClick={() => setFulfillment('pickup')}
-                        className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
+                        className={`relative flex-1 border px-4 py-2 text-sm font-medium ${
                           fulfillment === 'pickup'
                             ? 'border-emerald-700 text-emerald-900 bg-emerald-100 rounded-[999px]'
                             : 'btn-small text-nowrap btn-gradient'
@@ -376,7 +376,7 @@ export default function PaymentPage({
                       <button
                         type="button"
                         onClick={() => setFulfillment('delivery')}
-                        className={`relative flex-1 rounded-xl border px-4 py-2 text-sm font-medium ${
+                        className={`relative flex-1  border px-4 py-2 text-sm font-medium ${
                           fulfillment === 'delivery'
                             ? 'border-emerald-700 text-emerald-900 bg-emerald-100 rounded-[999px]' 
                             : 'btn-small text-nowrap btn-gradient'
@@ -445,7 +445,7 @@ export default function PaymentPage({
                     onClick={() => setStepIndex(Math.min(stepIndex + 1, steps.length - 1))}
                     disabled={missingRequired || missingDeliveryAddress}
                     aria-disabled={missingRequired || missingDeliveryAddress}
-                    className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all"
+                    className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white py-4 font-bold shadow-lg shadow-emerald-200 transition-all rounded-[999px]"
                   >
                     Continue to Payment
                   </button>
@@ -482,7 +482,7 @@ export default function PaymentPage({
                 }}
                 disabled={missingRequired || missingDeliveryAddress}
                 aria-disabled={missingRequired || missingDeliveryAddress}
-                className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition-all"
+                className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white py-4 font-bold shadow-lg shadow-emerald-200 transition-all rounded-[999px]"
               >
                 Continue to Payment
               </button>

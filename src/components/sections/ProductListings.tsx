@@ -137,7 +137,7 @@ export default function ProductListings({
                   <div className="flex gap-2 mt-auto">
                     {detailsEnabled?<button
                       className={cls(
-                        'btn mt-6 w-full justify-center',
+                        'btn mt-6 w-full justify-center rounded-[999px]',
                         cardInk ? 'btn-gradient btn-white-outline' : 'btn-gradient-inverted'
                       )}
                       onClick={() => setSelected(p)}
@@ -158,7 +158,7 @@ export default function ProductListings({
                     {cartActive && (
                       <button
                       className={cls(
-                        'btn mt-6 w-full justify-center', 'btn-gradient btn-white-outline' 
+                        'btn mt-6 w-full justify-center', 'btn-gradient btn-white-outline rounded-[999px]' 
                       )}
                       onClick={() => {
                         const defaultTaxable = taxes?.defaultProductTaxable === true;
@@ -187,7 +187,7 @@ export default function ProductListings({
 
         {hasOverflow && (
           <div className="mt-8 text-center">
-            <button className="btn btn-gradient" onClick={() => setShowAll((x) => !x)}>
+            <button className="btn btn-gradient rounded-[999px]" onClick={() => setShowAll((x) => !x)}>
               {showAll ? 'Show Less' : 'Show All'}
             </button>
           </div>
