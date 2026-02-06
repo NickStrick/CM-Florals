@@ -28,15 +28,15 @@ export default function PaymentForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    console.log('[Clover] Render', { paymentType, scriptUrl, tokenPresent: Boolean(token) });
+    // console.log('[Clover] Render', { paymentType, scriptUrl, tokenPresent: Boolean(token) });
     if (paymentType !== 'clover') return;
     const timer = setTimeout(() => {
       const hasClover = typeof (window as any)?.Clover !== 'undefined';
       const scriptEl = document.querySelector(`script[src="${scriptUrl}"]`);
-      console.log('[Clover] Post-render check', {
-        hasClover,
-        scriptTagPresent: Boolean(scriptEl),
-      });
+      // console.log('[Clover] Post-render check', {
+      //   hasClover,
+      //   scriptTagPresent: Boolean(scriptEl),
+      // });
     }, 1000);
     return () => clearTimeout(timer);
   }, [paymentType, scriptUrl, token]);
@@ -57,7 +57,7 @@ export default function PaymentForm({
     if (typeof window !== 'undefined' && (window as any).ConvergeEmbedded) {
       const converge = (window as any).ConvergeEmbedded({
         token: token,
-        callback: (response: any) => console.log('Payment Response:', response),
+        callback: (response: any) => console.log('Payment Success:'),
         error: (err: any) => console.error('Payment Error:', err),
       });
 
@@ -73,14 +73,14 @@ export default function PaymentForm({
       return;
     }
     if (typeof window !== 'undefined' && (window as any).Clover) {
-      console.log('[Clover] SDK loaded, initializing elements...', {
-        merchantIdPresent: Boolean(cloverMerchantId),
-      });
-      console.log('[Clover] Mount targets', {
-        cardNumber: Boolean(document.getElementById('card-number')),
-        cardExpiry: Boolean(document.getElementById('card-expiry')),
-        cardCvv: Boolean(document.getElementById('card-cvv')),
-      });
+      // console.log('[Clover] SDK loaded, initializing elements...', {
+      //   merchantIdPresent: Boolean(cloverMerchantId),
+      // });
+      // console.log('[Clover] Mount targets', {
+      //   cardNumber: Boolean(document.getElementById('card-number')),
+      //   cardExpiry: Boolean(document.getElementById('card-expiry')),
+      //   cardCvv: Boolean(document.getElementById('card-cvv')),
+      // });
       const clover = cloverMerchantId
         ? new (window as any).Clover(token, { merchantId: cloverMerchantId })
         : new (window as any).Clover(token);
@@ -109,16 +109,16 @@ export default function PaymentForm({
       cardCvv.mount('#card-cvv');
       cardPostal.mount('#card-postal-code');
       cardStreet.mount('#card-street-address');
-      console.log('[Clover] Elements mounted.');
+      // console.log('[Clover] Elements mounted.');
 
-      console.log('[Clover] Element instances', {
-        cardNumberType: typeof cardNumber,
-        cardNameType: typeof cardName,
-        cardExpiryType: typeof cardExpiry,
-        cardCvvType: typeof cardCvv,
-        cardPostalType: typeof cardPostal,
-        cardStreetType: typeof cardStreet,
-      });
+      // console.log('[Clover] Element instances', {
+      //   cardNumberType: typeof cardNumber,
+      //   cardNameType: typeof cardName,
+      //   cardExpiryType: typeof cardExpiry,
+      //   cardCvvType: typeof cardCvv,
+      //   cardPostalType: typeof cardPostal,
+      //   cardStreetType: typeof cardStreet,
+      // });
     }
   };
 
@@ -140,13 +140,12 @@ export default function PaymentForm({
           console.log('[Clover] onPay finished.');
         }
 
-        console.log('[Clover] Starting tokenization...', {
-          hasCreateToken: typeof cloverRef.current.createToken === 'function',
-        });
+        // console.log('[Clover] Starting tokenization...', {
+        //   hasCreateToken: typeof cloverRef.current.createToken === 'function',
+        // });
         let tokenPromise: Promise<any> | null = null;
         try {
           const returned = cloverRef.current.createToken();
-          console.log('[Clover] createToken returned', returned);
           if (returned && typeof returned.then === 'function') {
             tokenPromise = returned;
             returned.then(
@@ -168,7 +167,7 @@ export default function PaymentForm({
           }, 15000),
         );
         const result = await Promise.race([tokenPromise, timeoutPromise]);
-        console.log('[Clover] Tokenization result', result);
+        // console.log('[Clover] Tokenization result', result);
         if (result?.errors) {
           const message = Object.values(result.errors).join(' ');
           throw new Error(message || 'Card details are invalid.');
