@@ -13,7 +13,25 @@ export type ThemePreset =
   | 'lavender'
   | 'irish'
   | 'splunk'
-  | 'sue';  // new
+  | 'sue'
+  | 'custom';  // user-defined
+
+export const THEME_PRESETS: ThemePreset[] = [
+  'ocean',
+  'sunset',
+  'forest',
+  'slate',
+  'festival',
+  'candy',
+  'neon',
+  'grove',
+  'forest-earthy',
+  'lavender',
+  'irish',
+  'splunk',
+  'sue',
+  'custom',
+];
 
 export type Theme = {
   preset: ThemePreset;
@@ -21,10 +39,27 @@ export type Theme = {
   accent?: string;
   radius?: 'sm' | 'md' | 'lg' | 'xl';
 };
+export type ThemeColors = {
+  primary?: string;
+  accent?: string;
+  bg?: string;
+  bg2?: string;
+  fg?: string;
+  muted?: string;
+  text1?: string;
+  text2?: string;
+};
 export type SiteStyle = {
   preset: ThemePreset;
   primary?: string;   
   accent?: string;
+  bg?: string;
+  bg2?: string;
+  fg?: string;
+  muted?: string;
+  text1?: string;
+  text2?: string;
+  colors?: ThemeColors;
   radius?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 };
 
@@ -207,10 +242,27 @@ export type SectionalSection = SectionBase & {
 
 
 
+export type SiteSettings = {
+  general?: Record<string, unknown>;
+  payments?: PaymentsSettings;
+};
+
 export type SiteConfig = {
   theme: SiteStyle;
+  /**
+   * Header/footer are stored outside the reorderable `sections` list so they
+   * cannot be moved by users or AI patching.
+   *
+   * Legacy configs may still include header/footer inside `sections`; normalize
+   * at runtime (see `src/lib/siteConfigSections.ts`).
+   */
+  header?: HeaderSection;
+  showHeader?: boolean;
   sections: AnySection[];
+  footer?: FooterSection;
+  showFooter?: boolean;
   meta?: { title?: string; description?: string; favicon?: string };
+  settings?: SiteSettings;
 };
 
 
@@ -572,19 +624,11 @@ export type GoogleFormOptions = {
   totalEntryId?: string;
 };
 
-export type ProductListingsSection = SectionBase & {
-  id: string;
-  type: 'productListings';
-  title?: string;
-  subtitle?: string;
-  products: Product[];
-  style?: ProductListingsStyle;
-  showAllThreshold?: number;     // default 3 — show "Show all" if > threshold
-  buyCtaFallback?: string;       // default "Buy Now"
-  detailsEnabled?: boolean;        // default false
+export type PaymentsSettings = {
   cartActive?: boolean;        // default false
   checkoutInputs?: CheckoutInput[];
   googleFormUrl?: string;
+  googleFormSubmitBeforePayment?: boolean;
   paymentType?: 'converge' | 'clover' | 'externalLink';
   externalPaymentUrl?: string;
   googleFormOptions?: GoogleFormOptions;
@@ -610,6 +654,18 @@ export type ProductListingsSection = SectionBase & {
       s3Prefix?: string;
     };
   };
+};
+
+export type ProductListingsSection = SectionBase & {
+  id: string;
+  type: 'productListings';
+  title?: string;
+  subtitle?: string;
+  products: Product[];
+  style?: ProductListingsStyle;
+  showAllThreshold?: number;     // default 3 — show "Show all" if > threshold
+  buyCtaFallback?: string;       // default "Buy Now"
+  detailsEnabled?: boolean;        // default false
 };
 
 export type PersonItem = {

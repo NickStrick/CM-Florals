@@ -133,7 +133,7 @@ export default function EditFeatures({
       {/* Items list */}
       <div className="space-y-4">
         {items.map((it, i) => (
-          <div key={`feature-${i}`} className="card card-solid p-3 space-y-3">
+          <div key={`feature-${i}`} className="card admin-card card-solid p-3 space-y-3">
             {/* Move & remove */}
             <div className="flex items-center justify-between">
               <div className="font-semibold">Item {i + 1}</div>

@@ -149,7 +149,7 @@ export default function EditShare({
       {/* Items list */}
       <div className="space-y-3">
         {items.map((it, i) => (
-          <div key={`share-item-${i}`} className="card card-solid p-3 space-y-3">
+          <div key={`share-item-${i}`} className="card admin-card card-solid p-3 space-y-3">
             <div className="flex items-center justify-between">
               <div className="font-medium">{it.label || 'QR'}</div>
               <div className="flex items-center gap-2">

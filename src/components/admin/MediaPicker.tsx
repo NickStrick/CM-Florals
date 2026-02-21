@@ -154,7 +154,7 @@ export default function MediaPicker({
 
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
         {items.map((i) => (
-          <div key={i.key} className="relative card card-solid p-2">
+          <div key={i.key} className="relative card admin-card card-solid p-2">
             {/* Preview (best effort). For non-images this may show as broken; OK for MVP */}
             <div className="relative w-full h-40 rounded-[var(--round-xl)] overflow-hidden">
               <Image

@@ -102,7 +102,7 @@ export function EditTestimonials({
       {/* Items list */}
       <div className="space-y-3">
         {items.map((it, i) => (
-          <div key={`${i}-${'item'}`} className="card card-solid p-3 space-y-3">
+          <div key={`${i}-${'item'}`} className="card admin-card card-solid p-3 space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-sm opacity-70">Item #{i + 1}</div>
               <div className="flex gap-2">

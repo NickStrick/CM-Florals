@@ -5,6 +5,24 @@ export const ThemeSchema = z.object({
   preset: z.string(),
   primary: z.string().optional(),
   accent: z.string().optional(),
+  bg: z.string().optional(),
+  bg2: z.string().optional(),
+  fg: z.string().optional(),
+  muted: z.string().optional(),
+  text1: z.string().optional(),
+  text2: z.string().optional(),
+  colors: z
+    .object({
+      primary: z.string().optional(),
+      accent: z.string().optional(),
+      bg: z.string().optional(),
+      bg2: z.string().optional(),
+      fg: z.string().optional(),
+      muted: z.string().optional(),
+      text1: z.string().optional(),
+      text2: z.string().optional(),
+    })
+    .optional(),
   radius: z.enum(['sm', 'md', 'lg', 'xl', '2xl', 'full']).optional(),
 });
 
@@ -22,6 +40,12 @@ export const SiteConfigSchema = z.object({
   theme: ThemeSchema,
   meta: MetaSchema,
   sections: z.array(z.any()),
+  settings: z
+    .object({
+      general: z.any().optional(),
+      payments: z.any().optional(),
+    })
+    .optional(),
 });
 
 export type SiteConfigParsed = z.infer<typeof SiteConfigSchema>;

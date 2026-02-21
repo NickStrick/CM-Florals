@@ -14,7 +14,7 @@ export default function Navbar() {
   const [activeHref, setActiveHref] = useState<string>('');
 
   const header = useMemo<HeaderSection>(() => {
-    const fromConfig = config?.sections.find(s => s.type === 'header') as HeaderSection | undefined;
+    const fromConfig = config?.header as HeaderSection | undefined;
     // defaults if nothing provided
     return (
       fromConfig ?? {
@@ -44,11 +44,10 @@ export default function Navbar() {
       header.links?.find(l => l.href === '/' || l.href === '#home' || l.href === '#top')?.href ??
       links[0].href;
 
-    const sections = links
-      .map(l => {
-        if(!l.href.includes('#')) l.href = '#top'
-        return({ href: l.href, el: document.querySelector(l.href) as HTMLElement | null })
-      })
+    const sections = links.map((l) => {
+      const href = l.href?.includes('#') ? l.href : '#top';
+      return { href, el: document.querySelector(href) as HTMLElement | null };
+    })
       // .filter(s => s.el);
 
     if (sections.length === 0) return;
@@ -144,8 +143,8 @@ export default function Navbar() {
 
           {/* Center: Links (desktop) */}
           <ul className="hidden md:flex flex-1 justify-center gap-6 text-muted">
-            {(header.links ?? []).map(l => (
-              <li key={l.href}>
+            {(header.links ?? []).map((l, i) => (
+              <li key={`${l.href ?? ''}-${l.label ?? ''}-${i}`}>
                 <Link
                   href={l.href}
                   className="relative inline-flex flex-col items-center gap-2 hover:text-fg transition-colors text-nowrap"
@@ -196,8 +195,8 @@ export default function Navbar() {
           `}
         >
           <ul className="px-4 py-3 flex flex-col gap-2 bg-[color-mix(in_srgb,var(--bg)_92%,transparent)]">
-            {(header.links ?? []).map(l => (
-              <li key={l.href}>
+            {(header.links ?? []).map((l, i) => (
+              <li key={`${l.href ?? ''}-${l.label ?? ''}-${i}`}>
                 <Link
                   href={l.href}
                   className="block py-2 text-fg/80 hover:text-fg text-nowrap"

@@ -92,7 +92,7 @@ export default function ProductCardEditor({
   };
 
   return (
-    <div className="card card-solid p-4 space-y-4">
+    <div className="card admin-card card-solid p-4 space-y-4">
       <div className="flex items-center gap-2">
         <div className="font-semibold">{product.name || 'Untitled Product'}</div>
         <div className="text-xs opacity-70">({product.id})</div>

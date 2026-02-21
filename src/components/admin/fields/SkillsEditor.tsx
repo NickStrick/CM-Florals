@@ -118,7 +118,7 @@ export default function EditSkills({
       {/* Items list */}
       <div className="space-y-3">
         {items.map((it, i) => (
-          <div key={`skill-${i}`} className="card card-solid p-3 space-y-3">
+          <div key={`skill-${i}`} className="card admin-card card-solid p-3 space-y-3">
             <div className="grid md:grid-cols-[1fr_auto_auto_auto] gap-2">
               <input
                 className="input"

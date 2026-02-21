@@ -23,20 +23,33 @@ export default function PaymentForm({
   const cloverMerchantId = process.env.NEXT_PUBLIC_CLOVER_MERCHANT_ID ?? '';
   const scriptUrl = paymentType === 'converge' ? convergeScriptUrl : cloverScriptUrl;
   const missingConfig = !scriptUrl || !token;
+  console.log('PaymentForm config:', { paymentType, scriptUrl, token });
   const cloverRef = useRef<any>(null);
+  const convergeRef = useRef<any>(null);
+  const convergeInitTokenRef = useRef<string>('');
+  const convergeSubmitRef = useRef<{ resolve: () => void; reject: (err: unknown) => void } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
-    // console.log('[Clover] Render', { paymentType, scriptUrl, tokenPresent: Boolean(token) });
+    setScriptLoaded(false);
+    if (paymentType === 'converge') {
+      convergeInitTokenRef.current = '';
+      convergeRef.current = null;
+    }
+  }, [paymentType, scriptUrl]);
+
+  useEffect(() => {
+    console.log('[Clover] Render', { paymentType, scriptUrl, tokenPresent: Boolean(token) });
     if (paymentType !== 'clover') return;
     const timer = setTimeout(() => {
       const hasClover = typeof (window as any)?.Clover !== 'undefined';
       const scriptEl = document.querySelector(`script[src="${scriptUrl}"]`);
-      // console.log('[Clover] Post-render check', {
-      //   hasClover,
-      //   scriptTagPresent: Boolean(scriptEl),
-      // });
+      console.log('[Clover] Post-render check', {
+        hasClover,
+        scriptTagPresent: Boolean(scriptEl),
+      });
     }, 1000);
     return () => clearTimeout(timer);
   }, [paymentType, scriptUrl, token]);
@@ -54,12 +67,36 @@ export default function PaymentForm({
 
   const initConvergeHostedFields = () => {
     if (!token) return;
+    if (!scriptLoaded) return;
+    if (convergeInitTokenRef.current === token) return;
     if (typeof window !== 'undefined' && (window as any).ConvergeEmbedded) {
       const converge = (window as any).ConvergeEmbedded({
         token: token,
-        callback: (response: any) => console.log('Payment Success:'),
-        error: (err: any) => console.error('Payment Error:', err),
+        callback: (response: any) => {
+          console.log('[Converge] Payment Response:', response);
+          const ok =
+            response?.ssl_result === '0' ||
+            response?.ssl_result === 0 ||
+            response?.result === '0' ||
+            response?.result === 0 ||
+            response?.approved === true;
+          if (ok) {
+            convergeSubmitRef.current?.resolve();
+          } else {
+            convergeSubmitRef.current?.reject(
+              new Error(response?.ssl_result_message || response?.message || 'Converge payment declined.')
+            );
+          }
+          convergeSubmitRef.current = null;
+        },
+        error: (err: any) => {
+          console.error('[Converge] Payment Error:', err);
+          convergeSubmitRef.current?.reject(err);
+          convergeSubmitRef.current = null;
+        },
       });
+      convergeRef.current = converge;
+      convergeInitTokenRef.current = token;
 
       converge.mount('#card-number', 'cardNumber');
       converge.mount('#card-expiry', 'cardExpiration');
@@ -73,14 +110,14 @@ export default function PaymentForm({
       return;
     }
     if (typeof window !== 'undefined' && (window as any).Clover) {
-      // console.log('[Clover] SDK loaded, initializing elements...', {
-      //   merchantIdPresent: Boolean(cloverMerchantId),
-      // });
-      // console.log('[Clover] Mount targets', {
-      //   cardNumber: Boolean(document.getElementById('card-number')),
-      //   cardExpiry: Boolean(document.getElementById('card-expiry')),
-      //   cardCvv: Boolean(document.getElementById('card-cvv')),
-      // });
+      console.log('[Clover] SDK loaded, initializing elements...', {
+        merchantIdPresent: Boolean(cloverMerchantId),
+      });
+      console.log('[Clover] Mount targets', {
+        cardNumber: Boolean(document.getElementById('card-number')),
+        cardExpiry: Boolean(document.getElementById('card-expiry')),
+        cardCvv: Boolean(document.getElementById('card-cvv')),
+      });
       const clover = cloverMerchantId
         ? new (window as any).Clover(token, { merchantId: cloverMerchantId })
         : new (window as any).Clover(token);
@@ -109,16 +146,16 @@ export default function PaymentForm({
       cardCvv.mount('#card-cvv');
       cardPostal.mount('#card-postal-code');
       cardStreet.mount('#card-street-address');
-      // console.log('[Clover] Elements mounted.');
+      console.log('[Clover] Elements mounted.');
 
-      // console.log('[Clover] Element instances', {
-      //   cardNumberType: typeof cardNumber,
-      //   cardNameType: typeof cardName,
-      //   cardExpiryType: typeof cardExpiry,
-      //   cardCvvType: typeof cardCvv,
-      //   cardPostalType: typeof cardPostal,
-      //   cardStreetType: typeof cardStreet,
-      // });
+      console.log('[Clover] Element instances', {
+        cardNumberType: typeof cardNumber,
+        cardNameType: typeof cardName,
+        cardExpiryType: typeof cardExpiry,
+        cardCvvType: typeof cardCvv,
+        cardPostalType: typeof cardPostal,
+        cardStreetType: typeof cardStreet,
+      });
     }
   };
 
@@ -140,12 +177,13 @@ export default function PaymentForm({
           console.log('[Clover] onPay finished.');
         }
 
-        // console.log('[Clover] Starting tokenization...', {
-        //   hasCreateToken: typeof cloverRef.current.createToken === 'function',
-        // });
+        console.log('[Clover] Starting tokenization...', {
+          hasCreateToken: typeof cloverRef.current.createToken === 'function',
+        });
         let tokenPromise: Promise<any> | null = null;
         try {
           const returned = cloverRef.current.createToken();
+          console.log('[Clover] createToken returned', returned);
           if (returned && typeof returned.then === 'function') {
             tokenPromise = returned;
             returned.then(
@@ -167,7 +205,7 @@ export default function PaymentForm({
           }, 15000),
         );
         const result = await Promise.race([tokenPromise, timeoutPromise]);
-        // console.log('[Clover] Tokenization result', result);
+        console.log('[Clover] Tokenization result', result);
         if (result?.errors) {
           const message = Object.values(result.errors).join(' ');
           throw new Error(message || 'Card details are invalid.');
@@ -181,9 +219,30 @@ export default function PaymentForm({
           console.log('[Clover] onCloverToken finished.');
         }
       } else {
-        if (onPay) {
-          await onPay();
+        const converge = convergeRef.current;
+        if (!converge) {
+          throw new Error('Converge embedded fields are not initialized. Check token + script URL.');
         }
+
+        const done = new Promise<void>((resolve, reject) => {
+          convergeSubmitRef.current = { resolve, reject };
+        });
+
+        const submitFn =
+          typeof converge.submit === 'function'
+            ? converge.submit.bind(converge)
+            : typeof converge.pay === 'function'
+              ? converge.pay.bind(converge)
+              : null;
+
+        if (!submitFn) {
+          throw new Error('Converge embedded fields library did not expose submit/pay. Check the Converge script URL.');
+        }
+
+        submitFn();
+        await done;
+
+        if (onPay) await onPay();
       }
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Payment failed.');
@@ -191,6 +250,12 @@ export default function PaymentForm({
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (paymentType !== 'converge') return;
+    initConvergeHostedFields();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentType, token, scriptLoaded]);
 
   return (
     <div className="max-w-lg mx-auto p-5 md:p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
@@ -200,6 +265,7 @@ export default function PaymentForm({
             src={scriptUrl}
             onLoad={() => {
               console.log('[Converge] Script loaded.');
+              setScriptLoaded(true);
               initConvergeHostedFields();
             }}
             onError={(e) => console.error('[Converge] Script load error', e)}
@@ -209,6 +275,7 @@ export default function PaymentForm({
             src={scriptUrl}
             onLoad={() => {
               console.log('[Clover] Script loaded.', { hasClover: typeof (window as any)?.Clover !== 'undefined' });
+              setScriptLoaded(true);
               initCloverHostedFields();
             }}
             onError={(e) => console.error('[Clover] Script load error', e)}
@@ -216,13 +283,13 @@ export default function PaymentForm({
         )
       ) : null}
 
-      {missingConfig && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Payment configuration is missing. Set the {paymentType === 'converge'
-            ? 'NEXT_PUBLIC_CONVERGE_TOKEN and NEXT_PUBLIC_CONVERGE_IFRAME_URL'
+        {missingConfig && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Payment configuration is missing. Set the {paymentType === 'converge'
+            ? 'CONVERGE_MERCHANT_ID / CONVERGE_USER_ID / CONVERGE_PIN (server) and NEXT_PUBLIC_CONVERGE_IFRAME_URL'
             : 'NEXT_PUBLIC_CLOVER_TOKEN and NEXT_PUBLIC_CLOVER_IFRAME_URL'} env vars.
-        </div>
-      )}
+          </div>
+        )}
       {submitError && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
           {submitError}

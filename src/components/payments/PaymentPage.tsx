@@ -1,11 +1,12 @@
 // src/components/payments/PaymentPage.tsx
 'use client';
 
-import { useState, useEffect, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import PaymentForm from './PaymentForm';
 import { X, Plus, Trash2, CheckCircle, Check, ArrowBigLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { CheckoutInput, GoogleFormOptions } from '@/types/site';
+import { useSite } from '@/context/SiteContext';
 
 function formatPrice(cents: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
@@ -16,15 +17,15 @@ function formatPrice(cents: number, currency = 'USD') {
 
 export default function PaymentPage({
   token,
-  checkoutInputs,
-  googleFormUrl,
-  googleFormOptions,
-  paymentType = 'converge',
-  externalPaymentUrl,
-  supportEmail,
-  supportPhone,
-  taxes,
-  delivery,
+  checkoutInputs: checkoutInputsProp,
+  googleFormUrl: googleFormUrlProp,
+  googleFormOptions: googleFormOptionsProp,
+  paymentType: paymentTypeProp,
+  externalPaymentUrl: externalPaymentUrlProp,
+  supportEmail: supportEmailProp,
+  supportPhone: supportPhoneProp,
+  taxes: taxesProp,
+  delivery: deliveryProp,
 }: {
   token?: string;
   checkoutInputs?: CheckoutInput[];
@@ -55,20 +56,58 @@ export default function PaymentPage({
     };
   };
 }) {
+  const { config } = useSite();
+  const settingsPayments = config?.settings?.payments;
+  const settingsGeneral = (config?.settings?.general ?? {}) as Record<string, unknown>;
+  const businessDisplayName =
+    (typeof settingsGeneral.businessDisplayName === 'string' ? settingsGeneral.businessDisplayName : '').trim() ||
+    (config?.meta?.title ?? '').trim() ||
+    (process.env.NEXT_PUBLIC_SITE_ID ?? '').trim();
+  const businessNotificationEmail =
+    (typeof settingsGeneral.businessNotificationEmail === 'string'
+      ? settingsGeneral.businessNotificationEmail
+      : '').trim() ||
+    (settingsPayments?.supportEmail ?? '').trim();
+  const checkoutInputs = checkoutInputsProp ?? settingsPayments?.checkoutInputs;
+  const googleFormUrl = googleFormUrlProp ?? settingsPayments?.googleFormUrl;
+  const googleFormOptions = googleFormOptionsProp ?? settingsPayments?.googleFormOptions;
+  const googleFormSubmitBeforePayment =
+    settingsPayments?.googleFormSubmitBeforePayment === true;
+  const paymentType = paymentTypeProp ?? settingsPayments?.paymentType ?? 'converge';
+  const externalPaymentUrl = externalPaymentUrlProp ?? settingsPayments?.externalPaymentUrl;
+  const supportEmail = supportEmailProp ?? settingsPayments?.supportEmail;
+  const supportPhone = supportPhoneProp ?? settingsPayments?.supportPhone;
+  const taxes = taxesProp ?? settingsPayments?.taxes;
+  const delivery = deliveryProp ?? settingsPayments?.delivery;
   const { items, totalCents, currency, isCheckoutOpen, closeCheckout, addItem, removeItem } = useCart();
-  const convergeToken = token ?? process.env.NEXT_PUBLIC_CONVERGE_TOKEN ?? '';
+  const [convergeToken, setConvergeToken] = useState('');
+  const [convergeTokenStatus, setConvergeTokenStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const cloverToken = process.env.NEXT_PUBLIC_CLOVER_TOKEN ?? '';
   const convergeScriptUrl = process.env.NEXT_PUBLIC_CONVERGE_IFRAME_URL ?? '';
   const cloverScriptUrl = process.env.NEXT_PUBLIC_CLOVER_IFRAME_URL ?? '';
   const paymentToken = paymentType === 'clover' ? cloverToken : convergeToken;
   const paymentScriptUrl = paymentType === 'clover' ? cloverScriptUrl : convergeScriptUrl;
   const missingPaymentConfig =
-    paymentType !== 'externalLink' && (!paymentToken || !paymentScriptUrl);
+    paymentType !== 'externalLink' && (!paymentScriptUrl || (paymentType === 'clover' && !paymentToken));
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [purchaseComplete, setPurchaseComplete] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(true);
-  const hasDetailsStep = Boolean(checkoutInputs && checkoutInputs.length > 0);
+  const [googleFormSubmitted, setGoogleFormSubmitted] = useState(false);
+  const [orderSaved, setOrderSaved] = useState(false);
+  const orderIdRef = useRef<string>(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const emailField: CheckoutInput = {
+    id: 'email',
+    label: 'Email',
+    type: 'email',
+    required: true,
+    placeholder: 'you@example.com',
+  };
+  const effectiveCheckoutInputs = [
+    emailField,
+    ...(checkoutInputs ?? []).filter((field) => field.id !== 'email' && !field.hidden),
+  ];
+  const hasDetailsStep = effectiveCheckoutInputs.length > 0;
   const steps = ([
     hasDetailsStep ? { key: 'details', label: 'Details' } : null,
     { key: 'payment', label: 'Payment' },
@@ -95,8 +134,6 @@ export default function PaymentPage({
     }
   }, [stepIndex, steps.length]);
 
-  if (!isCheckoutOpen) return null;
-
   const addressCaptureEnabled = delivery?.addressCapture?.enabled === true;
   const addressRequired = delivery?.addressCapture?.required !== false;
   const needsDeliveryAddress =
@@ -105,7 +142,7 @@ export default function PaymentPage({
     needsDeliveryAddress &&
     (deliveryAddress.trim().length === 0 || !deliveryConfirmed) &&
     addressRequired;
-  const requiredFields = (checkoutInputs ?? []).filter((f) => f.required);
+  const requiredFields = effectiveCheckoutInputs.filter((f) => f.required);
   if (addressRequired && needsDeliveryAddress) {
     requiredFields.push({ id: 'deliveryAddress', required: true } as CheckoutInput);
   }
@@ -126,6 +163,55 @@ export default function PaymentPage({
   const taxBaseCents = taxableSubtotalCents + (taxes?.taxShipping ? deliveryFeeCents : 0);
   const taxCents = taxes?.enabled ? Math.round(taxBaseCents * (taxRate / 100)) : 0;
   const totalWithFeesCents = totalCents + taxCents + deliveryFeeCents;
+
+  useEffect(() => {
+    if (paymentType !== 'converge') return;
+    if (!isCheckoutOpen) return;
+
+    // If the parent supplied a token explicitly, trust it (e.g. server-rendered checkout).
+    if (token) {
+      setConvergeToken(token);
+      setConvergeTokenStatus('ready');
+      return;
+    }
+
+    // Dev fallback (older behavior) if you manually set a token.
+    const envToken = process.env.NEXT_PUBLIC_CONVERGE_TOKEN ?? '';
+    if (envToken) {
+      setConvergeToken(envToken);
+      setConvergeTokenStatus('ready');
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      setConvergeTokenStatus('loading');
+      try {
+        const res = await fetch('/api/payments/converge/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amountCents: totalWithFeesCents, currency }),
+        });
+        if (!res.ok) {
+          if (!cancelled) setConvergeTokenStatus('error');
+          return;
+        }
+        const data = (await res.json()) as { token?: string };
+        if (!cancelled && data?.token) {
+          setConvergeToken(data.token);
+          setConvergeTokenStatus('ready');
+        } else if (!cancelled) {
+          setConvergeTokenStatus('error');
+        }
+      } catch {
+        if (!cancelled) setConvergeTokenStatus('error');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currency, isCheckoutOpen, paymentType, token, totalWithFeesCents]);
 
   const submitDeliveryAddress = async () => {
     if (!needsDeliveryAddress) return;
@@ -180,7 +266,7 @@ export default function PaymentPage({
     if (!googleFormUrl) return;
 
     const formData = new FormData();
-    const fields = checkoutInputs?.filter((f) => f.googleFormEntryId) ?? [];
+  const fields = effectiveCheckoutInputs.filter((f) => f.googleFormEntryId) ?? [];
     fields.forEach((f) => {
       const value = customValues[f.id];
       if (typeof value === 'string' && value.length > 0) {
@@ -216,11 +302,92 @@ export default function PaymentPage({
     } catch {
       // no-op: form submission is best-effort in no-cors mode
     }
+    console.log('save order')
+    await saveOrderToS3();
+    setGoogleFormSubmitted(true);
   };
+
+  const saveOrderToS3 = async () => {
+    if (orderSaved) return;
+    const customerEmail =
+      (customValues.email as string) ||
+      (customValues.customerEmail as string) ||
+      '';
+    if (!customerEmail.trim()) {
+      console.warn('[orders] missing customer email; skipping order save');
+      return;
+    }
+
+    const customerName =
+      (customValues['customer-name'] as string) ||
+      (customValues.name as string) ||
+      (customValues.fullName as string) ||
+      (customValues.customerName as string) ||
+      '';
+
+    const payload = {
+      businessId: process.env.NEXT_PUBLIC_SITE_ID ?? '',
+      customerEmail,
+      customerName: customerName || undefined,
+      businessDisplayName: businessDisplayName || undefined,
+      businessNotificationEmail: businessNotificationEmail || undefined,
+      items: items.map((item) => ({
+        ...item,
+        price: Number((item.price / 100).toFixed(2)),
+        total: Number(((item.price * item.quantity) / 100).toFixed(2)),
+      })),
+      total: Number((totalWithFeesCents / 100).toFixed(2)),
+      currency,
+      orderId: orderIdRef.current,
+      fulfillment,
+      deliveryAddress: deliveryAddress.trim() || undefined,
+      taxes: {
+        ...(taxes ?? {}),
+        subtotalCents: totalCents,
+        taxCents,
+        totalCents: totalWithFeesCents,
+      },
+      delivery: {
+        enabled: delivery?.enabled ?? false,
+        type: delivery?.type ?? 'flat',
+        mode: deliveryMode,
+        fulfillment,
+        address: deliveryAddress.trim(),
+        addressConfirmed: deliveryConfirmed === true,
+        flatFeeCents: deliveryFeeCents,
+      },
+      customer: customValues,
+      checkoutInputs: effectiveCheckoutInputs ?? [],
+      payment: {
+        type: paymentType,
+        externalPaymentUrl: externalPaymentUrl ?? '',
+      },
+    };
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setOrderSaved(true);
+      }
+    } catch {
+      // best-effort fallback; avoid blocking checkout
+    }
+  };
+
   const submitCheckoutSideEffects = async () => {
-    await submitToGoogleForm();
+    // await saveOrderToS3();
+    if (!googleFormSubmitBeforePayment || !googleFormSubmitted) {
+      await submitToGoogleForm();
+    }
     await submitDeliveryAddress();
   };
+
+  if (!isCheckoutOpen) return null;
+  console.log('PaymentPage config:', { paymentType, paymentToken, paymentScriptUrl });
   return (
     <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-black/60 backdrop-blur-sm">
       {purchaseComplete && (
@@ -402,7 +569,7 @@ export default function PaymentPage({
                   </div>
                 )}
                 <div className="grid gap-4">
-                  {checkoutInputs?.map((field) => {
+                  {effectiveCheckoutInputs.map((field) => {
                     const commonProps = {
                       id: field.id,
                       name: field.id,
@@ -441,7 +608,12 @@ export default function PaymentPage({
 
                   <button
                     type="button"
-                    onClick={() => setStepIndex(Math.min(stepIndex + 1, steps.length - 1))}
+                    onClick={async () => {
+                      if (googleFormSubmitBeforePayment && !googleFormSubmitted) {
+                        await submitToGoogleForm();
+                      }
+                      setStepIndex(Math.min(stepIndex + 1, steps.length - 1));
+                    }}
                     disabled={missingRequired || missingDeliveryAddress}
                     aria-disabled={missingRequired || missingDeliveryAddress}
                     className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white py-4 font-bold shadow-lg shadow-emerald-200 transition-all rounded-[999px]"
@@ -463,11 +635,21 @@ export default function PaymentPage({
                 <span className="ml-1 flex justify-center items-center">Back to details</span> 
               </button>
             )}
+            {paymentType === 'converge' && convergeTokenStatus === 'loading' && (
+              <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                Loading secure payment formâ€¦
+              </div>
+            )}
+            {paymentType === 'converge' && convergeTokenStatus === 'error' && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                Could not initialize Converge checkout. Check `CONVERGE_MERCHANT_ID`, `CONVERGE_USER_ID`, `CONVERGE_PIN`, and `NEXT_PUBLIC_CONVERGE_IFRAME_URL`.
+              </div>
+            )}
             {missingPaymentConfig && (
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                 Payment configuration is missing. Set the {paymentType === 'clover'
                   ? 'NEXT_PUBLIC_CLOVER_TOKEN and NEXT_PUBLIC_CLOVER_IFRAME_URL'
-                  : 'NEXT_PUBLIC_CONVERGE_TOKEN and NEXT_PUBLIC_CONVERGE_IFRAME_URL'} env vars.
+                  : 'CONVERGE_MERCHANT_ID / CONVERGE_USER_ID / CONVERGE_PIN (server) and NEXT_PUBLIC_CONVERGE_IFRAME_URL'} env vars.
               </div>
             )}
             {paymentType === 'externalLink' ? (
@@ -485,11 +667,18 @@ export default function PaymentPage({
               >
                 Continue to Payment
               </button>
-            ) : !missingPaymentConfig ? (
+            ) : !missingPaymentConfig && (paymentType !== 'converge' || convergeTokenStatus === 'ready') ? (
               <PaymentForm
                 token={paymentToken}
                 paymentType={paymentType}
-                onPay={submitCheckoutSideEffects}
+                onPay={
+                  paymentType === 'converge'
+                    ? async () => {
+                        await submitCheckoutSideEffects();
+                        setPurchaseComplete(true);
+                      }
+                    : submitCheckoutSideEffects
+                }
                 onCloverToken={paymentType === 'clover' ? submitCloverPayment : undefined}
                 disabled={missingRequired || missingDeliveryAddress}
               />

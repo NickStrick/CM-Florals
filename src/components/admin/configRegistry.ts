@@ -40,7 +40,7 @@ export type SectionRegistry = Record<AnySection['type'], SectionRegistryItem<Any
 export const SECTION_REGISTRY: SectionRegistry = {
   header: {
     label: 'Header',
-    allowed: true,
+    allowed: false,
     create: (): HeaderSection => ({
       id: newId('header'),
       type: 'header',
@@ -138,7 +138,7 @@ export const SECTION_REGISTRY: SectionRegistry = {
 
   footer: {
     label: 'Footer',
-    allowed: true,
+    allowed: false,
     create: (): FooterSection => ({
       id: newId('footer'),
       type: 'footer',

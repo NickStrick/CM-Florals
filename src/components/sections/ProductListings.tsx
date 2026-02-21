@@ -11,6 +11,7 @@ import { resolveAssetUrl } from '@/lib/assetUrl';
 import CartModal from '../payments/CartModal';
 import PaymentPage from '../payments/PaymentPage';
 import { useCart } from '@/context/CartContext';
+import { useSite } from '@/context/SiteContext';
 
 function cls(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -28,16 +29,6 @@ export default function ProductListings({
   subtitle,
   products,
   detailsEnabled,
-  cartActive,
-  checkoutInputs,
-  googleFormUrl,
-  googleFormOptions,
-  paymentType,
-  externalPaymentUrl,
-  supportEmail,
-  supportPhone,
-  taxes,
-  delivery,
   style,
   showAllThreshold = 3,
   buyCtaFallback = 'Buy Now',
@@ -45,6 +36,10 @@ export default function ProductListings({
   const [showAll, setShowAll] = useState(false);
   const [selected, setSelected] = useState<Product | null>(null);
   const { addItem, openCart } = useCart();
+  const { config } = useSite();
+  const payments = config?.settings?.payments;
+  const cartActive = payments?.cartActive === true;
+  const taxes = payments?.taxes;
 
   const hasOverflow = (products?.length ?? 0) > showAllThreshold;
   const visible = useMemo(
@@ -60,15 +55,15 @@ export default function ProductListings({
     {cartActive && <CartModal />}
     {cartActive && (
       <PaymentPage
-        checkoutInputs={checkoutInputs}
-        googleFormUrl={googleFormUrl}
-        googleFormOptions={googleFormOptions}
-        paymentType={paymentType}
-        externalPaymentUrl={externalPaymentUrl}
-        supportEmail={supportEmail}
-        supportPhone={supportPhone}
-        taxes={taxes}
-        delivery={delivery}
+        checkoutInputs={payments?.checkoutInputs}
+        googleFormUrl={payments?.googleFormUrl}
+        googleFormOptions={payments?.googleFormOptions}
+        paymentType={payments?.paymentType}
+        externalPaymentUrl={payments?.externalPaymentUrl}
+        supportEmail={payments?.supportEmail}
+        supportPhone={payments?.supportPhone}
+        taxes={payments?.taxes}
+        delivery={payments?.delivery}
       />
     )}
     <section id={id} className="section sectionAboveWavePad">
@@ -87,7 +82,7 @@ export default function ProductListings({
           </div>
         </motion.div>
 
-        <div className={`grid gap-6 sm:grid-cols-${Math.min(cols, 2)} lg:grid-cols-${cols}`}>
+        <div className={`grid gap-1 sm:grid-cols-${Math.min(cols, 2)} lg:grid-cols-${cols}`}>
           {visible.map((p, i) => {
             const thumb = resolveAssetUrl(p.thumbnailUrl ?? p.images?.[0]?.url);
             const priceStr = formatPrice(p.price, p.currency ?? 'USD');

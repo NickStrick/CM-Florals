@@ -148,7 +148,7 @@ export function EditHeader({
             const { kind, sectionId } = hrefKind(lnk.href);
 
             return (
-              <div key={'linkid-' + i} className="card card-solid p-3 flex flex-col gap-2">
+              <div key={'linkid-' + i} className="card admin-card card-solid p-3 flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-2">
                   {/* Label */}
                   <input

@@ -8,7 +8,10 @@ import MediaPicker from './MediaPicker';
 import { SECTION_REGISTRY, getAllowedSectionTypes } from './configRegistry';
 import { getEditorForSection } from './EditSections';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faChevronDown, faTrash } from '@fortawesome/free-solid-svg-icons';
+import AdminAIChatPanel from './AdminAIChatPanel';
+import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
+import { getAdminSectionSlots, normalizeSiteConfig } from '@/lib/siteConfigSections';
 
 // -----------------------------
 // Utilities
@@ -23,12 +26,24 @@ const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(ma
 // -----------------------------
 export type ConfigModalProps = {
   onClose: () => void;
+  initialPatch?: Partial<SiteConfig> | null;
+  openInPreview?: boolean;
+  externalPatch?: Partial<SiteConfig> | null;
+  externalPatchNonce?: number;
+  externalPatchPreview?: boolean;
 };
 
 // -----------------------------
 // Component
 // -----------------------------
-export default function ConfigModal({ onClose }: ConfigModalProps) {
+export default function ConfigModal({
+  onClose,
+  initialPatch = null,
+  openInPreview = false,
+  externalPatch = null,
+  externalPatchNonce = 0,
+  externalPatchPreview = false,
+}: ConfigModalProps) {
   const { config, setConfig } = useSite();
   const siteId = getSiteId();
 
@@ -36,21 +51,75 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
   const [draft, setDraft] = useState<SiteConfig | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const originalRef = useRef<SiteConfig | null>(null);
+  const previewDraftRef = useRef<SiteConfig | null>(null);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const pendingAutoPreviewRef = useRef(false);
+  const ignoreConfigSyncRef = useRef(false);
+  const initialPatchAppliedRef = useRef(false);
+  const lastExternalPatchNonceRef = useRef<number>(0);
 
   useEffect(() => {
+    if (ignoreConfigSyncRef.current) {
+      ignoreConfigSyncRef.current = false;
+      return;
+    }
     if (config) {
       const copy = deepClone(config);
       setDraft(copy);
       originalRef.current = copy;
-      setSelectedIndex(0); // default to first section on open/load
+      setSelectedIndex(0); // default to header on open/load
     }
   }, [config]);
 
-  // keep selectedIndex in bounds whenever sections length changes
+  const startPreview = useCallback(() => {
+    if (!draft) return;
+    const snapshot = deepClone(draft);
+    previewDraftRef.current = snapshot;
+    ignoreConfigSyncRef.current = true;
+    setConfig(snapshot);
+    setIsPreviewing(true);
+  }, [draft, setConfig]);
+
+  useEffect(() => {
+    if (!pendingAutoPreviewRef.current) return;
+    if (!draft) return;
+    pendingAutoPreviewRef.current = false;
+    startPreview();
+  }, [draft, startPreview]);
+
+  useEffect(() => {
+    if (initialPatchAppliedRef.current) return;
+    if (!draft) return;
+    if (!initialPatch) return;
+
+    initialPatchAppliedRef.current = true;
+    pendingAutoPreviewRef.current = openInPreview;
+    setDraft((prev) => (prev ? applySiteConfigPatch(prev, initialPatch) : prev));
+  }, [draft, initialPatch, openInPreview]);
+
   useEffect(() => {
     if (!draft) return;
-    setSelectedIndex((i) => clamp(i, 0, Math.max(0, draft.sections.length - 1)));
-  }, [draft]);
+    if (!externalPatch) return;
+    if (externalPatchNonce <= 0) return;
+    if (lastExternalPatchNonceRef.current === externalPatchNonce) return;
+
+    lastExternalPatchNonceRef.current = externalPatchNonce;
+    pendingAutoPreviewRef.current = externalPatchPreview;
+    setDraft((prev) => (prev ? applySiteConfigPatch(prev, externalPatch) : prev));
+  }, [draft, externalPatch, externalPatchNonce, externalPatchPreview]);
+
+  const slots = useMemo(() => (draft ? getAdminSectionSlots(draft) : []), [draft]);
+
+  // keep selectedIndex in bounds whenever slot count changes
+  useEffect(() => {
+    if (!slots.length) {
+      setSelectedIndex(0);
+      return;
+    }
+    setSelectedIndex((i) => clamp(i, 0, Math.max(0, slots.length - 1)));
+  }, [slots.length]);
+
+  const selectedSlot = slots[selectedIndex];
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,8 +180,8 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
       copy.sections.splice(index, 1);
       return copy;
     });
-    // adjust selection after state updates: next tick clamp by effect; also set a best-guess now
-    setSelectedIndex((i) => (i > index ? i - 1 : i === index ? Math.max(0, i - 1) : i));
+    // keep selection safe after delete
+    setSelectedIndex(0);
   }, []);
 
   const addSection = useCallback((type: AnySection['type']) => {
@@ -137,7 +206,8 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
     if (!draft) return;
     const len = draft.sections.length;
     if (prevLenRef.current && len === prevLenRef.current + 1) {
-      setSelectedIndex(len - 1);
+      // slots: [header, ...sections, footer] -> last body section is at index `len`
+      setSelectedIndex(len);
     }
     prevLenRef.current = len;
   }, [draft?.sections.length, draft]);
@@ -157,8 +227,9 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
     });
     // keep selection attached to the moved item if it was selected
     setSelectedIndex((sel) => {
-      if (sel === from) return to;
-      if (sel === to) return from; // swapped positions
+      const selBody = sel - 1; // header occupies slot 0
+      if (selBody === from) return to + 1;
+      if (selBody === to) return from + 1; // swapped positions
       return sel;
     });
   }, []);
@@ -186,7 +257,7 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
           'Content-Type': 'application/json',
           'x-local-admin': '1',
         },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(normalizeSiteConfig(draft)),
       });
 
       if (!res.ok) {
@@ -213,6 +284,25 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
     setSelectedIndex(0);
   }, []);
 
+  const returnToEditor = useCallback(() => {
+    if (previewDraftRef.current) {
+      ignoreConfigSyncRef.current = true;
+      setConfig(previewDraftRef.current);
+    }
+    setIsPreviewing(false);
+  }, [setConfig]);
+
+  const undoChanges = useCallback(() => {
+    if (!originalRef.current) return;
+    const restored = deepClone(originalRef.current);
+    ignoreConfigSyncRef.current = true;
+    setConfig(restored);
+    setDraft(restored);
+    previewDraftRef.current = null;
+    setIsPreviewing(false);
+    onClose();
+  }, [onClose, setConfig]);
+
   // ---------------------------
   // Single-section editor renderer
   // ---------------------------
@@ -229,10 +319,12 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
           <div className="font-semibold">{section.type.toUpperCase()}</div>
           <div className="pt-2 flex items-center gap-2">
             <div className="flex-1" />
-            <button className="btn btn-ghost" onClick={() => removeSection(index)}>
-              <FontAwesomeIcon icon={faTrash} className="text-sm" />
-              Remove section
-            </button>
+            {section.type !== 'header' && section.type !== 'footer' && index >= 0 && (
+              <button className="btn btn-ghost" onClick={() => removeSection(index)}>
+                <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                Remove section
+              </button>
+            )}
           </div>
         </div>
 
@@ -250,10 +342,26 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
             <label className="flex items-end gap-2">
               <input
                 type="checkbox"
-                checked={section.visible !== false}
-                onChange={(e) => onChange({ ...section, visible: e.target.checked })}
+                checked={
+                  section.type === 'header'
+                    ? (draft?.showHeader ?? true)
+                    : section.type === 'footer'
+                      ? (draft?.showFooter ?? true)
+                      : section.visible !== false
+                }
+                onChange={(e) => {
+                  if (section.type === 'header') {
+                    setDraft((prev) => (prev ? { ...prev, showHeader: e.target.checked } : prev));
+                    return;
+                  }
+                  if (section.type === 'footer') {
+                    setDraft((prev) => (prev ? { ...prev, showFooter: e.target.checked } : prev));
+                    return;
+                  }
+                  onChange({ ...section, visible: e.target.checked });
+                }}
               />
-              <span>Visible</span>
+              <span>{section.type === 'header' || section.type === 'footer' ? 'Show' : 'Visible'}</span>
             </label>
           </div>
 
@@ -282,7 +390,7 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
   if (!draft) {
     return (
       <div className="fixed inset-0 z-[1200] bg-black/50 flex items-center justify-center p-4">
-        <div className="card p-6">
+        <div className="card admin-card p-6">
           <div className="text-sm text-muted">Loading config…</div>
           <div className="mt-4 text-right">
             <button className="btn btn-ghost" onClick={onClose}>
@@ -294,16 +402,49 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
     );
   }
 
-  const selected = draft.sections[selectedIndex];
+  if (isPreviewing) {
+    return (
+      <div className="fixed inset-0 z-[12000] pointer-events-none">
+        <div className="fixed top-[90px] right-4 z-[12010] pointer-events-auto">
+          <div className="card card-solid admin-card px-4 py-3 flex items-center gap-3">
+            <div className="text-sm text-muted">Previewing draft</div>
+            <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button className="btn btn-ghost" onClick={undoChanges}>
+              Undo Changes
+            </button>
+            <button className="btn btn-inverted" onClick={returnToEditor}>
+              Return to editor
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const selected =
+    selectedSlot?.kind === 'header'
+      ? draft.header
+      : selectedSlot?.kind === 'footer'
+        ? draft.footer
+        : selectedSlot?.kind === 'section'
+          ? draft.sections[selectedSlot.index]
+          : undefined;
 
   return (
     <div className="fixed edit-modal inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
-      <div className="card card-solid p-4 relative w-fit !max-w-full pr-[70px] overflow-hidden card-screen-height">
+      <div className="card card-solid admin-card p-4 relative w-fit !max-w-full pr-[70px] overflow-hidden card-screen-height">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="font-semibold text-lg">Edit Site Content</div>
           <div className="flex items-center gap-2 save-config-btns">
             {error && <div className="text-red-600 text-sm mr-3">{error}</div>}
+            {isDirty && (
+              <button className="btn btn-inverted" onClick={startPreview}>
+                Preview
+              </button>
+            )}
             {isDirty && (
               <button className="btn btn-ghost" onClick={onRestore}>
                 Restore
@@ -317,7 +458,20 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
             </button>
           </div>
         </div>
+            <div className="p-4 border-b">
+          <AdminAIChatPanel
+            mode="inline"
+            title="AI (Edit Sections)"
+            placeholder="Ask AI to update sections, content, or theme..."
+            config={draft}
+            onApplyPatch={(patch) => {
+              pendingAutoPreviewRef.current = true;
+              setDraft((prev) => (prev ? applySiteConfigPatch(prev, patch) : prev));
+            }}
+          />
+        </div>
 
+        
         {/* Body */}
         <div className="grid md:grid-cols-3 gap-0">
           {/* Left: Sections list (select one) */}
@@ -325,64 +479,82 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
             <div className="text-sm opacity-70">Sections</div>
 
             <div className="space-y-2">
-              {draft.sections.map((s, i) => {
+              {slots.map((slot, i) => {
+                const s = slot.section;
+                const isLocked = slot.kind === 'header' || slot.kind === 'footer';
                 const isSelected = i === selectedIndex;
                 return (
                   <div
-                    key={s.id}
+                    key={`${slot.kind}:${s.id}`}
                     // type="button"
                     onClick={() => setSelectedIndex(i)}
                     className={[
-                      'card card-solid p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
+                      'card card-solid admin-card p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
                       isSelected ? 'outline outline-2 outline-primary bg-black/5' : 'hover:bg-black/5',
                     ].join(' ')}
                     aria-current={isSelected ? 'true' : undefined}
                   >
                     <div className="flex flex-row gap-3">
                       <div className="flex flex-col gap-1">
+                        {isLocked || (slot.kind === 'section' && slot.index === 0)?<></>:
                         <button
                           className="btn btn-ghost px-2 py-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            moveUp(i);
+                            if (slot.kind === 'section') moveUp(slot.index);
                           }}
-                          disabled={i === 0}
+                          disabled={isLocked || (slot.kind === 'section' && slot.index === 0)}
                           title="Move up"
                         >
                           <FontAwesomeIcon icon={faChevronUp} className="text-xs" />
                         </button>
+              }
+              {isLocked || (slot.kind === 'section' && slot.index === draft.sections.length - 1)?<></>:
                         <button
                           className="btn btn-ghost px-2 py-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            moveDown(i);
+                            if (slot.kind === 'section') moveDown(slot.index);
                           }}
-                          disabled={i === draft.sections.length - 1}
+                          disabled={
+                            isLocked ||
+                            (slot.kind === 'section' && slot.index === draft.sections.length - 1)
+                          }
                           title="Move down"
                         >
                           <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
                         </button>
+                         }
                       </div>
                     <div className="min-w-0">
-                      <div className="font-medium">{s.type}</div>
+                      <div className="font-medium">
+                        {s.type}
+                        {slot.kind === 'header' }
+                        {slot.kind === 'footer' }
+                      </div>
                       <div className="text-xs text-muted break-all">{s.id}</div>
                     </div>
                     </div>
-                    <button className="btn btn-ghost" onClick={() => removeSection(i)} title={"Remove section"}>
+                    {slot.kind === 'section' && (
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => removeSection(slot.index)}
+                        title={'Remove section'}
+                      >
                         <FontAwesomeIcon icon={faTrash} className="text-sm" />
                       </button>
+                    )}
                   </div>
                 );
               })}
               {draft.sections.length === 0 && (
-                <div className="text-muted text-sm">No sections yet.</div>
+                <div className="text-muted text-sm">No body sections yet.</div>
               )}
             </div>
 
             {/* Quick add (dynamic) */}
             <div className="pt-4 border-t">
               <div className="text-sm opacity-70 mb-2">
-                <FontAwesomeIcon icon={faPlus} className="text-xs" />
                 Add section</div>
               <div className="flex flex-wrap gap-2">
                 {getAllowedSectionTypes().map((t) => (
@@ -399,10 +571,22 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
           </div>
 
           {/* Right: Only the selected editor */}
-          <div className="md:col-span-2 p-4 space-y-4 right-editor-container">
+          <div className="md:col-span-2 p-4 space-y-4">
             {selected ? (
-              <div key={selected.id} className="card card-solid p-4 space-y-3 right-editor-card">
-                {renderEditor(selected, selectedIndex, (next) => updateSection(selectedIndex, next))}
+              <div key={selected.id} className="card card-solid admin-card p-4 space-y-3 right-editor-card">
+                {selectedSlot?.kind === 'header'
+                  ? renderEditor(selected as AnySection, -1, (next) =>
+                      setDraft((prev) => (prev ? { ...prev, header: next as any } : prev))
+                    )
+                  : selectedSlot?.kind === 'footer'
+                    ? renderEditor(selected as AnySection, -1, (next) =>
+                        setDraft((prev) => (prev ? { ...prev, footer: next as any } : prev))
+                      )
+                    : selectedSlot?.kind === 'section'
+                      ? renderEditor(selected as AnySection, selectedSlot.index, (next) =>
+                          updateSection(selectedSlot.index, next)
+                        )
+                      : null}
               </div>
             ) : (
               <div className="text-sm text-muted">Select a section to edit.</div>
@@ -414,7 +598,7 @@ export default function ConfigModal({ onClose }: ConfigModalProps) {
       {/* Media Picker Overlay */}
       {pickerOpen && (
         <div className="fixed inset-0 z-[1300] bg-black/60 flex items-center justify-center p-4">
-          <div className="card card-solid p-4 relative w-fit max-w-[95vw] pr-[70px] max-h-[90vh] overflow-auto">
+          <div className="card card-solid admin-card p-4 relative w-fit max-w-[95vw] pr-[70px] max-h-[90vh] overflow-auto">
             <button
               onClick={handleCancelPick}
               className="absolute right-3 top-3 btn btn-ghost"

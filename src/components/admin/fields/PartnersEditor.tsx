@@ -223,7 +223,7 @@ export default function EditPartners({
       {/* Partners list */}
       <div className="space-y-4">
         {items.map((p, idx) => (
-          <div key={`partner-${idx}`} className="card card-solid p-4 space-y-4">
+          <div key={`partner-${idx}`} className="card admin-card card-solid p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="font-medium">{p.name || 'New Partner'}</div>
               <div className="flex items-center gap-2">

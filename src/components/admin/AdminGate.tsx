@@ -8,7 +8,7 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return;
-      const hasAKey = e.code === 'KeyA' || e.key.toLowerCase() === 'a';
+      const hasAKey = e.code === 'KeyA' || `${e.key}`?.toLowerCase() === 'a';
       const ctrlOrMeta = e.ctrlKey || e.metaKey;
       const ctrlAndMeta = e.ctrlKey && e.metaKey;
       const altOrShift = e.altKey || e.shiftKey;

@@ -206,7 +206,7 @@ export default function EditSocials({
               : `https://...`;
 
         return (
-          <div key={`social-${i}`} className="card card-solid p-3 space-y-3">
+          <div key={`social-${i}`} className="card admin-card card-solid p-3 space-y-3">
             <div className="grid md:grid-cols-[1fr_2fr_1fr_auto_auto_auto] gap-2">
               <select
                 className="select"

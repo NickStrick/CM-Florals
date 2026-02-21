@@ -3,6 +3,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import type { SiteConfig, SiteStyle, ThemePreset } from '@/types/site';
+import { normalizeSiteConfig } from '@/lib/siteConfigSections';
 
 type Ctx = {
   /** Current site configuration (null only before initial mount) */
@@ -34,10 +35,10 @@ export function SiteProvider({
   initial: SiteConfig;
   children: React.ReactNode;
 }) {
-  const [config, _setConfig] = useState<SiteConfig>(initial);
+  const [config, _setConfig] = useState<SiteConfig>(() => normalizeSiteConfig(initial));
 
   // expose full-replacement setter while preserving previous API
-  const setConfig = useCallback((next: SiteConfig) => _setConfig(next), []);
+  const setConfig = useCallback((next: SiteConfig) => _setConfig(normalizeSiteConfig(next)), []);
 
   // apply data-theme + runtime CSS vars (unchanged from your version)
   useEffect(() => {
@@ -45,9 +46,36 @@ export function SiteProvider({
     const b = document.body;
     const preset = (config.theme.preset ?? 'ocean') as ThemePreset;
     b.setAttribute('data-theme', preset);
-    if (config.theme.primary) b.style.setProperty('--primary', config.theme.primary);
-    if (config.theme.accent)  b.style.setProperty('--accent',  config.theme.accent);
+    const customColors =
+      config.theme.preset === 'custom' ? config.theme.colors : undefined;
+    const resolved = {
+      primary: customColors?.primary ?? config.theme.primary,
+      accent: customColors?.accent ?? config.theme.accent,
+      bg: customColors?.bg ?? config.theme.bg,
+      bg2: customColors?.bg2 ?? config.theme.bg2,
+      fg: customColors?.fg ?? config.theme.fg,
+      muted: customColors?.muted ?? config.theme.muted,
+      text1: customColors?.text1 ?? config.theme.text1,
+      text2: customColors?.text2 ?? config.theme.text2,
+    };
+    if (resolved.primary) b.style.setProperty('--primary', resolved.primary);
+    else b.style.removeProperty('--primary');
+    if (resolved.accent)  b.style.setProperty('--accent',  resolved.accent);
+    else b.style.removeProperty('--accent');
+    if (resolved.bg) b.style.setProperty('--bg', resolved.bg);
+    else b.style.removeProperty('--bg');
+    if (resolved.bg2) b.style.setProperty('--bg-2', resolved.bg2);
+    else b.style.removeProperty('--bg-2');
+    if (resolved.fg) b.style.setProperty('--fg', resolved.fg);
+    else b.style.removeProperty('--fg');
+    if (resolved.muted) b.style.setProperty('--muted', resolved.muted);
+    else b.style.removeProperty('--muted');
+    if (resolved.text1) b.style.setProperty('--text-1', resolved.text1);
+    else b.style.removeProperty('--text-1');
+    if (resolved.text2) b.style.setProperty('--text-2', resolved.text2);
+    else b.style.removeProperty('--text-2');
     if (config.theme.radius)  b.style.setProperty('--radius',  radiusToPx(config.theme.radius));
+    else b.style.removeProperty('--radius');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.theme]);
 

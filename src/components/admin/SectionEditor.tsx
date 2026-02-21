@@ -19,7 +19,7 @@ export default function SectionEditor({
   const reg = sectionRegistry[section.type];
 
   return (
-    <div className="card card-solid p-4 space-y-3">
+    <div className="card admin-card card-solid p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="font-semibold">{section.type.toUpperCase()}</div>
       </div>
