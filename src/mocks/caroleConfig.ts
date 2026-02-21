@@ -54,6 +54,79 @@ export const mockSiteConfig: SiteConfig = {
       "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founding Florist Carole Murray.",
     favicon: logo2.src,
   },
+  settings: {
+    general: {
+      businessDisplayName: "CM Florals",
+      businessNotificationEmail: "nickolasstricker@gmail.com",
+    },
+    payments: {
+      cartActive: true,
+      paymentType: "converge",
+      supportEmail: "shop@cmfloralsandgifts.com",
+      supportPhone: { label: "Call us at 773-209-4805", href: phoneHref },
+      taxes: {
+        enabled: true,
+        ratePercent: 10,
+        taxShipping: false,
+        defaultProductTaxable: true,
+      },
+      delivery: {
+        enabled: true,
+        type: "flat",
+        flatFeeCents: 1500,
+        mode: "both",
+         addressCapture: {
+          enabled: true,
+          required: true,
+          method: 'googleForm',
+          googleFormEntryId: '',
+        },
+      },
+      googleFormOptions: {
+        addItemToGForm: true,
+        itemsEntryId: "entry.918647669",
+        totalEntryId: "entry.65280150",
+      },
+      googleFormSubmitBeforePayment: true,
+      externalPaymentUrl: "https://venmo.com/u/Carole-Murray-9",
+      googleFormUrl:
+        "https://docs.google.com/forms/d/e/1FAIpQLScPLQtqUSiP_CFn1frA3nArkkue_jTWeiE2ZVto6NHOheStrg/formResponse",
+      checkoutInputs: [
+        {
+          id: "customer-name",
+          label: "Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter your full name",
+          description: "The name of the person purchasing the arrangement.",
+          googleFormEntryId: "entry.1007473156",
+        },
+        {
+          id: "customer-phone",
+          label: "Phone",
+          type: "text",
+          required: true,
+          placeholder: "Enter your phone number",
+          description: "The phone number of the person purchasing the arrangement.",
+          googleFormEntryId: "entry.1090739960",
+        },
+        {
+          id: "pickup-date",
+          label: "Pick up Date and Time",
+          type: "text",
+          required: true,
+          googleFormEntryId: "entry.299847389",
+        },
+        {
+          id: "special-instructions",
+          label: "Special Instructions",
+          type: "textarea",
+          placeholder: "Any special requests or notes?",
+          googleFormEntryId: "entry.809680059",
+        },
+      ],
+    },
+  },
   sections: [
     // HEADER
     {
@@ -98,51 +171,6 @@ export const mockSiteConfig: SiteConfig = {
       style: { columns: 3, cardVariant: "default", showBadges: true },
       showAllThreshold: 20,
       buyCtaFallback: "Buy Now",
-      cartActive: true,
-      paymentType: "clover",
-      supportEmail: "shop@cmfloralsandgifts.com",
-      supportPhone: {label: "Call or Text 773-209-4805", href: phoneHref},
-      googleFormOptions:{
-        addItemToGForm: true,
-        itemsEntryId: "entry.918647669",
-        totalEntryId: "entry.65280150",
-      },
-      
-      externalPaymentUrl: "https://venmo.com/u/Carole-Murray-9",
-      googleFormUrl: 'https://docs.google.com/forms/d/1NgHLz-cE-xzqcehqCNcr9C-OLnxzbo2kz1147S5rMWQ/formResponse',
-      checkoutInputs:[{
-        id: "customer-name",
-        label: "Name",
-        type: "text",
-        required: true,
-        placeholder: "Enter your full name",
-        description: "The name of the person purchasing the arrangement.",
-        googleFormEntryId: "entry.1007473156",
-      },
-      {
-        id: "customer-phone",
-        label: "Phone",
-        type: "text",
-        required: true,
-        placeholder: "Enter your phone number",
-        description: "The phone number of the person purchasing the arrangement.",
-        googleFormEntryId: "entry.1090739960",
-      },
-      {
-        id: "pickup-date",
-        label: "Pick up Date and Time",
-        type: "text",
-        required: true,
-        googleFormEntryId: "entry.299847389",
-      },
-      {
-        id: "special-instructions",
-        label: "Special Instructions",
-        type: "textarea",
-        placeholder: "Any special requests or notes?",
-        googleFormEntryId: "entry.809680059",
-      },
-    ],
       products: [
         {
           id: "cmf-rose-6",
@@ -359,7 +387,7 @@ export const mockSiteConfig: SiteConfig = {
         {
           id: "cmf-rose-36",
           name: "3 Dozen Mega Valentines Day Bouquet",
-          subtitle: "Three dozen Valentineâ€™s roses",
+          subtitle: "Three dozen Valentines roses",
           sku: "CMF-R36",
           price: 20000,
           compareAtPrice: 21500,
@@ -370,7 +398,7 @@ export const mockSiteConfig: SiteConfig = {
           ],
           summary: "Three dozen roses for an unforgettable gesture.",
           description:
-            "Thirty-six red roses arranged lush and full for the ultimate Valentineâ€™s statement.",
+            "Thirty-six red roses arranged lush and full for the ultimate Valentines statement.",
           features: ["Seasonal blooms", "Hand-tied & vased", "Gift note included"],
           specs: [
           ],
@@ -672,7 +700,7 @@ columns: 2,
           ],
         },
         {
-          title: "Support and Connect",
+          title: "Connect",
           links: [
             { label: "shop@cmfloralsandgifts.com", href: 'mailto:shop@cmfloralsandgifts.com' },
             { label: "Instagram", href: instagramHref },
