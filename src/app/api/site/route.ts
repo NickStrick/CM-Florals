@@ -6,6 +6,7 @@ export async function GET(): Promise<NextResponse<SiteConfig>> {
   const data: SiteConfig = {
     theme: { preset: 'ocean', radius: 'xl' },
     meta: { title: 'Site-Crafter Demo', description: 'Composable pages' },
+    settings: { general: {}, payments: {} },
     sections: [
       { id: 'hdr', type: 'header', logoText: 'Site-Crafter', links: [{ label:'Features', href:'#' }], cta: { label:'Get Started', href:'#cta' } },
       { id: 'hero', type: 'hero', eyebrow: 'Freelancer-ready', title: 'Build client sites in minutes', subtitle: 'Productize 80–90% of the work.', primaryCta: { label:'See pricing', href:'#' }, secondaryCta: { label:'Book a call', href:'#sched' } },

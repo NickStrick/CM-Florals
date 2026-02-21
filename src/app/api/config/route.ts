@@ -30,6 +30,16 @@ export async function PUT(req: NextRequest) {
   const guard = guardAdmin(req);
   if (guard) return guard;
 
+  // local dev “mock mode” (do not persist to S3)
+  if (process.env.NEXT_PUBLIC_USE_MOCK === '1') {
+    const json = await req.json();
+    const parsed = SiteConfigSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.flatten() }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true, variant: (req.nextUrl.searchParams.get('variant') as ConfigVariant) || 'draft', config: parsed.data });
+  }
+
   const variant = (req.nextUrl.searchParams.get('variant') as ConfigVariant) || 'draft';
   const json = await req.json();
 

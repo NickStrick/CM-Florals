@@ -22,6 +22,11 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Missing key or config' }, { status: 400 });
   }
 
+  // In mock mode, don't write to S3.
+  if (process.env.NEXT_PUBLIC_USE_MOCK === '1') {
+    return NextResponse.json({ ok: true, mock: true }, { status: 200 });
+  }
+
   await saveConfigJson({ key, bucket, json: config });
   return NextResponse.json({ ok: true }, { status: 200 });
 }

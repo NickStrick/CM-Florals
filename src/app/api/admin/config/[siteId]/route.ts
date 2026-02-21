@@ -96,10 +96,6 @@ export async function PUT(
   const guard = assertAdmin(req);
   if (guard) return guard;
 
-  if (!BUCKET) {
-    return NextResponse.json({ error: 'Missing bucket' }, { status: 500 });
-  }
-
   const siteId = (await params).siteId;
   const Key = keyFor(siteId);
 
@@ -107,6 +103,15 @@ export async function PUT(
     const body = await req.text(); // accept raw text
     // Make sure it's valid JSON (and return parsed version)
     const parsed = JSON.parse(body);
+
+    // In mock mode, don't write to S3 (just echo back the parsed config).
+    if (process.env.NEXT_PUBLIC_USE_MOCK === '1') {
+      return NextResponse.json(parsed, { status: 200 });
+    }
+
+    if (!BUCKET) {
+      return NextResponse.json({ error: 'Missing bucket' }, { status: 500 });
+    }
 
     await s3.send(
       new PutObjectCommand({

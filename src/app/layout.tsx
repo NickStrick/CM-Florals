@@ -66,7 +66,7 @@ export const metadata: Metadata = {
 
 
 async function getSiteConfig(): Promise<SiteConfig> {
-  const useMock = process.env.NEXT_PUBLIC_USE_MOCK === "1";
+  const useMock = process.env.NEXT_PUBLIC_USE_MOCK === "1" || process.env.NEXT_PUBLIC_USE_MOCK === "2";
   if (useMock) return mockSiteConfig;
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
