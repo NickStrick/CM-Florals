@@ -5,29 +5,26 @@ import type {
   ProductListingsSection,
   Product,
   ProductImage,
-  ProductSpec,
 } from '@/types/site';
 import type { EditorProps } from './types';
 import ProductCardEditor from './products/ProductCardEditor';
 
 // ---------- Helper types ----------
-type LocalSpec  = ProductSpec  & { _id: string };
 type LocalImage = ProductImage & { _id: string };
 
 // Editor-only row ids for variants
 type LocalColor = { _id: string; name: string; hex?: string; imageUrl?: string };
-type LocalSize  = { _id: string; label: string; value?: string };
+  type LocalOptionItem = { _id: string; label: string; value?: string; order?: number; default?: boolean };
+  type LocalOptionGroup = { _id: string; label: string; optionItems?: LocalOptionItem[] };
 
 type LocalProduct = Product & {
   _id: string;                 // stable key for React list
   images: LocalImage[];
   features: string[];
-  specs: LocalSpec[];
   badges: string[];
-  tags: string[];
   // variants (editor-only ids)
   colors?: LocalColor[];
-  sizes?: LocalSize[];
+  options?: LocalOptionGroup[];
 };
 
 
@@ -43,10 +40,8 @@ function withLocalIds(p: Product): LocalProduct {
     ...p,
     _id: rid(),
     images: (p.images ?? []).map((im) => ({ ...im, _id: rid() })),
-    specs:  (p.specs  ?? []).map((sp) => ({ ...sp, _id: rid() })),
     features: p.features ?? [],
     badges:   p.badges   ?? [],
-    tags:     p.tags     ?? [],
     // add editor ids for variants
       // --- safe variant mapping ---
     colors: Array.isArray(p.colors)
@@ -56,28 +51,32 @@ function withLocalIds(p: Product): LocalProduct {
             : { _id: rid(), name: String(c), hex: '', imageUrl: '' }
         )
       : [],
-    sizes: Array.isArray(p.sizes)
-      ? p.sizes.map((s) =>
-          typeof s === 'object' && s !== null
-            ? { ...s, _id: rid() }
-            : { _id: rid(), label: String(s), value: '' }
-        )
+    options: Array.isArray(p.options)
+      ? p.options.map((g) => ({
+          ...g,
+          _id: rid(),
+          optionItems: Array.isArray(g.optionItems)
+            ? g.optionItems.map((it) => ({ ...it, _id: rid() }))
+            : [],
+        }))
       : [],
   };
 }
 
 function stripLocalIds(p: LocalProduct): Product {
-  const { images, specs, colors, sizes, ...rest } = p;
+  const { images, colors, options, ...rest } = p;
   return {
     ...rest,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     images: images?.map(({ _id, ...img }: LocalImage) => img) ?? [],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    specs: specs?.map(({ _id, ...sp }: LocalSpec) => sp) ?? [],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     colors: colors?.map(({ _id, ...c }: LocalColor) => c) ?? [],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    sizes: sizes?.map(({ _id, ...s }: LocalSize) => s) ?? [],
+    options:
+      options?.map(({ _id, optionItems, ...g }: LocalOptionGroup) => ({
+        ...g,
+        optionItems: (optionItems ?? []).map(({ _id: itemId, ...it }: LocalOptionItem) => it),
+      })) ?? [],
   };
 }
 
@@ -146,12 +145,10 @@ export default function EditProductListings({
       stock: 'in_stock',
       images: [],
       features: [],
-      specs: [],
       badges: [],
-      tags: [],
       // variants start empty
       colors: [],
-      sizes: [],
+      options: [],
     });
     commitProducts([...localProducts, next]);
   }, [commitProducts, localProducts]);
@@ -210,11 +207,13 @@ export default function EditProductListings({
           <select
             className="select w-full"
             value={style.columns ?? 3}
-            onChange={(e) => setStyle({ columns: Number(e.target.value) as 1 | 2 | 3 })}
+            onChange={(e) => setStyle({ columns: Number(e.target.value) as 1 | 2 | 3 | 4 | 5 })}
           >
             <option value={1}>1</option>
             <option value={2}>2</option>
             <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={5}>5</option>
           </select>
         </div>
 
@@ -241,14 +240,17 @@ export default function EditProductListings({
           <span>Show badges</span>
         </label>
 
-        <label className="flex items-end gap-2">
-          <input
-            type="checkbox"
-            checked={section.detailsEnabled === true}
-            onChange={(e) => setSectionField('detailsEnabled', e.target.checked)}
-          />
-          <span>Enable product details modal</span>
-        </label>
+        <div>
+          <label className="block text-sm font-medium">View type</label>
+          <select
+            className="select w-full"
+            value={section.viewType ?? 'featured'}
+            onChange={(e) => setSectionField('viewType', e.target.value as 'list' | 'featured')}
+          >
+            <option value="featured">featured</option>
+            <option value="list">list</option>
+          </select>
+        </div>
 
         <div>
           <label className="block text-sm font-medium">Show-all threshold</label>

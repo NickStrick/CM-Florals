@@ -5,6 +5,15 @@ import Image from 'next/image';
 import type { Product } from '@/types/site';
 import { motion } from 'framer-motion';
 import { resolveAssetUrl } from '@/lib/assetUrl';
+import { useCart } from '@/context/CartContext';
+import { useSite } from '@/context/SiteContext';
+import {
+  buildLineItemId,
+  buildVariantLabel,
+  effectivePriceForSelection,
+  normalizeOptionGroups,
+  normalizeSelection,
+} from '@/lib/productOptions';
 
 type Props = {
   product: Product;
@@ -35,22 +44,6 @@ function normalizeColors(colors: Product['colors']): NormColor[] {
   });
 }
 
-// Normalize sizes: allow string[] or {label, value?}[]
-type NormSize = { label: string; value?: string };
-function normalizeSizes(sizes: Product['sizes']): NormSize[] {
-  if (!Array.isArray(sizes)) return [];
-  return sizes.map((s: unknown) => {
-    if (s && typeof s === 'object') {
-      const obj = s as Record<string, unknown>;
-      return {
-        label: String(obj.label ?? ''),
-        value: typeof obj.value === 'string' ? obj.value : undefined,
-      };
-    }
-    return { label: String(s) };
-  });
-}
-
 export default function ProductDetailModal({ product, onClose }: Props) {
   const {
     name,
@@ -64,12 +57,11 @@ export default function ProductDetailModal({ product, onClose }: Props) {
     purchaseUrl,
     ctaLabel = 'Buy Now',
     colors: rawColors,
-    sizes: rawSizes,
   } = product;
 
   // Normalize variants defensively
   const colors = useMemo(() => normalizeColors(rawColors), [rawColors]);
-  const sizes  = useMemo(() => normalizeSizes(rawSizes), [rawSizes]);
+  const optionGroups = useMemo(() => normalizeOptionGroups(product.options), [product.options]);
 
   // Main image with thumbnail switch
   const [mainIndex, setMainIndex] = useState(0);
@@ -80,17 +72,38 @@ export default function ProductDetailModal({ product, onClose }: Props) {
 
   // Variant selection
   const [selectedColor, setSelectedColor] = useState<NormColor | null>(colors[0] ?? null);
-  const [selectedSize, setSelectedSize]   = useState<NormSize  | null>(sizes[0]  ?? null);
+  const [selectedByGroup, setSelectedByGroup] = useState<Record<string, string>>({});
+  const isSoldOut = (product.stock ?? 'in_stock') === 'out_of_stock';
+  const canBuy = !!purchaseUrl && !isSoldOut;
+  const selection = useMemo(
+    () => normalizeSelection(optionGroups, selectedByGroup),
+    [optionGroups, selectedByGroup]
+  );
+  const effectivePrice = useMemo(() => effectivePriceForSelection(price, optionGroups, selection), [
+    price,
+    optionGroups,
+    selection,
+  ]);
 
-  const canBuy = !!purchaseUrl && (product.stock ?? 'in_stock') !== 'out_of_stock';
+  const { addItem, openCart, isCartOpen } = useCart();
+  const { config } = useSite();
+  const payments = config?.settings?.payments;
+  const cartActive = payments?.cartActive === true;
+  const taxes = payments?.taxes;
+  const offsetForCart = cartActive && isCartOpen;
 
   return (
-    <div className="fixed inset-0 z-[1200] bg-black/60 flex items-center justify-center p-4">
+    <div
+      className={[
+        'fixed inset-0 z-[5100] bg-black/60 flex items-center justify-center p-4 product-detail-overlay',
+        offsetForCart ? 'product-detail-overlay--with-cart' : '',
+      ].join(' ')}
+    >
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="card card-modal relative w-full max-w-3xl p-0 overflow-hidden"
+        className="card card-modal product-detail-modal relative w-full max-w-3xl p-0 overflow-hidden"
       >
         <button
           className="absolute right-3 top-3 btn btn-ghost"
@@ -103,7 +116,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
         {/* Content */}
         <div className="grid md:grid-cols-2 gap-0">
           {/* Media */}
-          <div className="p-4 md:p-6 border-b md:border-b-0 md:border-r">
+          <div className="p-4 md:p-6 border-b md:border-b-0 md:border-r border-[var(--bg-2)]">
             {mainImage ? (
               <Image
                 src={mainImage}
@@ -129,7 +142,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                       key={im.url + idx}
                       onClick={() => setMainIndex(idx)}
                       className={`rounded-lg overflow-hidden border ${
-                        isActive ? 'border-primary' : 'border-transparent opacity-90 hover:opacity-100'
+                        isActive ? 'bg-gradient-colored' : 'border-transparent opacity-90 hover:opacity-100'
                       }`}
                       aria-label={`Show image ${idx + 1}`}
                     >
@@ -148,26 +161,33 @@ export default function ProductDetailModal({ product, onClose }: Props) {
           </div>
 
           {/* Details */}
-          <div className="p-4 md:p-6 space-y-4">
+          <div className="p-4 md:p-6 space-y-4 text-[var(--text-1)]">
             <div>
               {badges && badges.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-2">
                   {badges.map((b, i) => (
-                    <span key={b + i} className="rounded-full border px-2 py-0.5 text-xs opacity-90">
+                    <span key={b + i} className="rounded-full border border-[var(--text-1)] px-2 py-0.5 text-xs opacity-90">
                       {b}
                     </span>
                   ))}
                 </div>
               )}
-              <h3 className="text-2xl font-semibold">{name}</h3>
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-2xl font-semibold">{name}</h3>
+                {isSoldOut && (
+                  <span className="rounded-full border px-3 py-1 text-xs font-semibold">
+                    Sold out
+                  </span>
+                )}
+              </div>
               {subtitle && <p className="mt-1 opacity-80">{subtitle}</p>}
             </div>
 
             <div className="flex items-end gap-3">
               <div className="text-3xl font-extrabold leading-none">
-                {formatPrice(price, currency)}
+                {formatPrice(effectivePrice, currency)}
               </div>
-              {typeof compareAtPrice === 'number' && compareAtPrice > price && (
+              {typeof compareAtPrice === 'number' && compareAtPrice > effectivePrice && (
                 <div className="pb-1 text-sm line-through opacity-60">
                   {formatPrice(compareAtPrice, currency)}
                 </div>
@@ -190,7 +210,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                         type="button"
                         onClick={() => setSelectedColor(c)}
                         className={`px-3 py-1 rounded-full border text-sm ${
-                          active ? 'border-primary' : 'border-black/10 hover:border-black/30'
+                          active ? 'bg-gradient-colored' : 'border-black/50 hover:border-black/60'
                         }`}
                         title={c.name}
                       >
@@ -210,42 +230,38 @@ export default function ProductDetailModal({ product, onClose }: Props) {
               </div>
             )}
 
-            {/* Size selector */}
-            {sizes.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Size</div>
-                <div className="flex flex-wrap gap-2">
-                  {sizes.map((s) => {
-                    const label = s.label || s.value || '';
-                    const active = (selectedSize?.label || selectedSize?.value) === (s.label || s.value);
-                    return (
-                      <button
-                        key={`size-${label}`}
-                        type="button"
-                        onClick={() => setSelectedSize(s)}
-                        className={`px-3 py-1 rounded-full border text-sm ${
-                          active ? 'border-primary' : 'border-black/10 hover:border-black/30'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
+            {/* Options */}
+            {optionGroups.length > 0 && (
+              <div className="space-y-4">
+                {optionGroups.map((g) => {
+                  const selectedKey = selection[g.label] ?? '';
+                  return (
+                    <div key={`opt-${g.label}`} className="space-y-2">
+                      <div className="text-sm font-medium">{g.label}</div>
+                      <div className="flex flex-wrap gap-2">
+                        {g.optionItems.map((it) => {
+                          const key = it.value ?? it.label;
+                          const active = key === selectedKey;
+                          return (
+                            <button
+                              key={`opt-${g.label}-${key}`}
+                              type="button"
+                              onClick={() => setSelectedByGroup((cur) => ({ ...cur, [g.label]: key }))}
+                              className={`px-3 py-1 rounded-full border text-sm ${
+                                active ? 'bg-gradient-colored' : 'border-black/50 hover:border-black/60'
+                              }`}
+                            >
+                              {it.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            {/* Quantity */}
-            {/* <div className="space-y-2">
-              <label className="block text-sm font-medium">Quantity</label>
-              <input
-                type="number"
-                min={1}
-                className="input w-24"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-              />
-            </div> */}
 
             {/* Features */}
             {product.features && product.features.length > 0 && (
@@ -256,28 +272,53 @@ export default function ProductDetailModal({ product, onClose }: Props) {
               </ul>
             )}
 
-            {/* Specs */}
-            {product.specs && product.specs.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                {product.specs.map((s, i) => (
-                  <div key={i} className="text-sm">
-                    <span className="opacity-70">{s.label}:</span> {s.value}
-                  </div>
-                ))}
-              </div>
+            {/* CTA */}
+            {cartActive && (
+              <button
+                className="btn w-full justify-center mt-2 btn-gradient"
+                type="button"
+                disabled={isSoldOut}
+                onClick={() => {
+                  if (isSoldOut) return;
+                  const defaultTaxable = taxes?.defaultProductTaxable === true;
+                  const taxable = typeof product.taxable === 'boolean' ? product.taxable : defaultTaxable;
+
+                  const variantLabel = buildVariantLabel(optionGroups, selection);
+                  const itemId = buildLineItemId(product.id, selection);
+                  const itemName = variantLabel ? `${name} (${variantLabel})` : name;
+                  const itemPrice = effectivePriceForSelection(price, optionGroups, selection);
+
+                  addItem({
+                    id: itemId,
+                    name: itemName,
+                    price: itemPrice,
+                    currency,
+                    imageUrl: mainImage || undefined,
+                    taxable,
+                    options: selection,
+                  });
+                  openCart();
+                  onClose();
+                }}
+              >
+                {isSoldOut ? 'Sold out' : 'Add to Cart'}
+              </button>
             )}
 
-            {/* CTA */}
-            {purchaseUrl && (
+            {!cartActive && purchaseUrl && canBuy && (
               <a
                 href={purchaseUrl}
-                className={`btn w-full justify-center mt-2 ${canBuy ? 'btn-gradient' : 'btn-ghost'}`}
+                className="btn w-full justify-center mt-2 btn-gradient"
                 rel="noopener noreferrer"
                 target="_blank"
-                aria-disabled={!canBuy}
               >
-                {canBuy ? ctaLabel : 'Out of stock'}
+                {ctaLabel}
               </a>
+            )}
+            {!cartActive && purchaseUrl && !canBuy && (
+              <button className="btn w-full justify-center mt-2 btn-ghost" type="button" disabled>
+                Sold out
+              </button>
             )}
           </div>
         </div>

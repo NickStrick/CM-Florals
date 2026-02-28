@@ -81,7 +81,7 @@ function buildSizeProducts(args: {
   subtitle?: string;
   prices: Record<SizeKey, number>; // cents
   imageUrl: string; // importedImage.src
-}): Product[] {
+}): Product {
   const {
     categorySlug,
     categoryBadge,
@@ -93,28 +93,35 @@ function buildSizeProducts(args: {
   } = args;
 
   const mk = (k: SizeKey): Product => ({
-    id: `cmf-${categorySlug}-${baseIndex}-${k.toLowerCase()}`,
-    name: `${name} (${SIZE_LABEL[k]})`,
+    id: `cmf-${categorySlug}-${baseIndex}`,
+    name,
     subtitle,
-    sku: `CMF-${categorySlug.slice(0, 3).toUpperCase()}${baseIndex}${k}`,
-    price: prices[k],
+    sku: `CMF-${categorySlug.slice(0, 3).toUpperCase()}${baseIndex}`,
+    price: prices.M,
     currency: "USD",
     thumbnailUrl: imageUrl,
-    images: [{ url: imageUrl, alt: `${name} (${SIZE_LABEL[k]})` }],
-    summary: `${name} — ${SIZE_LABEL[k]} size.`,
-    description: `${name} in ${SIZE_LABEL[k]} size. Crafted fresh for ${categoryBadge}.`,
+    images: [{ url: imageUrl, alt: name }],
+    summary: `${name}`,
+    description: `${name}. Crafted fresh for ${categoryBadge}.`,
     features: ["Fresh seasonal blooms", "Gift note included"],
-    specs: [],
     badges: [categoryBadge],
     stock: "in_stock",
     quantityAvailable: 99,
-    digital: false,
-    shippingClass: "fragile",
     ctaLabel: "Buy Now",
     maxQuantity: 99,
+    options: [
+      {
+        label: "Size",
+        optionItems: [
+          { label: SIZE_LABEL.S, value: "S", order: 1, price: prices.S },
+          { label: SIZE_LABEL.M, value: "M", order: 2, default: true, price: prices.M },
+          { label: SIZE_LABEL.L, value: "L", order: 3, price: prices.L },
+        ],
+      },
+    ],
   });
 
-  return [mk("S"), mk("M"), mk("L")];
+  return mk("M");
 }
 
 const PRODUCT_DATA = [
@@ -294,10 +301,11 @@ const productSections: ProductListingsSection[] = PRODUCT_DATA.map((cat) => ({
   type: "productListings",
   title: cat.title,
   subtitle: "Handcrafted florals — pickup at Ogilvie / Accenture Tower",
-  style: { columns: 3, cardVariant: "default", showBadges: true },
+  viewType: "list",
+  style: { columns: 4, cardVariant: "default", showBadges: true, sectionType: 'short' },
   showAllThreshold: 200,
   buyCtaFallback: "Buy Now",
-  products: cat.items.flatMap((p, itemIdx) =>
+  products: cat.items.map((p, itemIdx) =>
     buildSizeProducts({
       categorySlug: cat.categorySlug,
       categoryBadge: cat.title,

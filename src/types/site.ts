@@ -542,7 +542,14 @@ export type ProductSpec = {
 };
 
 export type ProductColor = { name: string; hex?: string; imageUrl?: string };
-export type ProductSize  = { label: string; value?: string };
+export type ProductOptionItem = {
+  label: string;
+  value?: string;
+  order?: number;
+  default?: boolean;
+  price?: number;
+};
+export type ProductOptions = { label: string; optionItems?: ProductOptionItem[] };
 
 
 export type Product = {
@@ -563,35 +570,36 @@ export type Product = {
   description?: string;  // long description (markdown/plain)
 
   features?: string[];   // bullet points
-  specs?: ProductSpec[]; // table
+  // specs?: ProductSpec[]; // table // remove
 
   badges?: string[];     // e.g. "New", "Bestseller"
-  tags?: string[];
+  // tags?: string[];// remove
 
   stock?: 'in_stock' | 'low_stock' | 'out_of_stock';
   quantityAvailable?: number;
 
-  digital?: boolean;     // digital product?
-  weightKg?: number;
-  widthCm?: number;
-  heightCm?: number;
-  depthCm?: number;
-  shippingClass?: string;
+  // digital?: boolean;     // remove
+  // weightKg?: number;// remove
+  // widthCm?: number;// remove
+  // heightCm?: number;// remove
+  // depthCm?: number;// remove
+  // shippingClass?: string;// remove
 
   // where Buy Now leads (until payments are integrated)
   purchaseUrl?: string;  // external checkout or link
   ctaLabel?: string;     // default "Buy Now"
   
-   colors?: ProductColor[];
-  sizes?: ProductSize[];           // e.g. ['S','M','L','XL']
+  colors?: ProductColor[];
+  options?: ProductOptions[];           // e.g. ['S','M','L','XL']
   maxQuantity?: number;          // default 10
   taxable?: boolean;             // optional override if taxes enabled
 };
 
 export type ProductListingsStyle = {
-  columns?: 1 | 2 | 3;           // default responsive columns, desktop cap at 3
+  columns?: 1 | 2 | 3 | 4 | 5;           // default responsive columns
   cardVariant?: 'default' | 'ink';
   showBadges?: boolean;
+  sectionType?: 'default' | 'short' | 'long';
 };
 
 export type CheckoutInputType =
@@ -662,10 +670,10 @@ export type ProductListingsSection = SectionBase & {
   title?: string;
   subtitle?: string;
   products: Product[];
+  viewType?: 'list' | 'featured'; // default 'featured'
   style?: ProductListingsStyle;
   showAllThreshold?: number;     // default 3 — show "Show all" if > threshold
   buyCtaFallback?: string;       // default "Buy Now"
-  detailsEnabled?: boolean;        // default false
 };
 
 export type PersonItem = {

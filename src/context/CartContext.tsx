@@ -9,6 +9,7 @@ export type CartItem = {
   price: number; // cents
   currency?: string;
   imageUrl?: string;
+  options?: Record<string, string>;
   quantity: number;
   taxable?: boolean;
 };

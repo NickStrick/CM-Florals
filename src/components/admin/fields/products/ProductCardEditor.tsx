@@ -6,22 +6,20 @@ import type { Product, ProductListingsSection } from '@/types/site';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import ProductImagesEditor from './ProductImagesEditor';
 import ProductFeaturesEditor from './ProductFeaturesEditor';
-import ProductSpecsEditor from './ProductSpecsEditor';
 import ProductBadgesTagsEditor from './ProductBadgesTagsEditor';
 
 type VariantColor = { _id: string; name: string; hex?: string; imageUrl?: string };
-type VariantSize  = { _id: string; label: string; value?: string };
+type VariantOptionItem = { _id: string; label: string; value?: string; order?: number; default?: boolean };
+type VariantOptionGroup = { _id: string; label: string; optionItems?: VariantOptionItem[] };
 
-type LocalProduct = Omit<Product, 'colors' | 'sizes'> & {
+type LocalProduct = Omit<Product, 'colors' | 'options'> & {
   _id: string; // stable editor-only key for the card
   images: Array<{ _id: string; url: string; alt?: string }>;
-  specs: Array<{ _id: string; label: string; value: string }>;
   features: string[];
   badges: string[];
-  tags: string[];
   // variant editors (editor-only ids)
   colors?: VariantColor[];
-  sizes?: VariantSize[];
+  options?: VariantOptionGroup[];
 };
 
 function rid() {
@@ -53,7 +51,7 @@ export default function ProductCardEditor({
 }) {
   // ---------- Variant helpers ----------
   const ensureColors = () => product.colors ?? [];
-  const ensureSizes  = () => product.sizes  ?? [];
+  const ensureOptions = () => product.options ?? [];
 
   const addColor = () => {
     const next = [...ensureColors(), { _id: rid(), name: '', hex: '', imageUrl: '' }];
@@ -73,22 +71,52 @@ export default function ProductCardEditor({
     onUpdate({ colors: arr });
   };
 
-  const addSize = () => {
-    const next = [...ensureSizes(), { _id: rid(), label: '', value: '' }];
-    onUpdate({ sizes: next });
+  const addOptionGroup = () => {
+    const next = [...ensureOptions(), { _id: rid(), label: '', optionItems: [{ _id: rid(), label: '', value: '' }] }];
+    onUpdate({ options: next });
   };
 
-  const updateSize = (i: number, patch: Partial<VariantSize>) => {
-    const arr = [...ensureSizes()];
+  const updateOptionGroup = (i: number, patch: Partial<VariantOptionGroup>) => {
+    const arr = [...ensureOptions()];
     const cur = arr[i];
     if (!cur) return;
     arr[i] = { ...cur, ...patch };
-    onUpdate({ sizes: arr });
+    onUpdate({ options: arr });
   };
 
-  const removeSize = (i: number) => {
-    const arr = ensureSizes().filter((_, idx) => idx !== i);
-    onUpdate({ sizes: arr });
+  const removeOptionGroup = (i: number) => {
+    const arr = ensureOptions().filter((_, idx) => idx !== i);
+    onUpdate({ options: arr });
+  };
+
+  const addOptionItem = (groupIndex: number) => {
+    const groups = [...ensureOptions()];
+    const g = groups[groupIndex];
+    if (!g) return;
+    const items = [...(g.optionItems ?? []), { _id: rid(), label: '', value: '' }];
+    groups[groupIndex] = { ...g, optionItems: items };
+    onUpdate({ options: groups });
+  };
+
+  const updateOptionItem = (groupIndex: number, itemIndex: number, patch: Partial<VariantOptionItem>) => {
+    const groups = [...ensureOptions()];
+    const g = groups[groupIndex];
+    if (!g) return;
+    const items = [...(g.optionItems ?? [])];
+    const cur = items[itemIndex];
+    if (!cur) return;
+    items[itemIndex] = { ...cur, ...patch };
+    groups[groupIndex] = { ...g, optionItems: items };
+    onUpdate({ options: groups });
+  };
+
+  const removeOptionItem = (groupIndex: number, itemIndex: number) => {
+    const groups = [...ensureOptions()];
+    const g = groups[groupIndex];
+    if (!g) return;
+    const items = (g.optionItems ?? []).filter((_, idx) => idx !== itemIndex);
+    groups[groupIndex] = { ...g, optionItems: items };
+    onUpdate({ options: groups });
   };
 
   return (
@@ -252,10 +280,7 @@ export default function ProductCardEditor({
       {/* Features */}
       <ProductFeaturesEditor product={product} onUpdate={onUpdate} />
 
-      {/* Specs */}
-      <ProductSpecsEditor product={product} onUpdate={onUpdate} />
-
-      {/* Badges / Tags */}
+      {/* Badges */}
       <ProductBadgesTagsEditor product={product} onUpdate={onUpdate} />
 
       {/* ---------- Variants: Colors ---------- */}
@@ -298,35 +323,59 @@ export default function ProductCardEditor({
         </div>
       </div>
 
-      {/* ---------- Variants: Sizes ---------- */}
+      {/* ---------- Options ---------- */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Sizes</label>
-          <button className="btn btn-ghost" onClick={addSize}>Add size</button>
+          <label className="text-sm font-medium">Options</label>
+          <button className="btn btn-ghost" onClick={addOptionGroup}>Add option group</button>
         </div>
 
-        {(ensureSizes()).length === 0 && (
-          <div className="text-sm text-muted">No sizes yet.</div>
+        {ensureOptions().length === 0 && (
+          <div className="text-sm text-muted">No options yet.</div>
         )}
 
-        <div className="space-y-2">
-          {ensureSizes().map((s, i) => (
-            <div key={s._id} className="grid md:grid-cols-[1fr_1fr_auto] gap-2 items-center">
-              <input
-                className="input"
-                placeholder="Label (e.g., S, M, L)"
-                value={s.label}
-                onChange={(e) => updateSize(i, { label: e.target.value })}
-              />
-              <input
-                className="input"
-                placeholder="Value (optional)"
-                value={s.value ?? ''}
-                onChange={(e) => updateSize(i, { value: e.target.value })}
-              />
-              <button className="btn btn-ghost text-red-600" onClick={() => removeSize(i)}>
-                Remove
-              </button>
+        <div className="space-y-3">
+          {ensureOptions().map((g, gi) => (
+            <div key={g._id} className="rounded-xl border p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  className="input flex-1"
+                  placeholder="Group label (e.g., Size)"
+                  value={g.label ?? ''}
+                  onChange={(e) => updateOptionGroup(gi, { label: e.target.value })}
+                />
+                <button className="btn btn-ghost" onClick={() => addOptionItem(gi)}>
+                  Add item
+                </button>
+                <button className="btn btn-ghost text-red-600" onClick={() => removeOptionGroup(gi)}>
+                  Remove group
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {(g.optionItems ?? []).map((it, ii) => (
+                  <div key={it._id} className="grid md:grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                    <input
+                      className="input"
+                      placeholder="Label (e.g., Classic)"
+                      value={it.label ?? ''}
+                      onChange={(e) => updateOptionItem(gi, ii, { label: e.target.value })}
+                    />
+                    <input
+                      className="input"
+                      placeholder="Value (optional)"
+                      value={it.value ?? ''}
+                      onChange={(e) => updateOptionItem(gi, ii, { value: e.target.value })}
+                    />
+                    <button className="btn btn-ghost text-red-600" onClick={() => removeOptionItem(gi, ii)}>
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                {(g.optionItems ?? []).length === 0 && (
+                  <div className="text-sm text-muted">No items yet.</div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -356,15 +405,15 @@ export default function ProductCardEditor({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Digital</label>
-          <select
-            className="select w-full"
-            value={String(!!product.digital)}
-            onChange={(e) => onUpdate({ digital: e.target.value === 'true' })}
-          >
-            <option value="false">false</option>
-            <option value="true">true</option>
-          </select>
+          <label className="block text-sm font-medium">Max Quantity</label>
+          <input
+            type="number"
+            min={0}
+            className="input w-full"
+            value={product.maxQuantity ?? 0}
+            onChange={(e) => onUpdate({ maxQuantity: Math.max(0, Number(e.target.value) || 0) })}
+            placeholder="0 = no limit"
+          />
         </div>
       </div>
       <div className="grid md:grid-cols-3 gap-3">
@@ -378,54 +427,7 @@ export default function ProductCardEditor({
         </label>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-3">
-        <div>
-          <label className="block text-sm font-medium">Weight (kg)</label>
-          <input
-            type="number"
-            className="input w-full"
-            value={product.weightKg ?? 0}
-            onChange={(e) => onUpdate({ weightKg: Number(e.target.value) || 0 })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Width (cm)</label>
-          <input
-            type="number"
-            className="input w-full"
-            value={product.widthCm ?? 0}
-            onChange={(e) => onUpdate({ widthCm: Number(e.target.value) || 0 })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Height (cm)</label>
-          <input
-            type="number"
-            className="input w-full"
-            value={product.heightCm ?? 0}
-            onChange={(e) => onUpdate({ heightCm: Number(e.target.value) || 0 })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Depth (cm)</label>
-          <input
-            type="number"
-            className="input w-full"
-            value={product.depthCm ?? 0}
-            onChange={(e) => onUpdate({ depthCm: Number(e.target.value) || 0 })}
-          />
-        </div>
-      </div>
-
       <div className="grid md:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium">Shipping Class</label>
-        <input
-            className="input w-full"
-            value={product.shippingClass ?? ''}
-            onChange={(e) => onUpdate({ shippingClass: e.target.value })}
-          />
-        </div>
         <div>
           <label className="block text-sm font-medium">Purchase URL</label>
           <input
