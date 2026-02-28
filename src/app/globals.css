@@ -4,14 +4,20 @@
 
 /* src/app/globals.css  (append to yours) */
 :root {
- --primary: #ff3c00;   /* vivid orange */
-  --accent:  #ffae00;   /* electric blue */
-  --bg:      #fff7ec; 
-   --bg-2:      #ffb96a;  /* soft cream backdrop */
-  --fg:      #330000;   /* deep slate ink */
-  --muted:   #8b0000;
-  --text-1: black;
-  --text-2: white;
+ --primary: rgb(255, 39, 190);    /* vibrant lavender/purple */
+  --accent:  #9a01c9;    /* metallic gold */
+  --bg:      #fafce9;    /* soft lavender-tinted white */
+  --bg-2:    #fdb3e9;    /* gentle lavender wash */
+  --fg:      #2d2d2d;    /* dark gray for text */
+  --muted:   #9b67cc;    /* muted warm gray */
+
+  --band-1:  #9b5de5;    /* lavender band */
+  --band-2:  #d4af37;    /* gold band */
+
+  --text-1: #2d2d2d;     /* primary text */
+  --text-2: white;       /* inverted text */
+  --text-accent: #d4af37;/* gold as text accent */
+  --cart-drawer-width: 400px;
 
   /* Admin Colors  */
   /* --admin-bg: #240029;
@@ -299,6 +305,9 @@ body[data-theme="grove"]  {
   isolation: isolate;
   border-radius: 0 0 48px 48px; /* gentle bottom curve hint */
 }
+.card-hover:hover{
+  
+}
 .curve::after {
   /* wavy edge using svg mask */
   content: "";
@@ -345,13 +354,20 @@ body[data-theme="grove"]  {
 
 /* Enhanced Card Hover Effect */
 .card-interactive {
-  transition: transform .3s ease, box-shadow .3s ease;
+  transition: all .3s ease;
+  background-position: 0% 100%;
 }
 .card-interactive:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.45);
+  background-position-x: -100%;
+   
+  animation: btnhover 2s ;
+      animation-play-state: paused;
 }
-
+.card-interactive:hover h3{
+  text-decoration: underline;
+}
 /* Button Hover Lift */
 .btn-primary, .btn-inverted {
   transition: transform .2s ease, box-shadow .2s ease;
@@ -456,6 +472,21 @@ body[data-theme="grove"]  {
     background-size: calc(200% + 4px) calc(160% + 4px);
       background-position: 0% 28%;
       color: var(--text-2) !important;
+  }
+  .bg-gradient-colored{
+    background-image: linear-gradient(
+          to bottom right,
+          var(--primary) 0%,
+          var(--primary) 40%,
+          var(--accent) 70%,
+          var(--accent) 100%
+      );
+      background-size: calc(200% + 4px) calc(100% + 4px);
+      background-position: 0% 100%;
+      color: var(--text-2); 
+      border-radius: var(--round-xl);
+      box-shadow: var(--elev-2);
+      border: 2px solid var(--bg-2);
   }
   .bg-gradient-1 {
     /* background: linear-gradient(to bottom, var(--bg) 5%, var(--bg-2) 100%); */
@@ -672,11 +703,14 @@ max-height: calc(100vh - 135px);
   top: auto;
     left: auto;
     height: calc(100% - 64px);
-    width: 400px;
+    width: var(--cart-drawer-width);
 }
 .cart-modal-content{
   height:100%;
     overflow-y: auto;
+}
+.product-detail-overlay--with-cart{
+  padding-right: calc(var(--cart-drawer-width) + 24px);
 }
 .cart-icon{
 
@@ -688,11 +722,33 @@ max-height: calc(100vh - 135px);
     border-top-right-radius: 0;
     right:0;
   }
+  .cart-modal-container{
+    height: 100vh;
+    top:0;
+  }
 }
 @media (max-width: 768px) {
   .cart-modal-container{
     width: 100%;
-    height: calc(100% - 64px);
+    padding-top:45px;
+  }
+  .product-detail-overlay{
+    align-items: flex-start;
+    overflow-y: auto;
+    padding:0;
+    height:100vh;
+  }
+  .product-detail-modal{
+    display: block;
+    justify-content: initial;
+    align-items: initial;
+    max-height: 100%;
+    overflow-y: auto;
+    padding-top:50px;
+    border-radius: 0;
+  }
+  .product-detail-overlay--with-cart{
+    padding-right: 1rem;
   }
   .rccs__card, .rccs {
    display: none !important;
