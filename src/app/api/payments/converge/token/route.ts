@@ -22,21 +22,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'amountCents must be a positive number.' }, { status: 400 });
   }
 
-  const merchantId = process.env.CONVERGE_MERCHANT_ID;
-  const userId = process.env.CONVERGE_USER_ID;
-  const pin = process.env.CONVERGE_PIN;
-  const baseUrl = process.env.CONVERGE_API_BASE_URL ?? 'https://api.convergepay.com';
+  const merchantId = process.env.CONVERGE_MERCHANT_ID?.trim();
+  const accountId = (process.env.CONVERGE_ACCOUNT_ID?.trim() || merchantId)?.trim();
+  const userId = process.env.CONVERGE_USER_ID?.trim();
+  const pin = process.env.CONVERGE_PIN?.trim();
+  const baseUrl = (process.env.CONVERGE_API_BASE_URL ?? 'https://api.convergepay.com').trim();
   const transactionType = body.transactionType ?? 'ccsale';
 
-  if (!merchantId || !userId || !pin) {
+  if (!accountId || !userId || !pin) {
     return NextResponse.json(
-      { error: 'Server is missing CONVERGE_MERCHANT_ID, CONVERGE_USER_ID, or CONVERGE_PIN.' },
+      { error: 'Server is missing CONVERGE_ACCOUNT_ID/CONVERGE_MERCHANT_ID, CONVERGE_USER_ID, or CONVERGE_PIN.' },
       { status: 500 }
     );
   }
 
   const params = new URLSearchParams();
-  params.set('ssl_merchant_id', merchantId);
+  // Converge docs refer to this as "ssl_account_id" (formerly "ssl_merchant_id").
+  // Send both for compatibility across gateways/accounts.
+  params.set('ssl_account_id', accountId);
+  params.set('ssl_merchant_id', accountId);
   params.set('ssl_user_id', userId);
   params.set('ssl_pin', pin);
   params.set('ssl_transaction_type', transactionType);
