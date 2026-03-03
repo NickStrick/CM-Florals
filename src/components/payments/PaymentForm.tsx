@@ -286,7 +286,7 @@ export default function PaymentForm({
         {missingConfig && (
           <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
             Payment configuration is missing. Set the {paymentType === 'converge'
-            ? 'CONVERGE_MERCHANT_ID / CONVERGE_USER_ID / CONVERGE_PIN (server) and NEXT_PUBLIC_CONVERGE_IFRAME_URL'
+            ? 'CONVERGE_ACCOUNT_ID (or CONVERGE_MERCHANT_ID) / CONVERGE_USER_ID / CONVERGE_PIN (server) and NEXT_PUBLIC_CONVERGE_IFRAME_URL'
             : 'NEXT_PUBLIC_CLOVER_TOKEN and NEXT_PUBLIC_CLOVER_IFRAME_URL'} env vars.
           </div>
         )}

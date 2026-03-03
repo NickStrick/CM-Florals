@@ -642,14 +642,14 @@ export default function PaymentPage({
             )}
             {paymentType === 'converge' && convergeTokenStatus === 'error' && (
               <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-                Could not initialize Converge checkout. Check `CONVERGE_MERCHANT_ID`, `CONVERGE_USER_ID`, `CONVERGE_PIN`, and `NEXT_PUBLIC_CONVERGE_IFRAME_URL`.
+                Could not initialize Converge checkout. Check `CONVERGE_ACCOUNT_ID` (or `CONVERGE_MERCHANT_ID`), `CONVERGE_USER_ID`, `CONVERGE_PIN`, and `NEXT_PUBLIC_CONVERGE_IFRAME_URL`.
               </div>
             )}
             {missingPaymentConfig && (
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                 Payment configuration is missing. Set the {paymentType === 'clover'
                   ? 'NEXT_PUBLIC_CLOVER_TOKEN and NEXT_PUBLIC_CLOVER_IFRAME_URL'
-                  : 'CONVERGE_MERCHANT_ID / CONVERGE_USER_ID / CONVERGE_PIN (server) and NEXT_PUBLIC_CONVERGE_IFRAME_URL'} env vars.
+                  : 'CONVERGE_ACCOUNT_ID (or CONVERGE_MERCHANT_ID) / CONVERGE_USER_ID / CONVERGE_PIN (server) and NEXT_PUBLIC_CONVERGE_IFRAME_URL'} env vars.
               </div>
             )}
             {paymentType === 'externalLink' ? (
