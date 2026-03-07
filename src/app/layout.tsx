@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +18,7 @@ import AdminBar from "@/components/admin/AdminBar";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.cmfloralsandgifts.com";
+const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "";
 
 // import { mockSiteConfig } from "@/mocks/siteConfig";
 import { mockSiteConfig } from "@/mocks/caroleConfig";
@@ -112,6 +114,21 @@ export default async function RootLayout({
         <link rel="icon" href="/favicon.ico" />
         <meta name="google-site-verification" content="LK3rJ_0mXFfWNK5RGCmh1doBT7wb2ElyJnEmmtvlefQ" />
         <SeoLocalBusinessSchema />
+        {googleAdsId ? (
+          <>
+            <Script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-gtag" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${googleAdsId}');`}
+            </Script>
+          </>
+        ) : null}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-app`}>
         <SiteProvider initial={config}>

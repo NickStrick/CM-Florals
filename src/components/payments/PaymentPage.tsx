@@ -85,6 +85,8 @@ export default function PaymentPage({
   const cloverToken = process.env.NEXT_PUBLIC_CLOVER_TOKEN ?? '';
   const convergeScriptUrl = process.env.NEXT_PUBLIC_CONVERGE_IFRAME_URL ?? '';
   const cloverScriptUrl = process.env.NEXT_PUBLIC_CLOVER_IFRAME_URL ?? '';
+  const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? '';
+  const googleAdsPurchaseSendTo = process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_SEND_TO ?? '';
   const paymentToken = paymentType === 'clover' ? cloverToken : convergeToken;
   const paymentScriptUrl = paymentType === 'clover' ? cloverScriptUrl : convergeScriptUrl;
   const missingPaymentConfig =
@@ -96,6 +98,7 @@ export default function PaymentPage({
   const [googleFormSubmitted, setGoogleFormSubmitted] = useState(false);
   const [orderSaved, setOrderSaved] = useState(false);
   const orderIdRef = useRef<string>(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const googleAdsConversionFiredRef = useRef(false);
   const emailField: CheckoutInput = {
     id: 'email',
     label: 'Email',
@@ -212,6 +215,42 @@ export default function PaymentPage({
       cancelled = true;
     };
   }, [currency, isCheckoutOpen, paymentType, token, totalWithFeesCents]);
+
+  useEffect(() => {
+    if (!purchaseComplete) return;
+    if (googleAdsConversionFiredRef.current) return;
+    if (!googleAdsId || !googleAdsPurchaseSendTo) return;
+    if (typeof window === 'undefined') return;
+
+    const maxAttempts = 20;
+    const intervalMs = 500;
+    let attempts = 0;
+
+    const trySend = () => {
+      if (googleAdsConversionFiredRef.current) return true;
+      if (typeof window.gtag !== 'function') return false;
+
+      googleAdsConversionFiredRef.current = true;
+      window.gtag('event', 'conversion', {
+        send_to: googleAdsPurchaseSendTo,
+        value: Number((totalWithFeesCents / 100).toFixed(2)),
+        currency,
+        transaction_id: orderIdRef.current,
+      });
+      return true;
+    };
+
+    if (trySend()) return;
+
+    const handle = window.setInterval(() => {
+      attempts += 1;
+      if (trySend() || attempts >= maxAttempts) {
+        window.clearInterval(handle);
+      }
+    }, intervalMs);
+
+    return () => window.clearInterval(handle);
+  }, [currency, googleAdsId, googleAdsPurchaseSendTo, purchaseComplete, totalWithFeesCents]);
 
   const submitDeliveryAddress = async () => {
     if (!needsDeliveryAddress) return;
