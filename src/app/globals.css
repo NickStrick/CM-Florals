@@ -1048,3 +1048,10 @@ animation: loading 0.6s ;
 .admin-tab.active{
 margin-bottom: -1px;
 }
+.gradient-fade {
+  background: linear-gradient(
+    to right,
+      var(--bg) 0%,
+    transparent 32%
+  );
+}

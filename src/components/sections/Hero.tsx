@@ -7,13 +7,12 @@ import AnimatedSection from '@/components/AnimatedSection';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 
 export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, imageUrl }: HeroSection) {
-  console.log('Hero imageUrl:', imageUrl);
   const imgUrl = resolveAssetUrl(imageUrl);
   return (
-    <section id={id} className="section curve bg-app bg-gradient-1">
+    <section id={id} className="section curve bg-app  !pt-[0] !pr-0">
       <AnimatedSection>
-        <div className="mx-auto max-w-7xl grid md:grid-cols-2 gap-[4rem] md:gap-[10rem] items-center">
-          <div>
+        <div className="mx-auto  grid md:grid-cols-2  items-center">
+          <div className="p-4 max-w-[600px] mx-auto">
             {eyebrow ? <p className="h-eyebrow mb-3">{eyebrow}</p> : null}
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -44,13 +43,22 @@ export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, i
               initial={{ opacity: 0, scale: .94, y: 16 }}
               whileInView={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: .6, ease: 'easeOut', delay: .1 }}
-              className="relative w-fit mx-auto"
+              className="relative w-fit ml-auto"
             >
-              {/* soft blob shadow */}
-              <div className="absolute -inset-6 rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] blur-2xl -z-10" />
-              <div className="overflow-hidden rounded-full max-h-[600px] max-w-[600px] mx-auto aspect-square">
+              
+              <div className="relative w-full h-[calc(100vh-64px)] overflow-hidden">
+                  {/* Image */}
                 <Image src={imgUrl} alt="" width={980} height={740} className="w-full h-auto" />
-              </div>
+
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 gradient-fade"></div>
+
+                  {/* Optional content */}
+                  <div className="absolute inset-0 flex items-center px-8">
+                    <h1 className="text-white text-4xl font-bold">
+                    </h1>
+                  </div>
+                </div>
             </motion.div>
           ) : null}
         </div>
