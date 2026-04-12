@@ -632,9 +632,16 @@ export type GoogleFormOptions = {
   totalEntryId?: string;
 };
 
+export type PromoCode = {
+  promoId: string;
+  type: 'percentage' | 'amount';
+  value: number; // percent (e.g. 10 = 10%) for percentage, dollars (e.g. 5 = $5.00) for amount
+};
+
 export type PaymentsSettings = {
   cartActive?: boolean;        // default false
   checkoutInputs?: CheckoutInput[];
+  promoCodes?: PromoCode[];
   googleFormUrl?: string;
   googleFormSubmitBeforePayment?: boolean;
   paymentType?: 'converge' | 'clover' | 'externalLink';

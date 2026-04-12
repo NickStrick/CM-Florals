@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import PaymentForm from './PaymentForm';
 import { X, Plus, Trash2, CheckCircle, Check, ArrowBigLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import type { CheckoutInput, GoogleFormOptions } from '@/types/site';
+import type { CheckoutInput, GoogleFormOptions, PromoCode } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 
 function formatPrice(cents: number, currency = 'USD') {
@@ -85,8 +85,6 @@ export default function PaymentPage({
   const cloverToken = process.env.NEXT_PUBLIC_CLOVER_TOKEN ?? '';
   const convergeScriptUrl = process.env.NEXT_PUBLIC_CONVERGE_IFRAME_URL ?? '';
   const cloverScriptUrl = process.env.NEXT_PUBLIC_CLOVER_IFRAME_URL ?? '';
-  const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? '';
-  const googleAdsPurchaseSendTo = process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_SEND_TO ?? '';
   const paymentToken = paymentType === 'clover' ? cloverToken : convergeToken;
   const paymentScriptUrl = paymentType === 'clover' ? cloverScriptUrl : convergeScriptUrl;
   const missingPaymentConfig =
@@ -97,8 +95,10 @@ export default function PaymentPage({
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(true);
   const [googleFormSubmitted, setGoogleFormSubmitted] = useState(false);
   const [orderSaved, setOrderSaved] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
   const orderIdRef = useRef<string>(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-  const googleAdsConversionFiredRef = useRef(false);
   const emailField: CheckoutInput = {
     id: 'email',
     label: 'Email',
@@ -165,7 +165,13 @@ export default function PaymentPage({
       : 0;
   const taxBaseCents = taxableSubtotalCents + (taxes?.taxShipping ? deliveryFeeCents : 0);
   const taxCents = taxes?.enabled ? Math.round(taxBaseCents * (taxRate / 100)) : 0;
-  const totalWithFeesCents = totalCents + taxCents + deliveryFeeCents;
+  const promoCodes = settingsPayments?.promoCodes ?? [];
+  const discountCents = appliedPromo
+    ? appliedPromo.type === 'percentage'
+      ? Math.round(totalCents * (appliedPromo.value / 100))
+      : Math.min(Math.round(appliedPromo.value * 100), totalCents)
+    : 0;
+  const totalWithFeesCents = totalCents + taxCents + deliveryFeeCents - discountCents;
 
   useEffect(() => {
     if (paymentType !== 'converge') return;
@@ -215,42 +221,6 @@ export default function PaymentPage({
       cancelled = true;
     };
   }, [currency, isCheckoutOpen, paymentType, token, totalWithFeesCents]);
-
-  useEffect(() => {
-    if (!purchaseComplete) return;
-    if (googleAdsConversionFiredRef.current) return;
-    if (!googleAdsId || !googleAdsPurchaseSendTo) return;
-    if (typeof window === 'undefined') return;
-
-    const maxAttempts = 20;
-    const intervalMs = 500;
-    let attempts = 0;
-
-    const trySend = () => {
-      if (googleAdsConversionFiredRef.current) return true;
-      if (typeof window.gtag !== 'function') return false;
-
-      googleAdsConversionFiredRef.current = true;
-      window.gtag('event', 'conversion', {
-        send_to: googleAdsPurchaseSendTo,
-        value: Number((totalWithFeesCents / 100).toFixed(2)),
-        currency,
-        transaction_id: orderIdRef.current,
-      });
-      return true;
-    };
-
-    if (trySend()) return;
-
-    const handle = window.setInterval(() => {
-      attempts += 1;
-      if (trySend() || attempts >= maxAttempts) {
-        window.clearInterval(handle);
-      }
-    }, intervalMs);
-
-    return () => window.clearInterval(handle);
-  }, [currency, googleAdsId, googleAdsPurchaseSendTo, purchaseComplete, totalWithFeesCents]);
 
   const submitDeliveryAddress = async () => {
     if (!needsDeliveryAddress) return;
@@ -425,6 +395,18 @@ export default function PaymentPage({
     await submitDeliveryAddress();
   };
 
+  const applyPromo = () => {
+    const code = promoInput.trim().toLowerCase();
+    const match = promoCodes.find((p) => p.promoId.toLowerCase() === code);
+    if (match) {
+      setAppliedPromo(match);
+      setPromoError(null);
+    } else {
+      setPromoError('Invalid promo code.');
+      setAppliedPromo(null);
+    }
+  };
+
   if (!isCheckoutOpen) return null;
   console.log('PaymentPage config:', { paymentType, paymentToken, paymentScriptUrl });
   return (
@@ -528,6 +510,41 @@ export default function PaymentPage({
                     </button>
                   </div>
                 ))}
+                {promoCodes.length > 0 && (
+                  <div className="pt-2">
+                    {appliedPromo ? (
+                      <div className="flex items-center justify-between text-sm bg-emerald-50 rounded-xl px-3 py-2">
+                        <span className="text-emerald-700 font-medium">&ldquo;{appliedPromo.promoId}&rdquo; applied</span>
+                        <button
+                          onClick={() => { setAppliedPromo(null); setPromoInput(''); setPromoError(null); }}
+                          className="text-gray-400 hover:text-red-500 text-xs ml-2"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoInput}
+                            onChange={(e) => { setPromoInput(e.target.value); setPromoError(null); }}
+                            placeholder="Promo code"
+                            className="flex-1 p-2 text-sm border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                            onKeyDown={(e) => e.key === 'Enter' && applyPromo()}
+                          />
+                          <button
+                            onClick={applyPromo}
+                            className="px-3 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                        {promoError && <p className="text-xs text-red-500 mt-1">{promoError}</p>}
+                      </>
+                    )}
+                  </div>
+                )}
                 <div className="border-t pt-3 space-y-2 text-sm">
                   {taxes?.enabled || delivery?.enabled ? (
                     <div className="flex justify-between">
@@ -545,6 +562,16 @@ export default function PaymentPage({
                     <div className="flex justify-between">
                       <span className="text-gray-600">Delivery</span>
                       <span className="font-medium">{formatPrice(deliveryFeeCents, currency)}</span>
+                    </div>
+                  )}
+                  {appliedPromo && discountCents > 0 && (
+                    <div className="flex justify-between text-emerald-700">
+                      <span>
+                        Discount ({appliedPromo.type === 'percentage'
+                          ? `${appliedPromo.value}%`
+                          : formatPrice(appliedPromo.value * 100, currency)})
+                      </span>
+                      <span>-{formatPrice(discountCents, currency)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-semibold pt-2">

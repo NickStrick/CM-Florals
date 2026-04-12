@@ -7,6 +7,7 @@ import AnimatedSection from '@/components/AnimatedSection';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 
 export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, imageUrl }: HeroSection) {
+  console.log('Hero imageUrl:', imageUrl);
   const imgUrl = resolveAssetUrl(imageUrl);
   return (
     <section id={id} className="section curve bg-app  !pt-[0] !pr-0">

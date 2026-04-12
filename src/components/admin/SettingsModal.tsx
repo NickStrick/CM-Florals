@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, SiteConfig } from '@/types/site';
+import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, PromoCode, SiteConfig } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
@@ -24,6 +24,16 @@ type LocalCheckoutInput = CheckoutInput & {
   _id: string;
   optionsText?: string;
 };
+
+type LocalPromoCode = PromoCode & { _id: string };
+
+function promoCodesToLocal(xs: PromoCode[]): LocalPromoCode[] {
+  return (xs ?? []).map((p) => ({ ...p, _id: rid() }));
+}
+
+function promoCodesFromLocal(xs: LocalPromoCode[]): PromoCode[] {
+  return xs.map(({ promoId, type, value }) => ({ promoId, type, value }));
+}
 
 function optionsToText(options?: CheckoutInputOption[]) {
   if (!options || options.length === 0) return '';
@@ -56,10 +66,17 @@ function checkoutInputsToLocal(xs: CheckoutInput[]): LocalCheckoutInput[] {
 }
 
 function checkoutInputsFromLocal(xs: LocalCheckoutInput[]): CheckoutInput[] {
-  return xs.map(({ _id, optionsText, ...rest }) => {
-    const options = rest.type === 'select' ? textToOptions(optionsText) : undefined;
-    return { ...rest, options };
-  });
+  return xs.map((f) => ({
+    id: f.id,
+    label: f.label,
+    type: f.type,
+    required: f.required,
+    placeholder: f.placeholder,
+    description: f.description,
+    googleFormEntryId: f.googleFormEntryId,
+    hidden: f.hidden,
+    options: f.type === 'select' ? textToOptions(f.optionsText) : undefined,
+  }));
 }
 
 // -----------------------------
@@ -121,10 +138,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   }, []);
 
   const [localCheckoutInputs, setLocalCheckoutInputs] = useState<LocalCheckoutInput[]>([]);
+  const [localPromoCodes, setLocalPromoCodes] = useState<LocalPromoCode[]>([]);
 
   useEffect(() => {
     setLocalCheckoutInputs(checkoutInputsToLocal(payments.checkoutInputs ?? []));
   }, [payments.checkoutInputs]);
+
+  useEffect(() => {
+    setLocalPromoCodes(promoCodesToLocal(payments.promoCodes ?? []));
+  }, [payments.promoCodes]);
 
   const updatePayments = useCallback(
     <K extends keyof PaymentsSettings>(key: K, value: PaymentsSettings[K]) => {
@@ -172,6 +194,32 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       commitCheckoutInputs(localCheckoutInputs.filter((f) => f._id !== id));
     },
     [commitCheckoutInputs, localCheckoutInputs]
+  );
+
+  const commitPromoCodes = useCallback(
+    (next: LocalPromoCode[]) => {
+      setLocalPromoCodes(next);
+      updatePayments('promoCodes', promoCodesFromLocal(next));
+    },
+    [updatePayments]
+  );
+
+  const addPromoCode = useCallback(() => {
+    commitPromoCodes([...localPromoCodes, { _id: rid(), promoId: '', type: 'percentage', value: 10 }]);
+  }, [commitPromoCodes, localPromoCodes]);
+
+  const updatePromoCode = useCallback(
+    (id: string, patch: Partial<LocalPromoCode>) => {
+      commitPromoCodes(localPromoCodes.map((p) => (p._id === id ? { ...p, ...patch } : p)));
+    },
+    [commitPromoCodes, localPromoCodes]
+  );
+
+  const removePromoCode = useCallback(
+    (id: string) => {
+      commitPromoCodes(localPromoCodes.filter((p) => p._id !== id));
+    },
+    [commitPromoCodes, localPromoCodes]
   );
 
   const isDirty = useMemo(() => {
@@ -777,6 +825,67 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   }
                   placeholder="entry.654321"
                 />
+              </div>
+            </div>
+
+            {/* ---- Promo Codes ---- */}
+            <div className="rounded-xl border border-gray-200 p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold">Promo Codes</div>
+                <button className="btn btn-ghost" onClick={addPromoCode}>
+                  Add promo
+                </button>
+              </div>
+
+              {localPromoCodes.length === 0 && (
+                <div className="text-sm text-muted">No promo codes configured.</div>
+              )}
+
+              <div className="space-y-3">
+                {localPromoCodes.map((promo) => (
+                  <div key={promo._id} className="rounded-lg border border-gray-200 p-3 space-y-3">
+                    <div className="grid md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium">Promo Code</label>
+                        <input
+                          className="input w-full"
+                          value={promo.promoId}
+                          onChange={(e) => updatePromoCode(promo._id, { promoId: e.target.value })}
+                          placeholder="SUMMER20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium">Type</label>
+                        <select
+                          className="select w-full"
+                          value={promo.type}
+                          onChange={(e) => updatePromoCode(promo._id, { type: e.target.value as PromoCode['type'] })}
+                        >
+                          <option value="percentage">Percentage (%)</option>
+                          <option value="amount">Fixed Amount ($)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium">
+                          Value ({promo.type === 'percentage' ? '%' : '$'})
+                        </label>
+                        <input
+                          type="number"
+                          className="input w-full"
+                          min={0}
+                          value={promo.value}
+                          onChange={(e) => updatePromoCode(promo._id, { value: Number(e.target.value) || 0 })}
+                          placeholder={promo.type === 'percentage' ? '10' : '5.00'}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button className="btn btn-ghost text-red-600" onClick={() => removePromoCode(promo._id)}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 

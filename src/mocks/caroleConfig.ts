@@ -44,16 +44,19 @@ import elegantAnniversaryBouquet from "../../public/carole/CurrentProducts/Elega
 import anniversaryWeddingVaseAndBouquet from "../../public/carole/CurrentProducts/Anniversary Wedding Vase Bouquet.jpg";
 import theAnniversaryBouquet from "../../public/carole/CurrentProducts/The Anniversary Bouquet.jpg";
 import mixedFlowerBouquetAnniversary from "../../public/carole/CurrentProducts/Mixed Flower Bouquet Anniversary.jpg";
-import easterCenterPiece from "../../public/carole/CurrentProducts/Easter Centerpiece.jpg";
-import easterEggVase from "../../public/carole/CurrentProducts/Easter Egg Bouquet.jpg";
-import easterPeepBouquet from "../../public/carole/CurrentProducts/Easter Peeps and Gerber Daisey.jpg";
-import elegantEasterBouquet from "../../public/carole/CurrentProducts/Elegant Easter Bouquet.jpg";
-import easterBasket from "../../public/carole/CurrentProducts/Easter Basket.jpg";
-import easterBouquet from "../../public/carole/CurrentProducts/Easter Bouquet Spring.jpg";
 import administrativeSunshineAndTulipsBouquetInVase from "../../public/carole/CurrentProducts/Adminisstrative Asst. Week.jpg";
 import oneWithPail from "../../public/carole/CurrentProducts/Administrative Assitant Week.jpg";
 import assortedTulips from "../../public/carole/CurrentProducts/Assorted Tulips.jpg";
 import bouquetWithBrightColors from "../../public/carole/CurrentProducts/Extra Large Bouquet with Bright Colors.jpg";
+
+import nosegay1 from "../../public/carole/CurrentProducts/prom/Nosegay 1.jpg";
+import nosegay2 from "../../public/carole/CurrentProducts/prom/Nosegay 2.jpg";
+import nosegay3 from "../../public/carole/CurrentProducts/prom/Nosegay 3.png";
+import nosegay4 from "../../public/carole/CurrentProducts/prom/Nosegay 4.png";
+
+import administrativeDay1 from "../../public/carole/CurrentProducts/corporate/Administrative day 1.jpg";  
+import administrative2 from "../../public/carole/CurrentProducts/corporate/Administrative 3.jpg"; 
+import administrative6 from "../../public/carole/CurrentProducts/corporate/Administrative 6.jpg";
 
 const phoneHref = "tel:17732094805";
 const tiktokHref =
@@ -68,9 +71,9 @@ const linkedinHref = "https://www.linkedin.com/in/carole-murray-61458b20a/";
 type SizeKey = "S" | "M" | "L";
 
 const SIZE_LABEL: Record<SizeKey, string> = {
-  S: "Small",
-  M: "Medium",
-  L: "Large",
+  S: "Standard",
+  M: "Deluxe",
+  L: "Premium",
 };
 
 function buildSizeProducts(args: {
@@ -92,12 +95,12 @@ function buildSizeProducts(args: {
     imageUrl,
   } = args;
 
-  const mk = (k: SizeKey): Product => ({
+  const mk = (): Product => ({
     id: `cmf-${categorySlug}-${baseIndex}`,
     name,
     subtitle,
     sku: `CMF-${categorySlug.slice(0, 3).toUpperCase()}${baseIndex}`,
-    price: prices.M,
+    price: prices.S,
     currency: "USD",
     thumbnailUrl: imageUrl,
     images: [{ url: imageUrl, alt: name }],
@@ -109,19 +112,23 @@ function buildSizeProducts(args: {
     quantityAvailable: 99,
     ctaLabel: "Buy Now",
     maxQuantity: 99,
-    options: [
-      {
-        label: "Size",
-        optionItems: [
-          { label: SIZE_LABEL.S, value: "S", order: 1, price: prices.S },
-          { label: SIZE_LABEL.M, value: "M", order: 2, default: true, price: prices.M },
-          { label: SIZE_LABEL.L, value: "L", order: 3, price: prices.L },
-        ],
-      },
-    ],
+    ...(prices.S === prices.M && prices.M === prices.L
+      ? {}
+      : {
+          options: [
+            {
+              label: "Size",
+              optionItems: [
+                { label: SIZE_LABEL.S, value: "S", order: 1, default: true, price: prices.S },
+                { label: SIZE_LABEL.M, value: "M", order: 2, price: prices.M },
+                { label: SIZE_LABEL.L, value: "L", order: 3, price: prices.L },
+              ],
+            },
+          ],
+        }),
   });
 
-  return mk("M");
+  return mk();
 }
 
 const PRODUCT_DATA = [
@@ -222,48 +229,6 @@ const PRODUCT_DATA = [
     ],
   },
   {
-    title: "Easter",
-    categorySlug: "easter",
-    items: [
-      {
-        img: easterCenterPiece,
-        name: "Easter Center Piece",
-        subtitle: "Easter Center Piece",
-        prices: { S: 6500, M: 9000, L: 12500 },
-      },
-      {
-        img: easterEggVase,
-        name: "Easter Egg Vase",
-        subtitle: "Easter Egg Vase",
-        prices: { S: 4000, M: 6000, L: 8000 },
-      },
-      {
-        img: easterPeepBouquet,
-        name: "Easter Peep Bouquet",
-        subtitle: "Easter Peep Bouquet",
-        prices: { S: 4000, M: 6000, L: 8000 },
-      },
-      {
-        img: elegantEasterBouquet,
-        name: "Easter Egg Surprise",
-        subtitle: "Elegant Easter Bouquet",
-        prices: { S: 4500, M: 6000, L: 7500 },
-      },
-      {
-        img: easterBasket,
-        name: "Easter Basket",
-        subtitle: "Easter Basket",
-        prices: { S: 3500, M: 5000, L: 7500 },
-      },
-      {
-        img: easterBouquet,
-        name: "European Easter Mix",
-        subtitle: "Easter Bouquet",
-        prices: { S: 3500, M: 5000, L: 7500 },
-      },
-    ],
-  },
-  {
     title: "Administrative Assistant Week",
     categorySlug: "administrativeassistantweek",
     items: [
@@ -290,6 +255,60 @@ const PRODUCT_DATA = [
         name: "The Amazing Administrative Handheld",
         subtitle: "Bouquet with Bright Colors",
         prices: { S: 2500, M: 4000, L: 5500 },
+      },
+    ],
+  },
+   {
+    title: "Prom",
+    categorySlug: "prom",
+    items: [
+      {
+        img: nosegay1,
+        name: "Prom Nosegay Bouquet",
+        subtitle: "Handheld Prom Bouquet",
+        prices: { S: 4000, M: 4000, L: 4000 },
+      },
+      {
+        img: nosegay2,
+        name: "Boutonniere",
+        subtitle: "Prom Boutonniere",
+        prices: { S: 1500, M: 1500, L: 1500 },
+      },
+      {
+        img: nosegay3,
+        name: "Nosegay & Boutonniere",
+        subtitle: "Nosegay & Boutonniere Bundle",
+        prices: { S: 5000, M: 5000, L: 5000 },
+      },
+      {
+        img: nosegay4,
+        name: "Wrist Corsage",
+        subtitle: "Prom Wrist Corsage",
+        prices: { S: 2500, M: 2500, L: 2500 },
+      },
+    ],
+  },
+  {
+    title: "Corporate",
+    categorySlug: "corporate",
+    items: [
+      {
+        img: administrativeDay1,
+        name: "Bold & Brilliant",
+        subtitle: "Gerbera & Rose Office Vase",
+        prices: { S: 4500, M: 6500, L: 8500 },
+      },
+      {
+        img: administrative2,
+        name: "Vivid Celebration",
+        subtitle: "Sunflower & Purple Daisy Office Vase",
+        prices: { S: 4500, M: 6500, L: 8500 },
+      },
+      {
+        img: administrative6,
+        name: "The Corporate Collection",
+        subtitle: "Multi-Vase Office Display",
+        prices: { S: 9000, M: 13000, L: 18000 },
       },
     ],
   },
@@ -326,79 +345,83 @@ export const mockSiteConfig: SiteConfig = {
       "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founding Florist Carole Murray.",
     favicon: logo2.src,
   },
-  settings: {
-    general: {
-      businessDisplayName: "CM Florals",
-      businessNotificationEmail: "nickolasstricker@gmail.com",
+  "settings": {
+    "general": {
+      "businessDisplayName": "CM Florals",
+      "businessNotificationEmail": "shop@cmfloralsandgifts.com"
     },
-    payments: {
-      cartActive: true,
-      paymentType: "converge",
-      supportEmail: "shop@cmfloralsandgifts.com",
-      supportPhone: { label: "Call us at 773-209-4805", href: phoneHref },
-      taxes: {
-        enabled: true,
-        ratePercent: 10,
-        taxShipping: false,
-        defaultProductTaxable: true,
+    "payments": {
+      "cartActive": true,
+      "paymentType": "clover",
+      "supportEmail": "shop@cmfloralsandgifts.com",
+      "supportPhone": {
+        "label": "Call us at 773-209-4805",
+        "href": "tel:17732094805"
       },
-      delivery: {
-        enabled: true,
-        type: "flat",
-        flatFeeCents: 1500,
-        mode: "both",
-        addressCapture: {
-          enabled: true,
-          required: true,
-          method: "googleForm",
-          googleFormEntryId: "",
-        },
+      "taxes": {
+        "enabled": true,
+        "ratePercent": 10,
+        "taxShipping": false,
+        "defaultProductTaxable": true
       },
-      googleFormOptions: {
-        addItemToGForm: true,
-        itemsEntryId: "entry.918647669",
-        totalEntryId: "entry.65280150",
+      "delivery": {
+        "enabled": true,
+        "type": "flat",
+        "flatFeeCents": 1500,
+        "mode": "both",
+        "addressCapture": {
+          "enabled": true,
+          "required": true,
+          "method": "googleForm",
+          "googleFormEntryId": ""
+        }
       },
-      googleFormSubmitBeforePayment: true,
-      externalPaymentUrl: "https://venmo.com/u/Carole-Murray-9",
-      googleFormUrl:
-        "https://docs.google.com/forms/d/e/1FAIpQLScPLQtqUSiP_CFn1frA3nArkkue_jTWeiE2ZVto6NHOheStrg/formResponse",
-      checkoutInputs: [
-        {
-          id: "customer-name",
-          label: "Name",
-          type: "text",
-          required: true,
-          placeholder: "Enter your full name",
-          description: "The name of the person purchasing the arrangement.",
-          googleFormEntryId: "entry.1007473156",
-        },
-        {
-          id: "customer-phone",
-          label: "Phone",
-          type: "text",
-          required: true,
-          placeholder: "Enter your phone number",
-          description:
-            "The phone number of the person purchasing the arrangement.",
-          googleFormEntryId: "entry.1090739960",
-        },
-        {
-          id: "pickup-date",
-          label: "Pick up Date and Time",
-          type: "text",
-          required: true,
-          googleFormEntryId: "entry.299847389",
-        },
-        {
-          id: "special-instructions",
-          label: "Special Instructions",
-          type: "textarea",
-          placeholder: "Any special requests or notes?",
-          googleFormEntryId: "entry.809680059",
-        },
+      "googleFormOptions": {
+        "addItemToGForm": true,
+        "itemsEntryId": "entry.918647669",
+        "totalEntryId": "entry.65280150"
+      },
+      "googleFormSubmitBeforePayment": false,
+      "externalPaymentUrl": "https://venmo.com/u/Carole-Murray-9",
+      "googleFormUrl": "https://docs.google.com/forms/d/e/1FAIpQLScPLQtqUSiP_CFn1frA3nArkkue_jTWeiE2ZVto6NHOheStrg/formResponse",
+      "promoCodes": [
+        { "promoId": "CoachSue", "type": "percentage", "value": 10 }
       ],
-    },
+      "checkoutInputs": [
+        {
+          "id": "customer-name",
+          "label": "Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "Enter your full name",
+          "description": "The name of the person purchasing the arrangement.",
+          "googleFormEntryId": "entry.1007473156"
+        },
+        {
+          "id": "customer-phone",
+          "label": "Phone",
+          "type": "text",
+          "required": true,
+          "placeholder": "Enter your phone number",
+          "description": "The phone number of the person purchasing the arrangement.",
+          "googleFormEntryId": "entry.1090739960"
+        },
+        {
+          "id": "pickup-date",
+          "label": "Pick up Date and Time",
+          "type": "text",
+          "required": true,
+          "googleFormEntryId": "entry.299847389"
+        },
+        {
+          "id": "special-instructions",
+          "label": "Special Instructions",
+          "type": "textarea",
+          "placeholder": "Any special requests or notes?",
+          "googleFormEntryId": "entry.809680059"
+        }
+      ]
+    }
   },
   sections: [
     // HEADER

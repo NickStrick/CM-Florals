@@ -141,8 +141,8 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                       type="button"
                       key={im.url + idx}
                       onClick={() => setMainIndex(idx)}
-                      className={`rounded-lg overflow-hidden border ${
-                        isActive ? 'bg-gradient-colored' : 'border-transparent opacity-90 hover:opacity-100'
+                      className={` overflow-hidden border product-select ${
+                        isActive ? 'bg-gradient-colored' : ' border-2 border-transparent opacity-90 hover:opacity-100'
                       }`}
                       aria-label={`Show image ${idx + 1}`}
                     >
@@ -209,8 +209,8 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                         key={`color-${c.name}`}
                         type="button"
                         onClick={() => setSelectedColor(c)}
-                        className={`px-3 py-1 rounded-full border text-sm ${
-                          active ? 'bg-gradient-colored' : 'border-black/50 hover:border-black/60'
+                        className={`px-3 py-1 border  product-select ${
+                          active ? 'bg-gradient-colored' : 'border-2 border-black/50 hover:border-black/60'
                         }`}
                         title={c.name}
                       >
@@ -247,8 +247,8 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                               key={`opt-${g.label}-${key}`}
                               type="button"
                               onClick={() => setSelectedByGroup((cur) => ({ ...cur, [g.label]: key }))}
-                              className={`px-3 py-1 rounded-full border text-sm ${
-                                active ? 'bg-gradient-colored' : 'border-black/50 hover:border-black/60'
+                              className={`px-3 py-1 border product-select ${
+                                active ? 'bg-gradient-colored' : 'border-black/50 hover:border-black/60 border-2'
                               }`}
                             >
                               {it.label}
