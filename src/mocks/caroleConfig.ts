@@ -1,5 +1,5 @@
 // src/mocks/caroleConfig.ts
-import type { SiteConfig, Product, ProductListingsSection } from "@/types/site";
+import type { SiteConfig, SiteProduct } from "@/types/site";
 
 // ---- Image imports ----           // Hero/banner image
 import booth from "../../public/carole/booth.jpg";
@@ -50,13 +50,24 @@ import assortedTulips from "../../public/carole/CurrentProducts/Assorted Tulips.
 import bouquetWithBrightColors from "../../public/carole/CurrentProducts/Extra Large Bouquet with Bright Colors.jpg";
 
 import nosegay1 from "../../public/carole/CurrentProducts/prom/Nosegay 1.jpg";
-import nosegay2 from "../../public/carole/CurrentProducts/prom/Nosegay 2.jpg";
-import nosegay3 from "../../public/carole/CurrentProducts/prom/Nosegay 3.png";
+import nosegay2 from "../../public/carole/CurrentProducts/prom/boun.png";
+import nosegay3 from "../../public/carole/CurrentProducts/prom/NosegayBoun.png";
 import nosegay4 from "../../public/carole/CurrentProducts/prom/Nosegay 4.png";
 
-import administrativeDay1 from "../../public/carole/CurrentProducts/corporate/Administrative day 1.jpg";  
-import administrative2 from "../../public/carole/CurrentProducts/corporate/Administrative 3.jpg"; 
-import administrative6 from "../../public/carole/CurrentProducts/corporate/Administrative 6.jpg";
+import administrativeDay1 from "../../public/carole/CurrentProducts/administrative/Administrative day 1.jpg";  
+import administrative2 from "../../public/carole/CurrentProducts/administrative/Administrative 3.jpg"; 
+import administrative6 from "../../public/carole/CurrentProducts/administrative/Administrative 6.jpg";
+
+import CorpoTable from "../../public/carole/CurrentProducts/corporate/CorpoTable.jpg";
+import CorpoTable2 from "../../public/carole/CurrentProducts/corporate/CorpoTable2.jpg"; 
+import corporateOrchidBromeliad from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad.jpg"; 
+import corporateOrchidBromeliad2 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad2.jpg"; 
+import corporateOrchidBromeliad3 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad3.jpg"; 
+import corporateOrchidBromeliad4 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad4.jpg"; 
+import corporateOrchidBromeliad5 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad5.jpg"; 
+import corporateFlowerBed2 from "../../public/carole/CurrentProducts/corporate/corporateFlowerBed.jpg"; 
+import corporateFlowerBed from "../../public/carole/CurrentProducts/corporate/corporateFlowerBed2.jpg"; 
+import corporateBouquet from "../../public/carole/CurrentProducts/corporate/corporateBouquet.jpg";
 
 const phoneHref = "tel:17732094805";
 const tiktokHref =
@@ -84,7 +95,8 @@ function buildSizeProducts(args: {
   subtitle?: string;
   prices: Record<SizeKey, number>; // cents
   imageUrl: string; // importedImage.src
-}): Product {
+  extraImages?: { url: string; alt: string }[];
+}): SiteProduct {
   const {
     categorySlug,
     categoryBadge,
@@ -93,23 +105,23 @@ function buildSizeProducts(args: {
     subtitle,
     prices,
     imageUrl,
+    extraImages,
   } = args;
 
-  const mk = (): Product => ({
+  const mk = (): SiteProduct => ({
     id: `cmf-${categorySlug}-${baseIndex}`,
     name,
     subtitle,
-    sku: `CMF-${categorySlug.slice(0, 3).toUpperCase()}${baseIndex}`,
+    category: categoryBadge,
     price: prices.S,
     currency: "USD",
     thumbnailUrl: imageUrl,
-    images: [{ url: imageUrl, alt: name }],
+    images: [{ url: imageUrl, alt: name }, ...(extraImages ?? [])],
     summary: `${name}`,
     description: `${name}. Crafted fresh for ${categoryBadge}.`,
     features: ["Fresh seasonal blooms", "Gift note included"],
     badges: [categoryBadge],
     stock: "in_stock",
-    quantityAvailable: 99,
     ctaLabel: "Buy Now",
     maxQuantity: 99,
     ...(prices.S === prices.M && prices.M === prices.L
@@ -132,6 +144,69 @@ function buildSizeProducts(args: {
 }
 
 const PRODUCT_DATA = [
+   {
+    title: "Prom",
+    categorySlug: "prom",
+    items: [
+      {
+        img: nosegay1,
+        name: "Prom Nosegay Bouquet",
+        subtitle: "Handheld Prom Bouquet",
+        prices: { S: 4000, M: 4000, L: 4000 },
+      },
+      {
+        img: nosegay2,
+        name: "Boutonniere",
+        subtitle: "Prom Boutonniere",
+        prices: { S: 1500, M: 1500, L: 1500 },
+      },
+      {
+        img: nosegay3,
+        name: "Nosegay & Boutonniere",
+        subtitle: "Nosegay & Boutonniere Bundle",
+        prices: { S: 5000, M: 5000, L: 5000 },
+      },
+      {
+        img: nosegay4,
+        name: "Wrist Corsage",
+        subtitle: "Prom Wrist Corsage",
+        prices: { S: 2500, M: 2500, L: 2500 },
+      },
+    ],
+  },
+  {
+    title: "Corporate",
+    categorySlug: "corporate",
+    items: [
+      {
+        img: CorpoTable,
+        extraImgs: [CorpoTable2],
+        name: "Executive Table Display",
+        subtitle: "Premium centerpiece for corporate events & boardrooms",
+        prices: { S: 12000, M: 18000, L: 25000 },
+      },
+      {
+        img: corporateOrchidBromeliad,
+        extraImgs: [corporateOrchidBromeliad2, corporateOrchidBromeliad3, corporateOrchidBromeliad4, corporateOrchidBromeliad5],
+        name: "Orchid & Bromeliad Collection",
+        subtitle: "Elegant tropical arrangement for executive spaces",
+        prices: { S: 9000, M: 13000, L: 18000 },
+      },
+      {
+        img: corporateFlowerBed,
+        extraImgs: [corporateFlowerBed2],
+        name: "Corporate Garden Display",
+        subtitle: "Lush floor display for lobbies and atriums",
+        prices: { S: 15000, M: 22000, L: 30000 },
+      },
+      {
+        img: corporateBouquet,
+        name: "Corporate Bouquet",
+        subtitle: "Refined arrangement for desks and conference rooms",
+        prices: { S: 6500, M: 9000, L: 12000 },
+      },
+    ],
+  },
   {
     title: "Everyday Beauty's",
     categorySlug: "everyday",
@@ -251,94 +326,53 @@ const PRODUCT_DATA = [
         prices: { S: 2500, M: 4000, L: 6000 },
       },
       {
+        img: administrativeDay1,
+        name: "Bold & Brilliant",
+        subtitle: "Gerbera & Rose Vase",
+        prices: { S: 4500, M: 6000, L: 7500 },
+      },
+      {
+        img: administrative2,
+        name: "Vivid Celebration",
+        subtitle: "Sunflower & Purple Daisy Vase",
+        prices: { S: 4500, M: 6000, L: 7500 },
+      },
+      {
+        img: administrative6,
+        name: "Spring Administrative Special",
+        subtitle: "Seasonal spring arrangement",
+        prices: { S: 3000, M: 4500, L: 6000 },
+      },
+      {
         img: bouquetWithBrightColors,
         name: "The Amazing Administrative Handheld",
         subtitle: "Bouquet with Bright Colors",
         prices: { S: 2500, M: 4000, L: 5500 },
       },
     ],
-  },
-   {
-    title: "Prom",
-    categorySlug: "prom",
-    items: [
-      {
-        img: nosegay1,
-        name: "Prom Nosegay Bouquet",
-        subtitle: "Handheld Prom Bouquet",
-        prices: { S: 4000, M: 4000, L: 4000 },
-      },
-      {
-        img: nosegay2,
-        name: "Boutonniere",
-        subtitle: "Prom Boutonniere",
-        prices: { S: 1500, M: 1500, L: 1500 },
-      },
-      {
-        img: nosegay3,
-        name: "Nosegay & Boutonniere",
-        subtitle: "Nosegay & Boutonniere Bundle",
-        prices: { S: 5000, M: 5000, L: 5000 },
-      },
-      {
-        img: nosegay4,
-        name: "Wrist Corsage",
-        subtitle: "Prom Wrist Corsage",
-        prices: { S: 2500, M: 2500, L: 2500 },
-      },
-    ],
-  },
-  {
-    title: "Corporate",
-    categorySlug: "corporate",
-    items: [
-      {
-        img: administrativeDay1,
-        name: "Bold & Brilliant",
-        subtitle: "Gerbera & Rose Office Vase",
-        prices: { S: 4500, M: 6500, L: 8500 },
-      },
-      {
-        img: administrative2,
-        name: "Vivid Celebration",
-        subtitle: "Sunflower & Purple Daisy Office Vase",
-        prices: { S: 4500, M: 6500, L: 8500 },
-      },
-      {
-        img: administrative6,
-        name: "The Corporate Collection",
-        subtitle: "Multi-Vase Office Display",
-        prices: { S: 9000, M: 13000, L: 18000 },
-      },
-    ],
-  },
+  }
 ] as const;
 
-const productSections: ProductListingsSection[] = PRODUCT_DATA.map((cat) => ({
-  visible: true,
-  id: `products-${cat.categorySlug}`,
-  type: "productListings",
-  title: cat.title,
-  subtitle: "Handcrafted florals — pickup at Ogilvie / Accenture Tower",
-  viewType: "list",
-  style: { columns: 4, cardVariant: "default", showBadges: true, sectionType: 'short' },
-  showAllThreshold: 200,
-  buyCtaFallback: "Buy Now",
-  products: cat.items.map((p, itemIdx) =>
+const shopProducts: SiteProduct[] = PRODUCT_DATA.flatMap((cat) =>
+  cat.items.map((p, itemIdx) =>
     buildSizeProducts({
       categorySlug: cat.categorySlug,
       categoryBadge: cat.title,
       baseIndex: itemIdx + 1,
       name: p.name,
       subtitle: p.subtitle,
-      prices: p.prices,
+      prices: { ...p.prices },
       imageUrl: p.img.src,
+      extraImages: (p as { extraImgs?: readonly { src: string }[] }).extraImgs?.map(
+        (i) => ({ url: i.src, alt: p.name })
+      ),
     })
-  ),
-}));
+  )
+);
 
 export const mockSiteConfig: SiteConfig = {
   theme: { preset: "lavender", radius: "xl" },
+  products: { showFilters: true, items: shopProducts },
   meta: {
     title: "CM Florals — Floral Design & Gifts",
     description:
@@ -433,14 +467,14 @@ export const mockSiteConfig: SiteConfig = {
       logoImage: logoWhite.src,
       links: [
         { label: "Home", href: "#top" },
-        { label: "Products", href: "#products-everyday" },
+        { label: "Products", href: "#shop" },
         { label: "About", href: "#create" },
         { label: "Previous Work", href: "#gallery" },
         { label: "Testimonials", href: "#testimonials" },
         { label: "Contact", href: "#contact" },
         { label: "Pay", href: "#pay" },
       ],
-      cta: { label: "Order Now", href: "#products-everyday" },
+      cta: { label: "Order Now", href: "#shop" },
       style: { sticky: true, blur: true, elevation: "sm", transparent: false },
     },
 
@@ -453,16 +487,22 @@ export const mockSiteConfig: SiteConfig = {
       title: "Floral Design and Gifts for Chicago",
       subtitle:
         "Custom florals for celebrations, weddings, holidays, and everyday gifting. Crafted with warmth and color to fit your story. Founded by Carole Murray.",
-      primaryCta: { label: "Order Now", href: "#products-everyday" },
+      primaryCta: { label: "Order Delivery Now", href: "#shop" },
       secondaryCta: {
-        label: "Find us at Ogilvie / Accenture Tower",
+        label: "Pick up at Ogilvie / Accenture Tower",
         href: "#contact",
       },
       imageUrl: logoMain.src,
     },
 
-    // ✅ Product sections (generated from Excel)
-    ...productSections,
+    // ✅ Product shop
+    {
+      visible: true,
+      id: "shop",
+      type: "productShop",
+      title: "Shop Our Florals",
+      subtitle: "Handcrafted florals — pickup at Ogilvie / Accenture Tower",
+    },
 
     // WHAT WE CREATE
     {
@@ -702,7 +742,7 @@ export const mockSiteConfig: SiteConfig = {
           title: "Explore",
           links: [
             { label: "Home", href: "/" },
-            { label: "Products", href: "#products-everyday" },
+            { label: "Products", href: "#shop" },
             { label: "About", href: "#create" },
             { label: "Founder", href: "#about" },
             { label: "Previous Work", href: "#gallery" },

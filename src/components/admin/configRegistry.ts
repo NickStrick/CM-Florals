@@ -23,7 +23,8 @@ import type {
   SocialsSection,
   VideoSection,
   ProductListingsSection,
-  PersonsSection
+  PersonsSection,
+  ProductShopSection,
 } from '@/types/site';
 
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
@@ -389,6 +390,18 @@ export const SECTION_REGISTRY: SectionRegistry = {
       subtitle: 'Meet the people behind our success.',
       items: [],
       style: { columns: 3, cardVariant: 'default', rounded: 'xl', align: 'center' },
+    }),
+  },
+
+  productShop: {
+    label: 'Product Shop',
+    allowed: true,
+    create: (): ProductShopSection => ({
+      id: newId('productShop'),
+      type: 'productShop',
+      visible: true,
+      title: 'Shop',
+      subtitle: '',
     }),
   },
 };

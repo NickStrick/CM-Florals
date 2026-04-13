@@ -74,8 +74,8 @@ async function getSiteConfig(): Promise<SiteConfig> {
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
   const site = process.env.NEXT_PUBLIC_SITE_ID ?? "carole";
-  const prefer = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? "published") as "draft" | "published";
-  const fallback = prefer === "draft" ? "published" : "draft";
+  const prefer = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? "published") as "published" | "published";
+  const fallback = prefer === "published" ? "published" : "published";
 
   async function fetchJSON(url: string) {
     const res = await fetch(url, { cache: "no-store" });

@@ -89,6 +89,7 @@ export type SectionBase = {
     | 'video'
     | 'productListings'
     | 'persons'
+    | 'productShop'
     ;
 
   // visible/editable flags to support your builder UI
@@ -122,7 +123,8 @@ export type AnySection =
   | SocialsSection
   | VideoSection
   | ProductListingsSection
-  | PersonsSection; 
+  | PersonsSection
+  | ProductShopSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -263,6 +265,7 @@ export type SiteConfig = {
   showFooter?: boolean;
   meta?: { title?: string; description?: string; favicon?: string };
   settings?: SiteSettings;
+  products?: SiteProductsConfig;
 };
 
 
@@ -669,6 +672,41 @@ export type PaymentsSettings = {
       s3Prefix?: string;
     };
   };
+};
+
+export type SiteProduct = {
+  id: string;
+  name: string;
+  subtitle?: string;
+  category?: string;          // used for tab grouping in ProductShop
+  price: number;              // cents
+  compareAtPrice?: number;
+  currency?: string;
+  thumbnailUrl?: string;
+  images?: ProductImage[];
+  summary?: string;
+  description?: string;
+  features?: string[];
+  badges?: string[];
+  stock?: 'in_stock' | 'low_stock' | 'out_of_stock';
+  options?: ProductOptions[];
+  colors?: ProductColor[];
+  maxQuantity?: number;
+  taxable?: boolean;
+  featured?: boolean;         // shows in Best Sellers strip on All tab
+  ctaLabel?: string;
+  purchaseUrl?: string;
+};
+
+export type SiteProductsConfig = {
+  showFilters?: boolean;
+  items: SiteProduct[];
+};
+
+export type ProductShopSection = SectionBase & {
+  type: 'productShop';
+  title?: string;
+  subtitle?: string;
 };
 
 export type ProductListingsSection = SectionBase & {

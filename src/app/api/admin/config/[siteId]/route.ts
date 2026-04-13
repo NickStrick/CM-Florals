@@ -105,7 +105,7 @@ export async function PUT(
     const parsed = JSON.parse(body);
 
     // In mock mode, don't write to S3 (just echo back the parsed config).
-    if (process.env.NEXT_PUBLIC_USE_MOCK === '1') {
+    if (process.env.NEXT_PUBLIC_USE_MOCK === '2') {
       return NextResponse.json(parsed, { status: 200 });
     }
 

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const variant = (req.nextUrl.searchParams.get('variant') as ConfigVariant) || 'published';
 
   // local dev “mock mode”
-  if (process.env.NEXT_PUBLIC_USE_MOCK === '1') {
+  if (process.env.NEXT_PUBLIC_USE_MOCK === '2') {
     return NextResponse.json(mockSiteConfig);
   }
 
@@ -31,7 +31,7 @@ export async function PUT(req: NextRequest) {
   if (guard) return guard;
 
   // local dev “mock mode” (do not persist to S3)
-  if (process.env.NEXT_PUBLIC_USE_MOCK === '1') {
+  if (process.env.NEXT_PUBLIC_USE_MOCK === '2') {
     const json = await req.json();
     const parsed = SiteConfigSchema.safeParse(json);
     if (!parsed.success) {

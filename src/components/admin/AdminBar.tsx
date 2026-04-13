@@ -9,6 +9,7 @@ import SettingsModal from './SettingsModal';
 import AdminThemePanel from './AdminThemePanel';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import OrdersModal from './OrdersModal';
+import ProductsModal from './ProductsModal';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import type { SiteConfig } from '@/types/site';
 
@@ -28,6 +29,7 @@ export default function AdminBar() {
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [showAI, setShowAI] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
+  const [showProducts, setShowProducts] = useState(false);
 
   const siteId = getSiteId();
   const bucket = process.env.NEXT_PUBLIC_S3_DEFAULT_BUCKET;
@@ -93,6 +95,14 @@ export default function AdminBar() {
             title="Manage orders"
           >
             Orders
+          </button>
+
+          <button
+            className={showProducts ? 'btn btn-primary' : 'btn btn-inverted'}
+            onClick={() => setShowProducts((v) => !v)}
+            title="Manage products"
+          >
+            Products
           </button>
 
           <button
@@ -199,6 +209,9 @@ export default function AdminBar() {
 
       {/* Orders modal */}
       {showOrders && <OrdersModal onClose={() => setShowOrders(false)} />}
+
+      {/* Products modal */}
+      {showProducts && <ProductsModal onClose={() => setShowProducts(false)} />}
     </div>
   );
 }

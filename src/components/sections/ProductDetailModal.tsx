@@ -114,18 +114,20 @@ export default function ProductDetailModal({ product, onClose }: Props) {
         </button>
 
         {/* Content */}
-        <div className="grid md:grid-cols-2 gap-0">
+        <div className="grid md:grid-cols-2 gap-0 md:max-h-[100vh] overflow-auto">
           {/* Media */}
           <div className="p-4 md:p-6 border-b md:border-b-0 md:border-r border-[var(--bg-2)]">
             {mainImage ? (
-              <Image
-                src={mainImage}
-                alt={images[mainIndex]?.alt ?? name}
-                className="w-full h-auto rounded-xl"
-                width={400}
-                height={400}
-                style={{ width: '100%', height: 'auto' }}
-              />
+              <div className="w-full max-h-[645px] flex items-center justify-center overflow-hidden rounded-xl">
+                <Image
+                  src={mainImage}
+                  alt={images[mainIndex]?.alt ?? name}
+                  className="rounded-xl object-contain w-full h-full"
+                  width={400}
+                  height={400}
+                  style={{ maxHeight: '645px', width: 'auto', height: 'auto', maxWidth: '100%' }}
+                />
+              </div>
             ) : (
               <div className="w-full aspect-[4/3] bg-black/10 rounded-xl" />
             )}
@@ -146,13 +148,16 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                       }`}
                       aria-label={`Show image ${idx + 1}`}
                     >
-                      <Image
-                        src={resolved}
-                        alt={im.alt ?? `${name} ${idx + 1}`}
-                        className="w-full h-auto block"
-                        width={80}
-                        height={80}
-                      />
+                      <div className="w-full max-h-[140px] flex items-center justify-center overflow-hidden">
+                        <Image
+                          src={resolved}
+                          alt={im.alt ?? `${name} ${idx + 1}`}
+                          className="object-contain block"
+                          width={80}
+                          height={80}
+                          style={{ maxHeight: '140px', width: 'auto', height: 'auto', maxWidth: '100%' }}
+                        />
+                      </div>
                     </button>
                   );
                 })}
@@ -188,7 +193,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                 {formatPrice(effectivePrice, currency)}
               </div>
               {typeof compareAtPrice === 'number' && compareAtPrice > effectivePrice && (
-                <div className="pb-1 text-sm line-through opacity-60">
+                <div className="pb-1 text-sm line-through opacity-9dd0">
                   {formatPrice(compareAtPrice, currency)}
                 </div>
               )}
