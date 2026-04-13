@@ -9,6 +9,7 @@ import { useSite } from '@/context/SiteContext';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import ProductDetailModal from './ProductDetailModal';
 import { normalizeOptionGroups, normalizeSelection } from '@/lib/productOptions';
+import { SeperatorWave } from '@/components/SeperatorWave';
 
 const PAGE_SIZE = 12;
 
@@ -187,10 +188,10 @@ function SidebarFilters({
 
 // ─── ProductShop ──────────────────────────────────────────────────────────────
 
-export default function ProductShop({ id, title, subtitle }: ProductShopSection) {
+export default function ProductShop({ id, title, subtitle, topWaveType, bottomWaveType }: ProductShopSection) {
   const { config } = useSite();
   const shopConfig = config?.products;
-  const allProducts = shopConfig?.items ?? [];
+  const allProducts = useMemo(() => shopConfig?.items ?? [], [shopConfig?.items]);
   const showFilters = shopConfig?.showFilters !== false;
 
   const [activeTab, setActiveTab] = useState('all');
@@ -293,6 +294,8 @@ export default function ProductShop({ id, title, subtitle }: ProductShopSection)
   if (!allProducts.length) return null;
 
   return (
+    <>
+    <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className="section">
       <div className="mx-auto max-w-7xl px-4">
         {/* Header */}
@@ -474,5 +477,7 @@ export default function ProductShop({ id, title, subtitle }: ProductShopSection)
         />
       )}
     </section>
+    <SeperatorWave type={bottomWaveType} flip={true} color={'var(--bg)'} />
+    </>
   );
 }

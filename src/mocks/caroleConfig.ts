@@ -502,10 +502,55 @@ export const mockSiteConfig: SiteConfig = {
       type: "productShop",
       title: "Shop Our Florals",
       subtitle: "Handcrafted florals — pickup at Ogilvie / Accenture Tower",
+      bottomWaveType: "1-hill",
     },
+
+        // CUSTOM FLORAL DESIGN REQUEST
+    {
+      visible: true,
+      backgroundUrl: booth.src,
+      id: "custom-request",
+      type: "sendAMessage",
+      title: "Custom Floral Design Request",
+      subtitle: "Tell us about your event and we'll get back to you with a quote.",
+      description: "Looking for something unique? Fill out the form below and Carole will personally follow up with a custom arrangement just for you.",
+      submission: {
+        type: "googleForm",
+        formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfx9ZrZx8kIp_RKOH3Vmboozl0yrcUKqCQAMww1Q7hLsVQdIA/formResponse",
+        fieldMap: {
+          name:           "entry.547818426",
+          email:          "entry.528578542",
+          phone:          "entry.323794102",
+          occasion:       "entry.118923852",
+          "event-date":   "entry.778203591",
+          budget:         "entry.1611030081",
+          details:        "entry.447020428",
+        },
+      },
+      submitLabel: "Send My Request",
+      successTitle: "Request received!",
+      successMessage: "Thank you! Carole will review your request and reach out within 1–2 business days.",
+      fields: [
+        { id: "name", label: "Your Name", type: "text", placeholder: "Full name", required: true },
+        { id: "email", label: "Email Address", type: "email", placeholder: "your@email.com", required: true },
+        { id: "phone", label: "Phone Number", type: "phone", placeholder: "(555) 555-5555" },
+        {
+          id: "occasion",
+          label: "Occasion / Event Type",
+          type: "select",
+          required: true,
+          options: ["Birthday", "Anniversary", "Wedding", "Corporate Event", "Prom", "Administrative Assistant Week", "Sympathy", "Just Because", "Other"],
+        },
+        { id: "event-date", label: "Event Date", type: "text", placeholder: "MM/DD/YYYY" },
+        { id: "budget", label: "Approximate Budget", type: "text", placeholder: "e.g. $75–$150" },
+        { id: "details", label: "Design Details & Special Requests", type: "textarea", placeholder: "Colors, flowers, style, size — anything that helps Carole craft the perfect arrangement.", required: true },
+      ],
+    },
+
 
     // WHAT WE CREATE
     {
+      topWaveType: "1-hill",
       visible: true,
       id: "create",
       type: "features",
@@ -692,6 +737,7 @@ export const mockSiteConfig: SiteConfig = {
     },
 
     // CONTACT
+
     {
       visible: true,
       id: "contact",

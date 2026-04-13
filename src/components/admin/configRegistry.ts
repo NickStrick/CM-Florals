@@ -25,6 +25,7 @@ import type {
   ProductListingsSection,
   PersonsSection,
   ProductShopSection,
+  SendAMessageSection,
 } from '@/types/site';
 
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
@@ -402,6 +403,27 @@ export const SECTION_REGISTRY: SectionRegistry = {
       visible: true,
       title: 'Shop',
       subtitle: '',
+    }),
+  },
+
+  sendAMessage: {
+    label: 'Send a Message',
+    allowed: true,
+    create: (): SendAMessageSection => ({
+      id: newId('sendAMessage'),
+      type: 'sendAMessage',
+      visible: true,
+      title: 'Send Us a Message',
+      subtitle: '',
+      description: '',
+      submitLabel: 'Send Message',
+      successTitle: "We'll be in touch!",
+      successMessage: "Your message has been received. We'll get back to you shortly.",
+      fields: [
+        { id: 'name', label: 'Name', type: 'text', placeholder: 'Your name', required: true },
+        { id: 'email', label: 'Email', type: 'email', placeholder: 'your@email.com', required: true },
+        { id: 'message', label: 'Message', type: 'textarea', placeholder: 'How can we help?', required: true },
+      ],
     }),
   },
 };

@@ -90,6 +90,7 @@ export type SectionBase = {
     | 'productListings'
     | 'persons'
     | 'productShop'
+    | 'sendAMessage'
     ;
 
   // visible/editable flags to support your builder UI
@@ -124,7 +125,8 @@ export type AnySection =
   | VideoSection
   | ProductListingsSection
   | PersonsSection
-  | ProductShopSection;
+  | ProductShopSection
+  | SendAMessageSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -707,6 +709,43 @@ export type ProductShopSection = SectionBase & {
   type: 'productShop';
   title?: string;
   subtitle?: string;
+};
+
+export type SendAMessageFieldType = 'text' | 'email' | 'phone' | 'textarea' | 'select';
+
+export type SendAMessageField = {
+  id: string;
+  label: string;
+  type: SendAMessageFieldType;
+  placeholder?: string;
+  required?: boolean;
+  options?: string[]; // for 'select' type
+};
+
+export type SendAMessageSubmission =
+  | { type: 'resend'; recipientEmail?: string }
+  | {
+      type: 'googleForm';
+      /** Base form URL — viewform or formResponse, both work */
+      formUrl: string;
+      /** Maps your field `id` → Google Form entry ID (e.g. "entry.547818426") */
+      fieldMap: Record<string, string>;
+    };
+
+export type SendAMessageSection = SectionBase & {
+  type: 'sendAMessage';
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  fields: SendAMessageField[];
+  submitLabel?: string;
+  successTitle?: string;
+  successMessage?: string;
+  /** @deprecated use submission: { type: 'resend', recipientEmail } instead */
+  recipientEmail?: string;
+  submission?: SendAMessageSubmission; // defaults to resend if omitted
+  backgroundUrl?: string;  // optional hero-style background image
+  overlayOpacity?: number; // 0–100, default 50
 };
 
 export type ProductListingsSection = SectionBase & {
