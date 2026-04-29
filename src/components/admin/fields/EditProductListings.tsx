@@ -1,193 +1,68 @@
 'use client';
 
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import type {
-  ProductListingsSection,
-  Product,
-  ProductImage,
-} from '@/types/site';
+import { useCallback, useMemo } from 'react';
+import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronUp, faChevronDown, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { ProductListingsSection } from '@/types/site';
 import type { EditorProps } from './types';
-import ProductCardEditor from './products/ProductCardEditor';
+import { useSite } from '@/context/SiteContext';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
-// ---------- Helper types ----------
-type LocalImage = ProductImage & { _id: string };
-
-// Editor-only row ids for variants
-type LocalColor = { _id: string; name: string; hex?: string; imageUrl?: string };
-  type LocalOptionItem = { _id: string; label: string; value?: string; order?: number; default?: boolean };
-  type LocalOptionGroup = { _id: string; label: string; optionItems?: LocalOptionItem[] };
-
-type LocalProduct = Product & {
-  _id: string;                 // stable key for React list
-  images: LocalImage[];
-  features: string[];
-  badges: string[];
-  // variants (editor-only ids)
-  colors?: LocalColor[];
-  options?: LocalOptionGroup[];
-};
-
-
-// ---------- Utilities ----------
-function rid() {
-  return (typeof crypto !== 'undefined' && crypto.randomUUID)
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
-}
-
-function withLocalIds(p: Product): LocalProduct {
-  return {
-    ...p,
-    _id: rid(),
-    images: (p.images ?? []).map((im) => ({ ...im, _id: rid() })),
-    features: p.features ?? [],
-    badges:   p.badges   ?? [],
-    // add editor ids for variants
-      // --- safe variant mapping ---
-    colors: Array.isArray(p.colors)
-      ? p.colors.map((c) =>
-          typeof c === 'object' && c !== null
-            ? { ...c, _id: rid() }
-            : { _id: rid(), name: String(c), hex: '', imageUrl: '' }
-        )
-      : [],
-    options: Array.isArray(p.options)
-      ? p.options.map((g) => ({
-          ...g,
-          _id: rid(),
-          optionItems: Array.isArray(g.optionItems)
-            ? g.optionItems.map((it) => ({ ...it, _id: rid() }))
-            : [],
-        }))
-      : [],
-  };
-}
-
-function stripLocalIds(p: LocalProduct): Product {
-  const { images, colors, options, ...rest } = p;
-  return {
-    ...rest,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    images: images?.map(({ _id, ...img }: LocalImage) => img) ?? [],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    colors: colors?.map(({ _id, ...c }: LocalColor) => c) ?? [],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    options:
-      options?.map(({ _id, optionItems, ...g }: LocalOptionGroup) => ({
-        ...g,
-        optionItems: (optionItems ?? []).map(({ _id: itemId, ...it }: LocalOptionItem) => it),
-      })) ?? [],
-  };
-}
-
-function productsToLocal(xs: Product[]): LocalProduct[] {
-  return (xs ?? []).map(withLocalIds);
-}
-function productsFromLocal(xs: LocalProduct[]): Product[] {
-  return xs.map(stripLocalIds);
-}
-
-
-// ---------- Main Component ----------
 export default function EditProductListings({
   section,
   onChange,
-  openMediaPicker,
-  siteId,
 }: EditorProps<ProductListingsSection>) {
-  const [localProducts, setLocalProducts] = useState<LocalProduct[]>(
-    () => productsToLocal(section.products ?? [])
-  );
+  const { config } = useSite();
+  const catalog = config?.products?.items ?? [];
 
-  // keep local state in sync if section.products ref truly changes
-  useEffect(() => {
-    setLocalProducts(productsToLocal(section.products ?? []));
-  }, [section.products]);
-
-  // commit local -> section
-  const commitProducts = useCallback(
-    (next: LocalProduct[]) => {
-      setLocalProducts(next);
-      onChange({ ...section, products: productsFromLocal(next) });
-    },
-    [onChange, section]
-  );
-
-  // section fields
-  const style = useMemo(() => section.style ?? { columns: 3 as const, cardVariant: 'default' as const, showBadges: true }, [section.style]);
-
-  const setSectionField = useCallback(
-    <K extends keyof ProductListingsSection>(key: K, value: ProductListingsSection[K]) => {
-      onChange({ ...section, [key]: value });
-    },
+  const set = useCallback(
+    <K extends keyof ProductListingsSection>(key: K, value: ProductListingsSection[K]) =>
+      onChange({ ...section, [key]: value }),
     [onChange, section]
   );
 
   const setStyle = useCallback(
-    (patch: Partial<NonNullable<ProductListingsSection['style']>>) => {
-      setSectionField('style', { ...style, ...patch } as NonNullable<ProductListingsSection['style']>);
-    },
-    [setSectionField, style]
+    (patch: Partial<NonNullable<ProductListingsSection['style']>>) =>
+      onChange({ ...section, style: { ...(section.style ?? {}), ...patch } }),
+    [onChange, section]
   );
 
-  // product CRUD
-  const addProduct = useCallback(() => {
-    const next = withLocalIds({
-      id: `prod-${rid().slice(0, 6)}`,
-      name: 'New Product',
-      price: 1999,
-      currency: 'USD',
-      thumbnailUrl: '',
-      summary: '',
-      description: '',
-      purchaseUrl: '',
-      ctaLabel: 'Buy Now',
-      stock: 'in_stock',
-      images: [],
-      features: [],
-      badges: [],
-      // variants start empty
-      colors: [],
-      options: [],
-    });
-    commitProducts([...localProducts, next]);
-  }, [commitProducts, localProducts]);
+  const productIds = useMemo(() => section.productIds ?? [], [section.productIds]);
+  const style = section.style ?? {};
 
-  const updateProduct = useCallback(
-    (id: string, patch: Partial<LocalProduct>) => {
-      commitProducts(localProducts.map((p) => (p._id === id ? { ...p, ...patch } : p)));
-    },
-    [commitProducts, localProducts]
-  );
+  // Selected product helpers
+  const addProduct = useCallback((id: string) => {
+    if (productIds.includes(id)) return;
+    set('productIds', [...productIds, id]);
+  }, [productIds, set]);
 
-  const removeProduct = useCallback(
-    (id: string) => {
-      commitProducts(localProducts.filter((p) => p._id !== id));
-    },
-    [commitProducts, localProducts]
-  );
+  const removeProduct = useCallback((id: string) => {
+    set('productIds', productIds.filter((pid) => pid !== id));
+  }, [productIds, set]);
 
-  const moveProduct = useCallback(
-    (from: number, to: number) => {
-      if (to < 0 || to >= localProducts.length) return;
-      const copy = localProducts.slice();
-      const [sp] = copy.splice(from, 1);
-      copy.splice(to, 0, sp);
-      commitProducts(copy);
-    },
-    [commitProducts, localProducts]
-  );
+  const moveProduct = useCallback((from: number, to: number) => {
+    if (to < 0 || to >= productIds.length) return;
+    const next = productIds.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    set('productIds', next);
+  }, [productIds, set]);
+
+  const unselected = catalog.filter((p) => !productIds.includes(p.id));
 
   return (
-    <div className="space-y-6">
-      {/* ---- Section Heading ---- */}
+    <div className="space-y-5">
+
+      {/* Heading */}
       <div className="grid md:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium">Title</label>
           <input
             className="input w-full"
             value={section.title ?? ''}
-            onChange={(e) => setSectionField('title', e.target.value)}
+            onChange={(e) => set('title', e.target.value)}
+            placeholder="Featured Products"
           />
         </div>
         <div>
@@ -195,12 +70,13 @@ export default function EditProductListings({
           <input
             className="input w-full"
             value={section.subtitle ?? ''}
-            onChange={(e) => setSectionField('subtitle', e.target.value)}
+            onChange={(e) => set('subtitle', e.target.value)}
+            placeholder="Handcrafted with care"
           />
         </div>
       </div>
 
-      {/* ---- Layout and Style ---- */}
+      {/* Style */}
       <div className="grid md:grid-cols-4 gap-3">
         <div>
           <label className="block text-sm font-medium">Columns</label>
@@ -209,49 +85,31 @@ export default function EditProductListings({
             value={style.columns ?? 3}
             onChange={(e) => setStyle({ columns: Number(e.target.value) as 1 | 2 | 3 | 4 | 5 })}
           >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-            <option value={4}>4</option>
-            <option value={5}>5</option>
+            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
-
         <div>
-          <label className="block text-sm font-medium">Card Variant</label>
+          <label className="block text-sm font-medium">Card variant</label>
           <select
             className="select w-full"
             value={style.cardVariant ?? 'default'}
-            onChange={(e) =>
-              setStyle({ cardVariant: e.target.value as 'default' | 'ink' })
-            }
+            onChange={(e) => setStyle({ cardVariant: e.target.value as 'default' | 'ink' })}
           >
-            <option value="default">default</option>
-            <option value="ink">ink</option>
+            <option value="default">Default</option>
+            <option value="ink">Ink</option>
           </select>
         </div>
-
-        <label className="flex items-end gap-2">
-          <input
-            type="checkbox"
-            checked={style.showBadges !== false}
-            onChange={(e) => setStyle({ showBadges: e.target.checked })}
-          />
-          <span>Show badges</span>
-        </label>
-
         <div>
           <label className="block text-sm font-medium">View type</label>
           <select
             className="select w-full"
             value={section.viewType ?? 'featured'}
-            onChange={(e) => setSectionField('viewType', e.target.value as 'list' | 'featured')}
+            onChange={(e) => set('viewType', e.target.value as 'list' | 'featured')}
           >
-            <option value="featured">featured</option>
-            <option value="list">list</option>
+            <option value="featured">Featured</option>
+            <option value="list">List</option>
           </select>
         </div>
-
         <div>
           <label className="block text-sm font-medium">Show-all threshold</label>
           <input
@@ -259,59 +117,127 @@ export default function EditProductListings({
             min={1}
             className="input w-full"
             value={section.showAllThreshold ?? 3}
-            onChange={(e) =>
-              setSectionField(
-                'showAllThreshold',
-                Math.max(1, Number(e.target.value) || 1)
-              )
-            }
+            onChange={(e) => set('showAllThreshold', Math.max(1, Number(e.target.value) || 1))}
           />
         </div>
       </div>
 
-      {/* ---- CTA label ---- */}
-      <div>
-        <label className="block text-sm font-medium">Default Buy CTA Label</label>
-        <input
-          className="input w-full"
-          value={section.buyCtaFallback ?? 'Buy Now'}
-          onChange={(e) => setSectionField('buyCtaFallback', e.target.value)}
-        />
-      </div>
-
-
-      {/* ---- Product List ---- */}
-      <div className="flex items-center justify-between mt-2">
-        <div className="text-sm font-medium">
-          Products ({localProducts.length})
-        </div>
-        <button className="btn btn-ghost" onClick={addProduct}>
-          Add product
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {localProducts.map((p, i) => (
-          <ProductCardEditor
-            key={p._id}                          // ← stable, prevents blur
-            product={p}
-            index={i}
-            total={localProducts.length}
-            section={section}
-            onUpdate={(patch) => updateProduct(p._id, patch)}
-            onRemove={() => removeProduct(p._id)}
-            onMove={(to) => moveProduct(i, to)}
-            openMediaPicker={openMediaPicker}
-            siteId={siteId}
+      <div className="grid md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium">Buy CTA label</label>
+          <input
+            className="input w-full"
+            value={section.buyCtaFallback ?? 'Buy Now'}
+            onChange={(e) => set('buyCtaFallback', e.target.value)}
+            placeholder="Buy Now"
           />
-        ))}
+        </div>
+        <label className="flex items-end gap-2 pb-1">
+          <input
+            type="checkbox"
+            checked={style.showBadges !== false}
+            onChange={(e) => setStyle({ showBadges: e.target.checked })}
+          />
+          <span className="text-sm">Show badges</span>
+        </label>
+      </div>
 
-        {localProducts.length === 0 && (
-          <div className="text-sm text-muted">
-            No products yet. Click “Add product”.
-          </div>
+      {/* Selected products */}
+      <div className="space-y-2">
+        <div className="text-sm font-semibold border-b pb-1">
+          Selected products ({productIds.length})
+        </div>
+
+        {productIds.length === 0 && (
+          <p className="text-sm text-muted">No products selected. Add from the catalog below.</p>
         )}
+
+        {productIds.map((pid, idx) => {
+          const product = catalog.find((p) => p.id === pid);
+          if (!product) return (
+            <div key={pid} className="card admin-card card-solid p-3 flex items-center justify-between gap-3">
+              <span className="text-sm text-muted italic">Product not found: {pid}</span>
+              <button className="btn btn-ghost text-red-500" onClick={() => removeProduct(pid)}>
+                <FontAwesomeIcon icon={faTrash} className="text-xs" />
+              </button>
+            </div>
+          );
+
+          const thumb = resolveAssetUrl(product.thumbnailUrl ?? product.images?.[0]?.url);
+
+          return (
+            <div key={pid} className="card admin-card card-solid p-3 flex items-center gap-3">
+              {thumb && (
+                <Image src={thumb} alt={product.name} width={40} height={40} className="w-10 h-10 rounded object-cover flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm truncate">{product.name}</div>
+                {product.category && <div className="text-xs text-muted">{product.category}</div>}
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => moveProduct(idx, idx - 1)}
+                  disabled={idx === 0}
+                  title="Move up"
+                >
+                  <FontAwesomeIcon icon={faChevronUp} className="text-xs" />
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => moveProduct(idx, idx + 1)}
+                  disabled={idx === productIds.length - 1}
+                  title="Move down"
+                >
+                  <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                </button>
+                <button
+                  className="btn btn-ghost text-red-500"
+                  onClick={() => removeProduct(pid)}
+                  title="Remove"
+                >
+                  <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Catalog picker */}
+      {unselected.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm font-semibold border-b pb-1">Add from catalog</div>
+          <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+            {unselected.map((product) => {
+              const thumb = resolveAssetUrl(product.thumbnailUrl ?? product.images?.[0]?.url);
+              return (
+                <div
+                  key={product.id}
+                  className="card admin-card card-solid p-3 flex items-center gap-3 hover:cursor-pointer hover:bg-black/5"
+                  onClick={() => addProduct(product.id)}
+                >
+                  {thumb && (
+                    <Image src={thumb} alt={product.name} width={32} height={32} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{product.name}</div>
+                    {product.category && <div className="text-xs text-muted">{product.category}</div>}
+                  </div>
+                  <span className="text-xs text-primary font-medium flex-shrink-0">+ Add</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {catalog.length === 0 && (
+        <p className="text-sm text-muted">
+          No products in catalog. Add products via the <strong>Products</strong> button in the admin bar.
+        </p>
+      )}
+
     </div>
   );
 }

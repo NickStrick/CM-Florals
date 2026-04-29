@@ -3,7 +3,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
-import { THEME_PRESETS, type SiteStyle, type ThemePreset, type ThemeColors, type SiteConfig } from '@/types/site';
+import { THEME_PRESETS, type SiteStyle, type ThemePreset, type ThemeColors, type SiteConfig, type FontPair } from '@/types/site';
+import { FONT_PAIRS, FONT_PAIR_KEYS } from '@/lib/fontPairs';
 
 type ColorField = {
   key: keyof Pick<SiteStyle, 'primary' | 'accent' | 'bg' | 'bg2' | 'fg' | 'muted' | 'text1' | 'text2'>;
@@ -31,6 +32,7 @@ export default function AdminThemePanel() {
   const siteId = getSiteId();
 
   const currentPreset = config?.theme?.preset ?? 'ocean';
+  const currentFontPair: FontPair = config?.theme?.fontPair ?? 'inter';
   const isCustom = currentPreset === 'custom';
   const options = useMemo(() => THEME_PRESETS, []);
 
@@ -141,11 +143,7 @@ export default function AdminThemePanel() {
               if (config) {
                 setConfig({
                   ...config,
-                  theme: {
-                    ...config.theme,
-                    preset: next,
-                    colors: undefined,
-                  },
+                  theme: { ...config.theme, preset: next, colors: undefined },
                 });
               }
             } else {
@@ -153,19 +151,32 @@ export default function AdminThemePanel() {
               if (config) {
                 setConfig({
                   ...config,
-                  theme: {
-                    ...config.theme,
-                    preset: next,
-                  },
+                  theme: { ...config.theme, preset: next },
                 });
               }
             }
           }}
         >
           {options.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
+
+        <select
+          className="select min-w-[200px] text-black"
+          value={currentFontPair}
+          onChange={(e) => {
+            const next = e.target.value as FontPair;
+            if (config) {
+              setConfig({
+                ...config,
+                theme: { ...config.theme, fontPair: next },
+              });
+            }
+          }}
+        >
+          {FONT_PAIR_KEYS.map((key) => (
+            <option key={key} value={key}>{FONT_PAIRS[key].label}</option>
           ))}
         </select>
 

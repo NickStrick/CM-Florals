@@ -4,6 +4,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import type { SiteConfig, SiteStyle, ThemePreset } from '@/types/site';
 import { normalizeSiteConfig } from '@/lib/siteConfigSections';
+import { FONT_PAIRS } from '@/lib/fontPairs';
 
 type Ctx = {
   /** Current site configuration (null only before initial mount) */
@@ -76,6 +77,23 @@ export function SiteProvider({
     else b.style.removeProperty('--text-2');
     if (config.theme.radius)  b.style.setProperty('--radius',  radiusToPx(config.theme.radius));
     else b.style.removeProperty('--radius');
+
+    // Font pair — set data-font attribute + inject/update Google Fonts link
+    const fontPair = config.theme.fontPair ?? 'inter';
+    b.setAttribute('data-font', fontPair);
+    const fontDef = FONT_PAIRS[fontPair];
+    let link = document.getElementById('site-font-link') as HTMLLinkElement | null;
+    if (fontDef.googleUrl) {
+      if (!link) {
+        link = document.createElement('link');
+        link.id = 'site-font-link';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
+      link.href = fontDef.googleUrl;
+    } else {
+      link?.remove();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.theme]);
 

@@ -216,7 +216,49 @@ body[data-theme="grove"]  {
   --elev-2: 0 18px 60px rgba(0,0,0,.18);
   --admin-elev: 0px 0px 21px -4px rgba(223, 107, 252, 0.18);
   --round-xl: clamp(14px, 1.6vw, 22px);
+
+  /* Font pair tokens — defaults to Inter */
+  --font-heading: 'Inter', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --heading-weight: 800;
 }
+
+/* ── Font pair overrides ───────────────────────────────────────────────────── */
+body[data-font="editorial"] {
+  --font-heading:    'Playfair Display', serif;
+  --font-body:       'Lato', sans-serif;
+  --heading-weight:  700;
+}
+body[data-font="soft"] {
+  --font-heading:    'DM Serif Display', serif;
+  --font-body:       'DM Sans', sans-serif;
+  --heading-weight:  400;
+}
+body[data-font="bold"] {
+  --font-heading:    'Bebas Neue', sans-serif;
+  --font-body:       'Inter', sans-serif;
+  --heading-weight:  400;
+}
+body[data-font="minimal"] {
+  --font-heading:    'Space Grotesk', sans-serif;
+  --font-body:       'Space Grotesk', sans-serif;
+  --heading-weight:  700;
+}
+body[data-font="classic"] {
+  --font-heading:    'Merriweather', serif;
+  --font-body:       'Source Sans 3', sans-serif;
+  --heading-weight:  700;
+}
+
+/* Apply font vars to document — Tailwind's base layer sets sans; these win because they come after */
+body {
+  font-family: var(--font-body);
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+}
+
 
 /* Pills & buttons */
 .btn {

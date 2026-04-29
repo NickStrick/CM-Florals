@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SiteConfig, AnySection } from '@/types/site';
+import type { SiteConfig, AnySection, HeaderSection, FooterSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import MediaPicker from './MediaPicker';
@@ -11,7 +11,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faTrash } from '@fortawesome/free-solid-svg-icons';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
-import { getAdminSectionSlots, normalizeSiteConfig } from '@/lib/siteConfigSections';
+import { getAdminSectionSlots, getAdminPageSectionSlots, normalizeSiteConfig } from '@/lib/siteConfigSections';
+import type { SitePage } from '@/types/site';
 
 // -----------------------------
 // Utilities
@@ -50,6 +51,8 @@ export default function ConfigModal({
   // Working copy (nullable until config is ready)
   const [draft, setDraft] = useState<SiteConfig | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<'main' | 'pages'>('main');
+  const [editingPageIndex, setEditingPageIndex] = useState<number | null>(null);
   const originalRef = useRef<SiteConfig | null>(null);
   const previewDraftRef = useRef<SiteConfig | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -108,7 +111,13 @@ export default function ConfigModal({
     setDraft((prev) => (prev ? applySiteConfigPatch(prev, externalPatch) : prev));
   }, [draft, externalPatch, externalPatchNonce, externalPatchPreview]);
 
-  const slots = useMemo(() => (draft ? getAdminSectionSlots(draft) : []), [draft]);
+  const slots = useMemo(() => {
+    if (!draft) return [];
+    if (activeTab === 'pages' && editingPageIndex !== null) {
+      return getAdminPageSectionSlots(draft, editingPageIndex);
+    }
+    return getAdminSectionSlots(draft);
+  }, [draft, activeTab, editingPageIndex]);
 
   // keep selectedIndex in bounds whenever slot count changes
   useEffect(() => {
@@ -204,13 +213,18 @@ export default function ConfigModal({
   const prevLenRef = useRef<number>(0);
   useEffect(() => {
     if (!draft) return;
-    const len = draft.sections.length;
+    const currentSections =
+      activeTab === 'pages' && editingPageIndex !== null
+        ? (draft.pages?.[editingPageIndex]?.sections ?? [])
+        : draft.sections;
+    const len = currentSections.length;
     if (prevLenRef.current && len === prevLenRef.current + 1) {
-      // slots: [header, ...sections, footer] -> last body section is at index `len`
-      setSelectedIndex(len);
+      // In main mode: header is slot 0, so last section = slot `len`.
+      // In page mode: no header slot, so last section = slot `len - 1`.
+      setSelectedIndex(activeTab === 'pages' && editingPageIndex !== null ? len - 1 : len);
     }
     prevLenRef.current = len;
-  }, [draft?.sections.length, draft]);
+  }, [draft, activeTab, editingPageIndex]);
 
   // reordering helpers
   function reorder<T>(arr: T[], from: number, to: number): T[] {
@@ -236,6 +250,86 @@ export default function ConfigModal({
 
   const moveUp   = useCallback((index: number) => moveSection(index, index - 1), [moveSection]);
   const moveDown = useCallback((index: number) => moveSection(index, index + 1), [moveSection]);
+
+  // ---------------------------
+  // Page section mutations (mirrors main mutations but targets draft.pages[i].sections)
+  // ---------------------------
+  const updatePageSection = useCallback((pageIdx: number, sectionIdx: number, next: AnySection) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const pages = deepClone(prev.pages ?? []);
+      pages[pageIdx].sections[sectionIdx] = next;
+      return { ...prev, pages };
+    });
+  }, []);
+
+  const removePageSection = useCallback((pageIdx: number, sectionIdx: number) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const pages = deepClone(prev.pages ?? []);
+      pages[pageIdx].sections.splice(sectionIdx, 1);
+      return { ...prev, pages };
+    });
+    setSelectedIndex(0);
+  }, []);
+
+  const addPageSection = useCallback((pageIdx: number, type: AnySection['type']) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const maker = SECTION_REGISTRY[type]?.create;
+      const next = maker ? maker() : undefined;
+      if (!next) return prev;
+      const pages = deepClone(prev.pages ?? []);
+      pages[pageIdx].sections = [...pages[pageIdx].sections, next];
+      return { ...prev, pages };
+    });
+  }, []);
+
+  const movePageSection = useCallback((pageIdx: number, from: number, to: number) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const pages = deepClone(prev.pages ?? []);
+      const secs = pages[pageIdx].sections;
+      if (to < 0 || to >= secs.length) return prev;
+      pages[pageIdx].sections = reorder(secs, from, to);
+      return { ...prev, pages };
+    });
+    setSelectedIndex((sel) => {
+      if (sel === from) return to;
+      if (sel === to) return from;
+      return sel;
+    });
+  }, []);
+
+  // ---------------------------
+  // Page CRUD
+  // ---------------------------
+  const addPage = useCallback(() => {
+    const slug = `page-${Math.random().toString(36).slice(2, 6)}`;
+    const newPage: SitePage = { slug, title: 'New Page', sections: [] };
+    setDraft((prev) => {
+      if (!prev) return prev;
+      return { ...prev, pages: [...(prev.pages ?? []), newPage] };
+    });
+  }, []);
+
+  const deletePage = useCallback((pageIdx: number) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const pages = (prev.pages ?? []).filter((_, i) => i !== pageIdx);
+      return { ...prev, pages };
+    });
+    setEditingPageIndex(null);
+  }, []);
+
+  const updatePageMeta = useCallback((pageIdx: number, patch: Partial<SitePage>) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const pages = deepClone(prev.pages ?? []);
+      pages[pageIdx] = { ...pages[pageIdx], ...patch };
+      return { ...prev, pages };
+    });
+  }, []);
 
   // ---------------------------
   // Save
@@ -423,8 +517,17 @@ export default function ConfigModal({
     );
   }
 
-  const selected =
-    selectedSlot?.kind === 'header'
+  // page-mode helpers
+  const inPageMode = activeTab === 'pages' && editingPageIndex !== null;
+  const currentSectionCount = inPageMode
+    ? (draft.pages?.[editingPageIndex!]?.sections.length ?? 0)
+    : draft.sections.length;
+
+  const selected = inPageMode
+    ? (selectedSlot?.kind === 'section'
+        ? draft.pages?.[editingPageIndex!]?.sections[selectedSlot.index]
+        : undefined)
+    : selectedSlot?.kind === 'header'
       ? draft.header
       : selectedSlot?.kind === 'footer'
         ? draft.footer
@@ -458,7 +561,7 @@ export default function ConfigModal({
             </button>
           </div>
         </div>
-            <div className="p-4 border-b">
+        <div className="p-4 border-b">
           <AdminAIChatPanel
             mode="inline"
             title="AI (Edit Sections)"
@@ -471,122 +574,278 @@ export default function ConfigModal({
           />
         </div>
 
-        
         {/* Body */}
         <div className="grid md:grid-cols-3 gap-0">
-          {/* Left: Sections list (select one) */}
+          {/* Left panel */}
           <div className="border-r p-4 space-y-3">
-            <div className="text-sm opacity-70">Sections</div>
 
-            <div className="space-y-2">
-              {slots.map((slot, i) => {
-                const s = slot.section;
-                const isLocked = slot.kind === 'header' || slot.kind === 'footer';
-                const isSelected = i === selectedIndex;
-                return (
+            {/* Tab strip */}
+            <div className="flex gap-1 border-b pb-2">
+              <button
+                className={['btn btn-ghost text-sm px-3 py-1', activeTab === 'main' ? 'font-bold underline' : ''].join(' ')}
+                onClick={() => { setActiveTab('main'); setEditingPageIndex(null); setSelectedIndex(0); }}
+              >
+                Main Page
+              </button>
+              <button
+                className={['btn btn-ghost text-sm px-3 py-1', activeTab === 'pages' ? 'font-bold underline' : ''].join(' ')}
+                onClick={() => { setActiveTab('pages'); setEditingPageIndex(null); setSelectedIndex(0); }}
+              >
+                Pages {draft.pages?.length ? `(${draft.pages.length})` : ''}
+              </button>
+            </div>
+
+            {/* ── PAGES LIST view ── */}
+            {activeTab === 'pages' && editingPageIndex === null && (
+              <div className="space-y-2">
+                {(draft.pages ?? []).map((page, i) => (
                   <div
-                    key={`${slot.kind}:${s.id}`}
-                    // type="button"
-                    onClick={() => setSelectedIndex(i)}
-                    className={[
-                      'card card-solid admin-card p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
-                      isSelected ? 'outline outline-2 outline-primary bg-black/5' : 'hover:bg-black/5',
-                    ].join(' ')}
-                    aria-current={isSelected ? 'true' : undefined}
+                    key={page.slug}
+                    className="card card-solid admin-card p-3 flex items-center justify-between gap-2"
                   >
-                    <div className="flex flex-row gap-3">
-                      <div className="flex flex-col gap-1">
-                        {isLocked || (slot.kind === 'section' && slot.index === 0)?<></>:
-                        <button
-                          className="btn btn-ghost px-2 py-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (slot.kind === 'section') moveUp(slot.index);
-                          }}
-                          disabled={isLocked || (slot.kind === 'section' && slot.index === 0)}
-                          title="Move up"
-                        >
-                          <FontAwesomeIcon icon={faChevronUp} className="text-xs" />
-                        </button>
-              }
-              {isLocked || (slot.kind === 'section' && slot.index === draft.sections.length - 1)?<></>:
-                        <button
-                          className="btn btn-ghost px-2 py-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (slot.kind === 'section') moveDown(slot.index);
-                          }}
-                          disabled={
-                            isLocked ||
-                            (slot.kind === 'section' && slot.index === draft.sections.length - 1)
-                          }
-                          title="Move down"
-                        >
-                          <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
-                        </button>
-                         }
-                      </div>
                     <div className="min-w-0">
-                      <div className="font-medium">
-                        {s.type}
-                        {slot.kind === 'header' }
-                        {slot.kind === 'footer' }
-                      </div>
-                      <div className="text-xs text-muted break-all">{s.id}</div>
+                      <div className="font-medium truncate">{page.title || <em className="opacity-40">Untitled</em>}</div>
+                      <div className="text-xs text-muted">/{page.slug}</div>
                     </div>
-                    </div>
-                    {slot.kind === 'section' && (
+                    <div className="flex gap-1 flex-shrink-0">
                       <button
-                        className="btn btn-ghost"
-                        onClick={() => removeSection(slot.index)}
-                        title={'Remove section'}
+                        className="btn btn-ghost text-sm"
+                        onClick={() => { setEditingPageIndex(i); setSelectedIndex(0); }}
                       >
-                        <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                        Edit
                       </button>
-                    )}
+                      <button
+                        className="btn btn-ghost text-red-500 text-sm"
+                        onClick={() => deletePage(i)}
+                        title="Delete page"
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                      </button>
+                    </div>
                   </div>
-                );
-              })}
-              {draft.sections.length === 0 && (
-                <div className="text-muted text-sm">No body sections yet.</div>
-              )}
-            </div>
-
-            {/* Quick add (dynamic) */}
-            <div className="pt-4 border-t">
-              <div className="text-sm opacity-70 mb-2">
-                Add section</div>
-              <div className="flex flex-wrap gap-2">
-                {getAllowedSectionTypes().map((t) => (
-                  <button
-                    key={t}
-                    className="btn btn-inverted"
-                    onClick={() => addSection(t)}
-                  >
-                    {SECTION_REGISTRY[t].label}
-                  </button>
                 ))}
+                {!draft.pages?.length && (
+                  <div className="text-sm text-muted">No custom pages yet.</div>
+                )}
+                <button className="btn btn-inverted w-full mt-2" onClick={addPage}>
+                  + Add Page
+                </button>
               </div>
-            </div>
+            )}
+
+            {/* ── PAGE SECTION EDITING view ── */}
+            {activeTab === 'pages' && editingPageIndex !== null && (
+              <>
+                {/* Back + page meta */}
+                <div className="space-y-2">
+                  <button
+                    className="btn btn-ghost text-sm"
+                    onClick={() => { setEditingPageIndex(null); setSelectedIndex(0); }}
+                  >
+                    ← Back to pages
+                  </button>
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-0.5">Page Title</label>
+                    <input
+                      className="input w-full text-sm"
+                      value={draft.pages?.[editingPageIndex]?.title ?? ''}
+                      onChange={(e) => updatePageMeta(editingPageIndex, { title: e.target.value })}
+                      placeholder="My Page"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted mb-0.5">Slug (URL path)</label>
+                    <input
+                      className="input w-full text-sm font-mono"
+                      value={draft.pages?.[editingPageIndex]?.slug ?? ''}
+                      onChange={(e) => updatePageMeta(editingPageIndex, { slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
+                      placeholder="my-page"
+                    />
+                    <p className="text-xs text-muted mt-0.5">Accessible at /{draft.pages?.[editingPageIndex]?.slug}</p>
+                  </div>
+                </div>
+
+                {/* Section list for this page */}
+                <div className="space-y-2">
+                  {slots.map((slot, i) => {
+                    if (slot.kind !== 'section') return null;
+                    const s = slot.section;
+                    const isSelected = i === selectedIndex;
+                    return (
+                      <div
+                        key={`page-sec:${s.id}`}
+                        onClick={() => setSelectedIndex(i)}
+                        className={[
+                          'card card-solid admin-card p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
+                          isSelected ? 'outline outline-2 outline-primary bg-black/5' : 'hover:bg-black/5',
+                        ].join(' ')}
+                        aria-current={isSelected ? 'true' : undefined}
+                      >
+                        <div className="flex flex-row gap-3">
+                          <div className="flex flex-col gap-1">
+                            {slot.index > 0 && (
+                              <button
+                                className="btn btn-ghost px-2 py-1"
+                                onClick={(e) => { e.stopPropagation(); movePageSection(editingPageIndex, slot.index, slot.index - 1); }}
+                                title="Move up"
+                              >
+                                <FontAwesomeIcon icon={faChevronUp} className="text-xs" />
+                              </button>
+                            )}
+                            {slot.index < currentSectionCount - 1 && (
+                              <button
+                                className="btn btn-ghost px-2 py-1"
+                                onClick={(e) => { e.stopPropagation(); movePageSection(editingPageIndex, slot.index, slot.index + 1); }}
+                                title="Move down"
+                              >
+                                <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-medium">{s.type}</div>
+                            <div className="text-xs text-muted break-all">{s.id}</div>
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-ghost"
+                          onClick={(e) => { e.stopPropagation(); removePageSection(editingPageIndex, slot.index); }}
+                          title="Remove section"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {currentSectionCount === 0 && (
+                    <div className="text-muted text-sm">No sections yet. Add one below.</div>
+                  )}
+                </div>
+
+                {/* Add section */}
+                <div className="pt-4 border-t">
+                  <div className="text-sm opacity-70 mb-2">Add section</div>
+                  <div className="flex flex-wrap gap-2">
+                    {getAllowedSectionTypes().map((t) => (
+                      <button
+                        key={t}
+                        className="btn btn-inverted"
+                        onClick={() => addPageSection(editingPageIndex, t)}
+                      >
+                        {SECTION_REGISTRY[t].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ── MAIN PAGE section list ── */}
+            {activeTab === 'main' && (
+              <>
+                <div className="space-y-2">
+                  {slots.map((slot, i) => {
+                    const s = slot.section;
+                    const isLocked = slot.kind === 'header' || slot.kind === 'footer';
+                    const isSelected = i === selectedIndex;
+                    return (
+                      <div
+                        key={`${slot.kind}:${s.id}`}
+                        onClick={() => setSelectedIndex(i)}
+                        className={[
+                          'card card-solid admin-card p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
+                          isSelected ? 'outline outline-2 outline-primary bg-black/5' : 'hover:bg-black/5',
+                        ].join(' ')}
+                        aria-current={isSelected ? 'true' : undefined}
+                      >
+                        <div className="flex flex-row gap-3">
+                          <div className="flex flex-col gap-1">
+                            {!isLocked && slot.kind === 'section' && slot.index > 0 && (
+                              <button
+                                className="btn btn-ghost px-2 py-1"
+                                onClick={(e) => { e.stopPropagation(); moveUp(slot.index); }}
+                                title="Move up"
+                              >
+                                <FontAwesomeIcon icon={faChevronUp} className="text-xs" />
+                              </button>
+                            )}
+                            {!isLocked && slot.kind === 'section' && slot.index < currentSectionCount - 1 && (
+                              <button
+                                className="btn btn-ghost px-2 py-1"
+                                onClick={(e) => { e.stopPropagation(); moveDown(slot.index); }}
+                                title="Move down"
+                              >
+                                <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-medium">{s.type}</div>
+                            <div className="text-xs text-muted break-all">{s.id}</div>
+                          </div>
+                        </div>
+                        {slot.kind === 'section' && (
+                          <button
+                            className="btn btn-ghost"
+                            onClick={(e) => { e.stopPropagation(); removeSection(slot.index); }}
+                            title="Remove section"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {draft.sections.length === 0 && (
+                    <div className="text-muted text-sm">No body sections yet.</div>
+                  )}
+                </div>
+
+                {/* Quick add */}
+                <div className="pt-4 border-t">
+                  <div className="text-sm opacity-70 mb-2">Add section</div>
+                  <div className="flex flex-wrap gap-2">
+                    {getAllowedSectionTypes().map((t) => (
+                      <button
+                        key={t}
+                        className="btn btn-inverted"
+                        onClick={() => addSection(t)}
+                      >
+                        {SECTION_REGISTRY[t].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
           </div>
 
-          {/* Right: Only the selected editor */}
+          {/* Right: editor panel */}
           <div className="md:col-span-2 p-4 space-y-4">
-            {selected ? (
+            {activeTab === 'pages' && editingPageIndex === null ? (
+              <div className="text-sm text-muted">Select a page to edit its sections, or create a new one.</div>
+            ) : selected ? (
               <div key={selected.id} className="card card-solid admin-card p-4 space-y-3 right-editor-card">
-                {selectedSlot?.kind === 'header'
-                  ? renderEditor(selected as AnySection, -1, (next) =>
-                      setDraft((prev) => (prev ? { ...prev, header: next as any } : prev))
-                    )
-                  : selectedSlot?.kind === 'footer'
-                    ? renderEditor(selected as AnySection, -1, (next) =>
-                        setDraft((prev) => (prev ? { ...prev, footer: next as any } : prev))
-                      )
-                    : selectedSlot?.kind === 'section'
+                {inPageMode
+                  ? (selectedSlot?.kind === 'section'
                       ? renderEditor(selected as AnySection, selectedSlot.index, (next) =>
-                          updateSection(selectedSlot.index, next)
+                          updatePageSection(editingPageIndex!, selectedSlot.index, next)
                         )
-                      : null}
+                      : null)
+                  : selectedSlot?.kind === 'header'
+                    ? renderEditor(selected as AnySection, -1, (next) =>
+                        setDraft((prev) => (prev ? { ...prev, header: next as HeaderSection } : prev))
+                      )
+                    : selectedSlot?.kind === 'footer'
+                      ? renderEditor(selected as AnySection, -1, (next) =>
+                          setDraft((prev) => (prev ? { ...prev, footer: next as FooterSection } : prev))
+                        )
+                      : selectedSlot?.kind === 'section'
+                        ? renderEditor(selected as AnySection, selectedSlot.index, (next) =>
+                            updateSection(selectedSlot.index, next)
+                          )
+                        : null}
               </div>
             ) : (
               <div className="text-sm text-muted">Select a section to edit.</div>

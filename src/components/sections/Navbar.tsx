@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useSite } from '@/context/SiteContext';
@@ -10,6 +11,7 @@ import { handleHashClick } from '@/lib/scrollToHash';
 
 export default function Navbar() {
   const { config } = useSite();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [activeHref, setActiveHref] = useState<string>('');
 
@@ -31,13 +33,32 @@ export default function Navbar() {
       }
     );
   }, [config]);
-  useEffect(() => {
-    if (!activeHref && (header.links?.length ?? 0) > 0) {
-      setActiveHref(header.links![0].href);
-    }
-  }, [activeHref, header.links]);
 
+  const { sticky = true, blur = true, elevation = 'sm', transparent = false } = header.style ?? {};
+
+  // Set active link based on current pathname (for full-page routes like /shop, /contact).
+  // Falls back to the first link when on the home page.
   useEffect(() => {
+    const links = header.links ?? [];
+    if (links.length === 0) return;
+
+    const pageMatch = links.find(
+      (l) => !l.href.startsWith('#') && l.href === pathname
+    );
+
+    if (pageMatch) {
+      setActiveHref(pageMatch.href);
+    } else if (pathname === '/' || !activeHref) {
+      // On the home page, default to the first link; scroll will take over from here.
+      setActiveHref(links[0].href);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, header.links]);
+
+  // Scroll-based active tracking — only relevant on the home page where hash links live.
+  useEffect(() => {
+    if (pathname !== '/') return;
+
     const links = (header.links ?? []);
     if (links.length === 0) return;
     const homeHref =
@@ -47,8 +68,7 @@ export default function Navbar() {
     const sections = links.map((l) => {
       const href = l.href?.includes('#') ? l.href : '#top';
       return { href, el: document.querySelector(href) as HTMLElement | null };
-    })
-      // .filter(s => s.el);
+    });
 
     if (sections.length === 0) return;
 
@@ -94,9 +114,7 @@ export default function Navbar() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, [activeHref, header.links]);
-
-  const { sticky = true, blur = true, elevation = 'sm', transparent = false } = header.style ?? {};
+  }, [activeHref, header.links, pathname, sticky]);
 
   // computed classes
   const positionCls = sticky ? 'fixed top-0 inset-x-0' : 'relative'; // 👈 sticky toggle

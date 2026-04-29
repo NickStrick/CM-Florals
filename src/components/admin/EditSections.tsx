@@ -27,6 +27,8 @@ import EditProductListings from './fields/EditProductListings';
 import EditPersons from './fields/PersonsEditor';
 import EditSendAMessage from './fields/SendAMessageEditor';
 import EditProductShop from './fields/ProductShopEditor';
+import EditSocials from './fields/SocialsEditor';
+import EditSkills from './fields/SkillsEditor';
 
 // -----------------------------
 // Shared types & helpers
@@ -77,6 +79,8 @@ export const SECTION_EDITORS: Partial<Record<AnySection['type'], EditorComponent
   persons: EditPersons as EditorComponent<AnySection>,
   sendAMessage: EditSendAMessage as EditorComponent<AnySection>,
   productShop: EditProductShop as EditorComponent<AnySection>,
+  socials: EditSocials as EditorComponent<AnySection>,
+  skills: EditSkills as EditorComponent<AnySection>,
   // Add more as you implement them…
 };
 

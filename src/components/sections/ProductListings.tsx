@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import type { ProductListingsSection, Product } from '@/types/site';
+import type { ProductListingsSection, SiteProduct } from '@/types/site';
 import AnimatedSection from '@/components/AnimatedSection';
 import { motion } from 'framer-motion';
 import ProductDetailModal from './ProductDetailModal';
@@ -33,14 +33,14 @@ export default function ProductListings({
   id,
   title,
   subtitle,
-  products,
+  productIds,
   viewType = 'featured',
   style,
   showAllThreshold = 3,
   buyCtaFallback = 'Buy Now',
 }: ProductListingsSection) {
   const [showAll, setShowAll] = useState(false);
-  const [selected, setSelected] = useState<Product | null>(null);
+  const [selected, setSelected] = useState<SiteProduct | null>(null);
   const [selectedOptionsByProduct, setSelectedOptionsByProduct] = useState<Record<string, Record<string, string>>>(
     {}
   );
@@ -50,7 +50,16 @@ export default function ProductListings({
   const cartActive = payments?.cartActive === true;
   const taxes = payments?.taxes;
 
-  const hasOverflow = (products?.length ?? 0) > showAllThreshold;
+  // Resolve ordered products from the global catalog
+  const catalog = useMemo(() => config?.products?.items ?? [], [config?.products?.items]);
+  const products = useMemo<SiteProduct[]>(() => {
+    if (!productIds?.length) return [];
+    return productIds
+      .map((pid) => catalog.find((p) => p.id === pid))
+      .filter((p): p is SiteProduct => p !== undefined);
+  }, [productIds, catalog]);
+
+  const hasOverflow = products.length > showAllThreshold;
   const visible = useMemo(
     () => (showAll ? products : products.slice(0, showAllThreshold)),
     [products, showAll, showAllThreshold]
@@ -58,7 +67,7 @@ export default function ProductListings({
 
   const normalizedOptionsByProductId = useMemo(() => {
     const map: Record<string, ReturnType<typeof normalizeOptionGroups>> = {};
-    for (const p of products ?? []) map[p.id] = normalizeOptionGroups(p.options);
+    for (const p of products) map[p.id] = normalizeOptionGroups(p.options);
     return map;
   }, [products]);
 
@@ -68,7 +77,7 @@ export default function ProductListings({
     setSelectedOptionsByProduct((cur) => {
       let changed = false;
       const next: Record<string, Record<string, string>> = { ...cur };
-      for (const p of products ?? []) {
+      for (const p of products) {
         if (next[p.id]) continue;
         const groups = normalizedOptionsByProductId[p.id] ?? [];
         if (groups.length === 0) continue;

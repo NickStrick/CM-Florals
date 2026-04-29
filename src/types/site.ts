@@ -49,9 +49,17 @@ export type ThemeColors = {
   text1?: string;
   text2?: string;
 };
+export type FontPair =
+  | 'inter'
+  | 'editorial'
+  | 'soft'
+  | 'bold'
+  | 'minimal'
+  | 'classic';
+
 export type SiteStyle = {
   preset: ThemePreset;
-  primary?: string;   
+  primary?: string;
   accent?: string;
   bg?: string;
   bg2?: string;
@@ -61,6 +69,7 @@ export type SiteStyle = {
   text2?: string;
   colors?: ThemeColors;
   radius?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  fontPair?: FontPair;
 };
 
 export type SectionBase = {
@@ -251,6 +260,17 @@ export type SiteSettings = {
   payments?: PaymentsSettings;
 };
 
+export type SitePage = {
+  /** URL slug — e.g. "about" renders at /about */
+  slug: string;
+  /** Display name used in nav and admin */
+  title: string;
+  /** Sections for this page (header/footer are inherited from the root config) */
+  sections: AnySection[];
+  meta?: { title?: string; description?: string };
+  visible?: boolean;
+};
+
 export type SiteConfig = {
   theme: SiteStyle;
   /**
@@ -268,6 +288,8 @@ export type SiteConfig = {
   meta?: { title?: string; description?: string; favicon?: string };
   settings?: SiteSettings;
   products?: SiteProductsConfig;
+  /** Custom pages — each gets a dynamic route at /[slug] */
+  pages?: SitePage[];
 };
 
 
@@ -753,7 +775,8 @@ export type ProductListingsSection = SectionBase & {
   type: 'productListings';
   title?: string;
   subtitle?: string;
-  products: Product[];
+  /** Ordered list of product IDs resolved from config.products.items */
+  productIds: string[];
   viewType?: 'list' | 'featured'; // default 'featured'
   style?: ProductListingsStyle;
   showAllThreshold?: number;     // default 3 — show "Show all" if > threshold

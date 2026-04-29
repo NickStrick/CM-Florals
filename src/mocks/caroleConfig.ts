@@ -379,6 +379,27 @@ export const mockSiteConfig: SiteConfig = {
       "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founding Florist Carole Murray.",
     favicon: logo2.src,
   },
+
+  // ── Header ───────────────────────────────────────────────────────────────────
+  showHeader: true,
+  header: {
+    id: "hdr",
+    type: "header",
+    logoText: "CM Florals",
+    logoImage: logoWhite.src,
+    links: [
+      { label: "Home", href: "#top" },
+      { label: "Shop", href: "#shop" },
+      { label: "Custom", href: "#custom-request" },
+      { label: "About", href: "#create" },
+      { label: "Previous Work", href: "#gallery" },
+      { label: "Testimonials", href: "#testimonials" },
+      { label: "Contact", href: "#contact" },
+    ],
+    cta: { label: "Order Now", href: "#shop" },
+    style: { sticky: true, blur: true, elevation: "sm", transparent: false },
+  },
+
   "settings": {
     "general": {
       "businessDisplayName": "CM Florals",
@@ -458,25 +479,6 @@ export const mockSiteConfig: SiteConfig = {
     }
   },
   sections: [
-    // HEADER
-    {
-      visible: true,
-      id: "hdr",
-      type: "header",
-      logoText: "CM Florals",
-      logoImage: logoWhite.src,
-      links: [
-        { label: "Home", href: "#top" },
-        { label: "Products", href: "#shop" },
-        { label: "About", href: "#create" },
-        { label: "Previous Work", href: "#gallery" },
-        { label: "Testimonials", href: "#testimonials" },
-        { label: "Contact", href: "#contact" },
-        { label: "Pay", href: "#pay" },
-      ],
-      cta: { label: "Order Now", href: "#shop" },
-      style: { sticky: true, blur: true, elevation: "sm", transparent: false },
-    },
 
     // HERO
     {
@@ -778,51 +780,52 @@ export const mockSiteConfig: SiteConfig = {
       backgroundClass: "bg-gradient-2-top",
     },
 
-    // FOOTER
-    {
-      visible: true,
-      id: "ftr",
-      type: "footer",
-      columns: [
-        {
-          title: "Explore",
-          links: [
-            { label: "Home", href: "/" },
-            { label: "Products", href: "#shop" },
-            { label: "About", href: "#create" },
-            { label: "Founder", href: "#about" },
-            { label: "Previous Work", href: "#gallery" },
-            { label: "Testimonials", href: "#testimonials" },
-            { label: "Pay", href: "#pay" },
-            { label: "Contact", href: "#contact" },
-          ],
-        },
-        {
-          title: "Info",
-          links: [
-            { label: "CM Florals & Gifts", href: "/" },
-            {
-              label: "500 W Madison St, Chicago, IL 60661",
-              href: "https://maps.app.goo.gl/uHEar2C6fxQPoHUo6",
-            },
-            { label: "(773) 209-4805", href: phoneHref },
-            { label: "Hours: Mon–Fri 9am–5pm", href: "#" },
-          ],
-        },
-        {
-          title: "Connect",
-          links: [
-            {
-              label: "shop@cmfloralsandgifts.com",
-              href: "mailto:shop@cmfloralsandgifts.com",
-            },
-            { label: "Instagram", href: instagramHref },
-            { label: "TikTok", href: tiktokHref },
-            { label: "LinkedIn", href: linkedinHref },
-          ],
-        },
-      ],
-      legal: "© 2025 CM Florals. All rights reserved.",
-    },
   ],
+
+  // ── Footer ───────────────────────────────────────────────────────────────────
+  showFooter: true,
+  footer: {
+    id: "ftr",
+    type: "footer",
+    columns: [
+      {
+        title: "Explore",
+        links: [
+          { label: "Home", href: "/" },
+          { label: "Shop", href: "#shop" },
+          { label: "Custom Request", href: "#custom-request" },
+          { label: "About", href: "#create" },
+          { label: "Founder", href: "#about" },
+          { label: "Previous Work", href: "#gallery" },
+          { label: "Testimonials", href: "#testimonials" },
+          { label: "Contact", href: "#contact" },
+        ],
+      },
+      {
+        title: "Info",
+        links: [
+          { label: "CM Florals & Gifts", href: "/" },
+          {
+            label: "500 W Madison St, Chicago, IL 60661",
+            href: "https://maps.app.goo.gl/uHEar2C6fxQPoHUo6",
+          },
+          { label: "(773) 209-4805", href: phoneHref },
+          { label: "Hours: Mon–Fri 9am–5pm", href: "#" },
+        ],
+      },
+      {
+        title: "Connect",
+        links: [
+          {
+            label: "shop@cmfloralsandgifts.com",
+            href: "mailto:shop@cmfloralsandgifts.com",
+          },
+          { label: "Instagram", href: instagramHref },
+          { label: "TikTok", href: tiktokHref },
+          { label: "LinkedIn", href: linkedinHref },
+        ],
+      },
+    ],
+    legal: "© 2025 CM Florals. All rights reserved.",
+  },
 };
