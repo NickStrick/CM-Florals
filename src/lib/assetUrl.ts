@@ -3,7 +3,7 @@ export function resolveAssetUrl(src?: string): string | undefined {
   if (!src) return undefined;
 
   // already a full/relative URL? pass through
-  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+  if (src.includes('http') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
     return src;
   }
 
