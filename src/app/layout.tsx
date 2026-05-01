@@ -83,6 +83,8 @@ async function getSiteConfig(): Promise<SiteConfig> {
       const text = await res.text().catch(() => "");
       console.warn(`[config] ${url} -> ${res.status}`, text?.slice(0, 200));
       return null;
+    }else{
+      console.log(`[config] ${url} -> ${res.json()}`);
     }
     return (await res.json()) as SiteConfig;
   }
