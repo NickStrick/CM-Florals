@@ -26,7 +26,7 @@ function ShopCard({
   product: SiteProduct;
   onSelect: () => void;
 }) {
-  const thumb = resolveAssetUrl(product.thumbnailUrl);
+  const thumb = resolveAssetUrl(product.thumbnailUrl);console.log('Resolved thumbnail URL:', thumb);
   const isSoldOut = product.stock === 'out_of_stock';
 
   return (
