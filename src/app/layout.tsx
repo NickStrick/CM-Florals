@@ -83,8 +83,6 @@ async function getSiteConfig(): Promise<SiteConfig> {
       const text = await res.text().catch(() => "");
       console.warn(`[config] ${url} -> ${res.status}`, text?.slice(0, 200));
       return null;
-    }else{
-      console.log(`[config] ${url} -> ${res.json()}`);
     }
     return (await res.json()) as SiteConfig;
   }
@@ -109,6 +107,7 @@ export default async function RootLayout({
 }) {
   const config = await getSiteConfig();
   const showThemeSwitcher = process.env.NEXT_PUBLIC_THEME_SWITCHER === "1";
+  console.log("Site config loaded:", config);
 
   return (
     <html lang="en">
