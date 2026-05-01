@@ -292,7 +292,7 @@ export default function ProductShop({ id, title, subtitle, topWaveType, bottomWa
   const filterProps = { minPrice, maxPrice, priceRange, setPriceRange, categories, filterCategories, setFilterCategories, activeTab, onReset: handleReset };
 
   if (!allProducts.length) return null;
-
+  console.log('Rendering ProductShop with config:', paginated, shopConfig);
   return (
     <>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
