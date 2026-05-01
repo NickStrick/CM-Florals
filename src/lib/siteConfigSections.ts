@@ -61,6 +61,7 @@ export function normalizeSiteConfig(input: SiteConfig): SiteConfig {
 }
 
 export function getRenderableSections(config: SiteConfig): AnySection[] {
+   console.log("Site config loaded:", config);
   const normalized = normalizeSiteConfig(config);
   const out: AnySection[] = [];
 

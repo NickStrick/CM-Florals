@@ -107,7 +107,6 @@ export default async function RootLayout({
 }) {
   const config = await getSiteConfig();
   const showThemeSwitcher = process.env.NEXT_PUBLIC_THEME_SWITCHER === "1";
-  console.log("Site config loaded:", config);
 
   return (
     <html lang="en">
