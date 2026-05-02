@@ -601,9 +601,24 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
   const tabProducts = useMemo(
     () =>
       activeTab === 'all'
-        ? localProducts
+        ? (() => {
+            const rank = (category?: string) => {
+              if (!category) return Number.MAX_SAFE_INTEGER;
+              const idx = categories.indexOf(category);
+              return idx === -1 ? Number.MAX_SAFE_INTEGER - 1 : idx;
+            };
+
+            return localProducts
+              .map((p, i) => ({ p, i }))
+              .sort((a, b) => {
+                const ar = rank(a.p.category);
+                const br = rank(b.p.category);
+                return ar !== br ? ar - br : a.i - b.i; // stable
+              })
+              .map(({ p }) => p);
+          })()
         : localProducts.filter((p) => p.category === activeTab),
-    [localProducts, activeTab]
+    [localProducts, activeTab, categories]
   );
 
   // ── Mutations ─────────────────────────────────────────────────────────────

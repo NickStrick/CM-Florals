@@ -51,7 +51,7 @@ function ShopCard({
 
       <div className="aspect-[1] w-full overflow-hidden bg-black/5">
         {thumb ? (
-          <img
+          <Image
             src={thumb}
             alt={product.name}
             width={320}
@@ -283,8 +283,23 @@ export default function ProductShop({ id, title, subtitle, topWaveType, bottomWa
   const mainProducts = useMemo(() => {
     if (activeTab !== 'all') return filtered;
     const featuredIds = new Set(featured.map((p) => p.id));
-    return filtered.filter((p) => !featuredIds.has(p.id));
-  }, [filtered, featured, activeTab]);
+    const rest = filtered.filter((p) => !featuredIds.has(p.id));
+
+    const rank = (category?: string) => {
+      if (!category) return Number.MAX_SAFE_INTEGER;
+      const idx = categories.indexOf(category);
+      return idx === -1 ? Number.MAX_SAFE_INTEGER - 1 : idx;
+    };
+
+    return rest
+      .map((p, i) => ({ p, i }))
+      .sort((a, b) => {
+        const ar = rank(a.p.category);
+        const br = rank(b.p.category);
+        return ar !== br ? ar - br : a.i - b.i; // stable
+      })
+      .map(({ p }) => p);
+  }, [filtered, featured, activeTab, categories]);
 
   const totalPages = Math.max(1, Math.ceil(mainProducts.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
