@@ -51,7 +51,7 @@ function ShopCard({
 
       <div className="aspect-[1] w-full overflow-hidden bg-black/5">
         {thumb ? (
-          <Image
+          <img
             src={thumb}
             alt={product.name}
             width={320}
