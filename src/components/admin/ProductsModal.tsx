@@ -503,6 +503,8 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [localProducts, setLocalProducts] = useState<LocalProduct[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
+  const [draggingCategory, setDraggingCategory] = useState<string | null>(null);
+  const [dragOverCategory, setDragOverCategory] = useState<string | null>(null);
 
   // ── Media picker ──────────────────────────────────────────────────────────
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -546,11 +548,55 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
     [draft?.products]
   );
 
+  const setCategoryOrder = useCallback((next: string[]) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        products: { ...(prev.products ?? { items: [] }), categoryOrder: next },
+      };
+    });
+  }, []);
+
+  const categoryOrder = shopConfig.categoryOrder ?? [];
   const categories = useMemo(() => {
-    const seen = new Set<string>();
-    for (const p of localProducts) if (p.category) seen.add(p.category);
-    return Array.from(seen);
-  }, [localProducts]);
+    const seen: string[] = [];
+    const seenSet = new Set<string>();
+    for (const p of localProducts) {
+      if (!p.category) continue;
+      if (seenSet.has(p.category)) continue;
+      seenSet.add(p.category);
+      seen.push(p.category);
+    }
+
+    const ordered: string[] = [];
+    const orderSet = new Set(categoryOrder);
+    for (const c of categoryOrder) if (seenSet.has(c)) ordered.push(c);
+    for (const c of seen) if (!orderSet.has(c)) ordered.push(c);
+    return ordered;
+  }, [localProducts, categoryOrder]);
+
+  useEffect(() => {
+    if (activeTab === 'all') return;
+    if (!categories.includes(activeTab)) setActiveTab('all');
+  }, [activeTab, categories]);
+
+  const handleDropCategory = useCallback(
+    (target: string) => {
+      if (!draggingCategory) return;
+      if (draggingCategory === target) return;
+
+      const next = [...categories];
+      const from = next.indexOf(draggingCategory);
+      const to = next.indexOf(target);
+      if (from < 0 || to < 0) return;
+
+      next.splice(from, 1);
+      next.splice(to, 0, draggingCategory);
+      setCategoryOrder(next);
+    },
+    [categories, draggingCategory, setCategoryOrder]
+  );
 
   const tabProducts = useMemo(
     () =>
@@ -702,7 +748,35 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
                       activeTab === tab
                         ? 'border-transparent text-white active'
                         : 'border-transparent text-gray-300 hover:text-[var(--admin-primary)]',
+                      tab !== 'all' ? 'cursor-move' : '',
+                      dragOverCategory === tab ? 'bg-white/5' : '',
                     ].join(' ')}
+                    draggable={tab !== 'all'}
+                    onDragStart={(e) => {
+                      if (tab === 'all') return;
+                      setDraggingCategory(tab);
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData('text/plain', tab);
+                    }}
+                    onDragEnd={() => {
+                      setDraggingCategory(null);
+                      setDragOverCategory(null);
+                    }}
+                    onDragOver={(e) => {
+                      if (tab === 'all' || !draggingCategory) return;
+                      e.preventDefault();
+                      setDragOverCategory(tab);
+                      e.dataTransfer.dropEffect = 'move';
+                    }}
+                    onDragLeave={() => {
+                      if (tab === dragOverCategory) setDragOverCategory(null);
+                    }}
+                    onDrop={(e) => {
+                      if (tab === 'all') return;
+                      e.preventDefault();
+                      handleDropCategory(tab);
+                      setDragOverCategory(null);
+                    }}
                     onClick={() => setActiveTab(tab)}
                   >
                     {tab === 'all'

@@ -702,6 +702,7 @@ export type SiteProduct = {
   id: string;
   name: string;
   subtitle?: string;
+  sku?: string;
   category?: string;          // used for tab grouping in ProductShop
   price: number;              // cents
   compareAtPrice?: number;
@@ -713,6 +714,7 @@ export type SiteProduct = {
   features?: string[];
   badges?: string[];
   stock?: 'in_stock' | 'low_stock' | 'out_of_stock';
+  quantityAvailable?: number;
   options?: ProductOptions[];
   colors?: ProductColor[];
   maxQuantity?: number;
@@ -724,6 +726,8 @@ export type SiteProduct = {
 
 export type SiteProductsConfig = {
   showFilters?: boolean;
+  /** Optional UI ordering for category tabs (first → last). */
+  categoryOrder?: string[];
   items: SiteProduct[];
 };
 
