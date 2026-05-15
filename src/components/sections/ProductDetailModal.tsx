@@ -119,7 +119,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
           <div className="p-4 md:p-6 border-b md:border-b-0 md:border-r border-[var(--bg-2)]">
             {mainImage ? (
               <div className="w-full max-h-[645px] flex items-center justify-center overflow-hidden rounded-xl">
-                <Image
+                <img
                   src={mainImage}
                   alt={images[mainIndex]?.alt ?? name}
                   className="rounded-xl object-contain w-full h-full"
