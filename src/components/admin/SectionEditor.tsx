@@ -61,7 +61,7 @@ export default function SectionEditor({
               })
             }
           >
-            <option value="">— none —</option>
+            <option value="" defaultChecked>— none —</option>
             {WAVE_TYPES.map((waveType) => (
               <option key={waveType} value={waveType}>
                 {waveType}
@@ -81,7 +81,7 @@ export default function SectionEditor({
               })
             }
           >
-            <option value="">— none —</option>
+            <option value="" defaultChecked>— none —</option>
             {WAVE_TYPES.map((waveType) => (
               <option key={waveType} value={waveType}>
                 {waveType}
