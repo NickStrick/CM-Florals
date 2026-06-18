@@ -9,6 +9,16 @@ import type { HeaderSection } from '@/types/site';
 import Image from 'next/image';
 import { handleHashClick } from '@/lib/scrollToHash';
 
+function normalizeNavHref(href: string) {
+  if (href.startsWith('#')) {
+    return { linkHref: `/${href}`, hashHref: href };
+  }
+  if (href.startsWith('/#')) {
+    return { linkHref: href, hashHref: href.slice(1) };
+  }
+  return { linkHref: href, hashHref: href };
+}
+
 export default function Navbar() {
   const { config } = useSite();
   const pathname = usePathname();
@@ -42,9 +52,10 @@ export default function Navbar() {
     const links = header.links ?? [];
     if (links.length === 0) return;
 
-    const pageMatch = links.find(
-      (l) => !l.href.startsWith('#') && l.href === pathname
-    );
+    const pageMatch = links.find((l) => {
+      const { linkHref } = normalizeNavHref(l.href);
+      return !linkHref.startsWith('/#') && linkHref === pathname;
+    });
 
     if (pageMatch) {
       setActiveHref(pageMatch.href);
@@ -66,7 +77,8 @@ export default function Navbar() {
       links[0].href;
 
     const sections = links.map((l) => {
-      const href = l.href?.includes('#') ? l.href : '#top';
+      const { hashHref } = normalizeNavHref(l.href);
+      const href = hashHref?.includes('#') ? hashHref : '#top';
       return { href, el: document.querySelector(href) as HTMLElement | null };
     });
 
@@ -130,7 +142,7 @@ export default function Navbar() {
   // Close menu on nav click (mobile)
   const onNav = () => setOpen(false);
   const handleAnchorClick = (href: string, closeMenu: boolean) =>
-    handleHashClick(href, {
+    handleHashClick(normalizeNavHref(href).hashHref, {
       setActiveHref,
       onAfterScroll: closeMenu ? onNav : undefined,
     });
@@ -164,7 +176,7 @@ export default function Navbar() {
             {(header.links ?? []).map((l, i) => (
               <li key={`${l.href ?? ''}-${l.label ?? ''}-${i}`}>
                 <Link
-                  href={l.href}
+                  href={normalizeNavHref(l.href).linkHref}
                   className="relative inline-flex flex-col items-center gap-2 hover:text-fg transition-colors text-nowrap"
                   onClick={handleAnchorClick(l.href, false)}
                 >
@@ -216,7 +228,7 @@ export default function Navbar() {
             {(header.links ?? []).map((l, i) => (
               <li key={`${l.href ?? ''}-${l.label ?? ''}-${i}`}>
                 <Link
-                  href={l.href}
+                  href={normalizeNavHref(l.href).linkHref}
                   className="block py-2 text-fg/80 hover:text-fg text-nowrap"
                   onClick={handleAnchorClick(l.href, true)}
                 >
