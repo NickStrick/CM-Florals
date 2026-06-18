@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SiteConfig, AnySection, HeaderSection, FooterSection } from '@/types/site';
+import { WAVE_TYPES, type SiteConfig, type AnySection, type HeaderSection, type FooterSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import MediaPicker from './MediaPicker';
@@ -457,6 +457,49 @@ export default function ConfigModal({
               />
               <span>{section.type === 'header' || section.type === 'footer' ? 'Show' : 'Visible'}</span>
             </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium">Top wave</label>
+              <select
+                className="select w-full"
+                value={section.topWaveType ?? ''}
+                onChange={(e) =>
+                  onChange({
+                    ...section,
+                    topWaveType: (e.target.value || undefined) as AnySection['topWaveType'],
+                  })
+                }
+              >
+                <option value="">— none —</option>
+                {WAVE_TYPES.map((waveType) => (
+                  <option key={waveType} value={waveType}>
+                    {waveType}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Bottom wave</label>
+              <select
+                className="select w-full"
+                value={section.bottomWaveType ?? ''}
+                onChange={(e) =>
+                  onChange({
+                    ...section,
+                    bottomWaveType: (e.target.value || undefined) as AnySection['bottomWaveType'],
+                  })
+                }
+              >
+                <option value="">— none —</option>
+                {WAVE_TYPES.map((waveType) => (
+                  <option key={waveType} value={waveType}>
+                    {waveType}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Type-specific */}
