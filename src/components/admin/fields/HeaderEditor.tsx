@@ -34,8 +34,10 @@ function makeLocalLinks(links: HeaderSection['links']): LocalNavLink[] {
 // infer mode from href
 function hrefKind(href?: string) {
   if (!href) return { kind: 'external' as const, sectionId: '' };
+  if (href === '/') return { kind: 'internal' as const, sectionId: '/' };
   if (href.startsWith('/#')) return { kind: 'internal' as const, sectionId: href.slice(2) };
   if (href.startsWith('#')) return { kind: 'internal' as const, sectionId: href.slice(1) };
+  if (href.startsWith('/')) return { kind: 'sub-page' as const, sectionId: '' };
   return { kind: 'external' as const, sectionId: '' };
 }
 
@@ -45,6 +47,7 @@ export function EditHeader({
 }: EditorProps<HeaderSection>) {
   const { config } = useSite(); // 👈 get sections without changing props
   const allSections = useMemo(() => config?.sections ?? [], [config?.sections]);
+  const allPages = useMemo(() => config?.pages ?? [], [config?.pages]);
 
   const [localLinks, setLocalLinks] = useState<LocalNavLink[]>(() =>
     makeLocalLinks(section.links)
@@ -165,11 +168,14 @@ export function EditHeader({
                       className="select w-36"
                       value={kind}
                       onChange={(e) => {
-                        const nextKind = e.target.value as 'internal' | 'external';
+                        const nextKind = e.target.value as 'internal' | 'external' | 'sub-page';
                         if (nextKind === 'internal') {
                           // switch to internal: default to first section or blank
                           const first = allSections[0]?.id ?? '';
                           updateLink(lnk._id, { href: first ? `/#${first}` : '' });
+                        } else if (nextKind === 'sub-page') {
+                          const first = allPages[0]?.slug ?? '';
+                          updateLink(lnk._id, { href: first ? `/${first.replace(/^\/+/, '')}` : '' });
                         } else {
                           // switch to external: keep existing external or blank
                           updateLink(lnk._id, { href: '' });
@@ -177,6 +183,7 @@ export function EditHeader({
                       }}
                     >
                       <option value="internal">Internal (section)</option>
+                      <option value="sub-page">Sub-page</option>
                       <option value="external">External URL</option>
                     </select>
 
@@ -187,7 +194,7 @@ export function EditHeader({
                         value={sectionId}
                         onChange={(e) => {
                           const id = e.target.value;
-                          updateLink(lnk._id, { href: id ? `/#${id}` : '' });
+                          updateLink(lnk._id, { href: id === '/' ? '/' : id ? `/#${id}` : '' });
                         }}
                       >
                         <option value="">— Select section —</option>
@@ -197,6 +204,22 @@ export function EditHeader({
                             {s.type.charAt(0).toUpperCase() + s.type.slice(1)} • {s.id}
                           </option>
                         ))}
+                      </select>
+                    ) : kind === 'sub-page' ? (
+                      <select
+                        className="select flex-1"
+                        value={lnk.href}
+                        onChange={(e) => updateLink(lnk._id, { href: e.target.value })}
+                      >
+                        <option value="">â€” Select page â€”</option>
+                        {allPages.map((page) => {
+                          const href = `/${page.slug.replace(/^\/+/, '')}`;
+                          return (
+                            <option key={page.slug} value={href}>
+                              {page.title || page.slug}
+                            </option>
+                          );
+                        })}
                       </select>
                     ) : (
                       <input

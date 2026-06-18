@@ -15,8 +15,10 @@ function deepClone<T>(obj: T): T {
 // infer mode from href
 function hrefKind(href?: string) {
   if (!href) return { kind: 'external' as const, sectionId: '' };
+  if (href === '/') return { kind: 'internal' as const, sectionId: '/' };
   if (href.startsWith('/#')) return { kind: 'internal' as const, sectionId: href.slice(2) };
   if (href.startsWith('#')) return { kind: 'internal' as const, sectionId: href.slice(1) };
+  if (href.startsWith('/')) return { kind: 'sub-page' as const, sectionId: '' };
   return { kind: 'external' as const, sectionId: '' };
 }
 
@@ -27,6 +29,7 @@ export default function EditFooter({
   const columns = section.columns ?? [];
   const { config } = useSite();
   const allSections = useMemo(() => config?.sections ?? [], [config?.sections]);
+  const allPages = useMemo(() => config?.pages ?? [], [config?.pages]);
 
   const setField = useCallback(
     <K extends keyof FooterSection>(key: K, value: FooterSection[K]) => {
@@ -224,16 +227,20 @@ export default function EditFooter({
                         className="select w-36"
                         value={kind}
                         onChange={(e) => {
-                          const nextKind = e.target.value as 'internal' | 'external';
+                          const nextKind = e.target.value as 'internal' | 'external' | 'sub-page';
                           if (nextKind === 'internal') {
                             const first = allSections[0]?.id ?? '';
                             updateLink(ci, li, { href: first ? `/#${first}` : '' });
+                          } else if (nextKind === 'sub-page') {
+                            const first = allPages[0]?.slug ?? '';
+                            updateLink(ci, li, { href: first ? `/${first.replace(/^\/+/, '')}` : '' });
                           } else {
                             updateLink(ci, li, { href: '' });
                           }
                         }}
                       >
                         <option value="internal">Internal</option>
+                        <option value="sub-page">Sub-page</option>
                         <option value="external">External</option>
                       </select>
 
@@ -241,18 +248,35 @@ export default function EditFooter({
                       {kind === 'internal' ? (
                         <select
                           className="select"
-                          value={sectionId}
+                          value={sectionId || (lnk.href === '/' ? '/' : '')}
                           onChange={(e) => {
                             const id = e.target.value;
-                            updateLink(ci, li, { href: id ? `/#${id}` : '' });
+                            updateLink(ci, li, { href: id === '/' ? '/' : id ? `/#${id}` : '' });
                           }}
                         >
                           <option value="">— Select section —</option>
+                          <option value="/">Home â€¢ Top of page</option>
                           {allSections.map((s) => (
                             <option key={s.id} value={s.id}>
                               {s.type.charAt(0).toUpperCase() + s.type.slice(1)} • {s.id}
                             </option>
                           ))}
+                        </select>
+                      ) : kind === 'sub-page' ? (
+                        <select
+                          className="select"
+                          value={lnk.href}
+                          onChange={(e) => updateLink(ci, li, { href: e.target.value })}
+                        >
+                          <option value="">â€” Select page â€”</option>
+                          {allPages.map((page) => {
+                            const href = `/${page.slug.replace(/^\/+/, '')}`;
+                            return (
+                              <option key={page.slug} value={href}>
+                                {page.title || page.slug}
+                              </option>
+                            );
+                          })}
                         </select>
                       ) : (
                         <input
