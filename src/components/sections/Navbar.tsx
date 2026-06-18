@@ -17,6 +17,7 @@ function normalizeNavHref(href: string) {
   if (href.startsWith('/#')) {
     return { linkHref: href, hashHref: href.slice(1) };
   }
+  console.log('Returning default values for nav href:', href);
   return { linkHref: href, hashHref: href };
 }
 
