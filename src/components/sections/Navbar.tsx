@@ -12,9 +12,11 @@ import { handleHashClick } from '@/lib/scrollToHash';
 function normalizeNavHref(href: string) {
   console.log('Normalizing nav href:', href);
   if (href.startsWith('#')) {
+    console.log('Returning default values for nav href:', href);
     return { linkHref: `/${href}`, hashHref: href };
   }
   if (href.startsWith('/#')) {
+    console.log('Returning default values for nav href:', href);
     return { linkHref: href, hashHref: href.slice(1) };
   }
   console.log('Returning default values for nav href:', href);
