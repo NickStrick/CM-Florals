@@ -276,7 +276,15 @@ function ProductEditForm({
   const thumb = resolveAssetUrl(product.thumbnailUrl);
 
   return (
-    <div className="card admin-card card-solid p-4 space-y-4">
+    <div
+      className="card admin-card card-solid p-4 space-y-4"
+      onBlurCapture={(e) => {
+        const nextFocused = e.relatedTarget as Node | null;
+        if (!e.currentTarget.contains(nextFocused)) {
+          onDone();
+        }
+      }}
+    >
 
       {/* Name + Subtitle */}
       <div className="grid md:grid-cols-2 gap-3">
@@ -418,7 +426,7 @@ function ProductEditForm({
             onChange={(e) => onChange({ featured: e.target.checked })}
             className="accent-[var(--admin-primary)]"
           />
-          <span className="text-sm">Best Seller</span>
+          <span className="text-sm">Featured</span>
         </label>
       </div>
 
@@ -600,24 +608,29 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
 
   const tabProducts = useMemo(
     () =>
-      activeTab === 'all'
-        ? (() => {
-            const rank = (category?: string) => {
-              if (!category) return Number.MAX_SAFE_INTEGER;
-              const idx = categories.indexOf(category);
-              return idx === -1 ? Number.MAX_SAFE_INTEGER - 1 : idx;
-            };
+      (() => {
+        const rank = (category?: string) => {
+          if (!category) return -1;
+          const idx = categories.indexOf(category);
+          return idx === -1 ? Number.MAX_SAFE_INTEGER - 1 : idx;
+        };
 
-            return localProducts
-              .map((p, i) => ({ p, i }))
-              .sort((a, b) => {
-                const ar = rank(a.p.category);
-                const br = rank(b.p.category);
-                return ar !== br ? ar - br : a.i - b.i; // stable
-              })
-              .map(({ p }) => p);
-          })()
-        : localProducts.filter((p) => p.category === activeTab),
+        return localProducts
+          .map((p, i) => ({ p, i }))
+          .filter(({ p }) => activeTab === 'all' || p.category === activeTab)
+          .sort((a, b) => {
+            const af = a.p.featured === true ? 0 : 1;
+            const bf = b.p.featured === true ? 0 : 1;
+            if (af !== bf) return af - bf;
+
+            if (activeTab !== 'all') return a.i - b.i;
+
+            const ar = rank(a.p.category);
+            const br = rank(b.p.category);
+            return ar !== br ? ar - br : a.i - b.i; // stable
+          })
+          .map(({ p }) => p);
+      })(),
     [localProducts, activeTab, categories]
   );
 
@@ -654,6 +667,23 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
       commitProducts(localProducts.map((p) => (p._localId === localId ? { ...p, ...patch } : p)));
     },
     [commitProducts, localProducts]
+  );
+
+  const finishEditing = useCallback(
+    (localId: string) => {
+      const product = localProducts.find((p) => p._localId === localId);
+      if (!product) {
+        setEditingId(null);
+        return;
+      }
+      if (!(product.name ?? '').trim()) {
+        commitProducts(localProducts.filter((p) => p._localId !== localId));
+        if (editingId === localId) setEditingId(null);
+        return;
+      }
+      if (editingId === localId) setEditingId(null);
+    },
+    [commitProducts, editingId, localProducts]
   );
 
   const removeProduct = useCallback(
@@ -827,7 +857,7 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
                       categories={categories}
                       onChange={(patch) => updateProduct(p._localId, patch)}
                       onRemove={() => removeProduct(p._localId)}
-                      onDone={() => setEditingId(null)}
+                      onDone={() => finishEditing(p._localId)}
                       openMediaPicker={openMediaPicker}
                       siteId={siteId}
                     />
