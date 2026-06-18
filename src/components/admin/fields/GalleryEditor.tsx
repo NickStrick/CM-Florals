@@ -134,7 +134,7 @@ export default function EditGallery({
 
           <div className="grid gap-2">
             {(section.items ?? []).map((it, i) => (
-              <div key={`${it.imageUrl || 'new'}-${i}`} className="flex items-center gap-2">
+              <div key={i} className="flex items-center gap-2">
                 <input
                   className="input flex-1"
                   value={it.imageUrl}

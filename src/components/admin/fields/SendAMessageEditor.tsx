@@ -216,8 +216,8 @@ export default function EditSendAMessage({
               <div>
                 <label className="block text-sm font-medium mb-2">Field → Google Form entry ID mapping</label>
                 <div className="space-y-2">
-                  {fields.map((f) => (
-                    <div key={f.id} className="flex items-center gap-3">
+                  {fields.map((f, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
                       <span className="text-sm w-40 truncate text-muted flex-shrink-0">{f.label || f.id}</span>
                       <input
                         className="input flex-1"
@@ -248,7 +248,7 @@ export default function EditSendAMessage({
         )}
 
         {fields.map((field, idx) => (
-          <div key={field.id} className="card admin-card card-solid p-4 space-y-3">
+          <div key={idx} className="card admin-card card-solid p-4 space-y-3">
             {/* Row header */}
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">{field.label || <em className="opacity-40">Untitled field</em>}</span>
