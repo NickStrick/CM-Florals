@@ -72,6 +72,9 @@ export type SiteStyle = {
   fontPair?: FontPair;
 };
 
+export const WAVE_TYPES = ['1-hill', '2-hill', '1-cave', '2-cave'] as const;
+export type WaveType = (typeof WAVE_TYPES)[number];
+
 export type SectionBase = {
   id: string;
   type:
@@ -106,8 +109,8 @@ export type SectionBase = {
   visible?: boolean;
   editable?: boolean;
   backgroundClass?: string; // custom bg class (e.g. "bg-gradient-to-r from-blue-500 to-green-500")
-  topWaveType?: string;
-  bottomWaveType?: string;
+  topWaveType?: WaveType;
+  bottomWaveType?: WaveType;
 };
 
 export type AnySection =
