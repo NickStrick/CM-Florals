@@ -12,6 +12,7 @@ import { faChevronUp, faChevronDown, faTrash } from '@fortawesome/free-solid-svg
 import AdminAIChatPanel from './AdminAIChatPanel';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { getAdminSectionSlots, getAdminPageSectionSlots, normalizeSiteConfig } from '@/lib/siteConfigSections';
+import { isAdminAiUiEnabled } from '@/lib/adminAi';
 import type { SitePage } from '@/types/site';
 
 // -----------------------------
@@ -46,6 +47,7 @@ export default function ConfigModal({
   externalPatchPreview = false,
 }: ConfigModalProps) {
   const { config, setConfig } = useSite();
+  const adminAiEnabled = isAdminAiUiEnabled();
   const siteId = getSiteId();
 
   // Working copy (nullable until config is ready)
@@ -604,18 +606,20 @@ export default function ConfigModal({
             </button>
           </div>
         </div>
-        <div className="p-4 border-b">
-          <AdminAIChatPanel
-            mode="inline"
-            title="AI (Edit Sections)"
-            placeholder="Ask AI to update sections, content, or theme..."
-            config={draft}
-            onApplyPatch={(patch) => {
-              pendingAutoPreviewRef.current = true;
-              setDraft((prev) => (prev ? applySiteConfigPatch(prev, patch) : prev));
-            }}
-          />
-        </div>
+        {adminAiEnabled && (
+          <div className="p-4 border-b">
+            <AdminAIChatPanel
+              mode="inline"
+              title="AI (Edit Sections)"
+              placeholder="Ask AI to update sections, content, or theme..."
+              config={draft}
+              onApplyPatch={(patch) => {
+                pendingAutoPreviewRef.current = true;
+                setDraft((prev) => (prev ? applySiteConfigPatch(prev, patch) : prev));
+              }}
+            />
+          </div>
+        )}
 
         {/* Body */}
         <div className="grid md:grid-cols-3 gap-0">

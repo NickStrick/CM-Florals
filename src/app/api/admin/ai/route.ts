@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { SiteConfig } from '@/types/site';
 import OpenAI from 'openai';
+import { isAdminAiServerEnabled } from '@/lib/adminAi';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
@@ -13,6 +14,10 @@ type AiRequest = {
 };
 
 export async function POST(req: Request) {
+  if (!isAdminAiServerEnabled()) {
+    return NextResponse.json({ error: 'Admin AI is disabled' }, { status: 403 });
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'Missing OPENAI_API_KEY' }, { status: 500 });

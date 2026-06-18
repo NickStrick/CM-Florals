@@ -6,6 +6,7 @@ import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
+import { isAdminAiUiEnabled } from '@/lib/adminAi';
 
 // -----------------------------
 // Utilities
@@ -91,6 +92,7 @@ export type SettingsModalProps = {
 // -----------------------------
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { config, setConfig } = useSite();
+  const adminAiEnabled = isAdminAiUiEnabled();
   const siteId = getSiteId();
 
   const [draft, setDraft] = useState<SiteConfig | null>(null);
@@ -342,10 +344,11 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
         </div>
 
-        <div className="p-4 border-b">
-          <AdminAIChatPanel
-            mode="inline"
-            title="AI (Settings)"
+        {adminAiEnabled && (
+          <div className="p-4 border-b">
+            <AdminAIChatPanel
+              mode="inline"
+              title="AI (Settings)"
               placeholder="Ask AI to update payments, checkout fields, or other settings..."
               config={draft}
               onApplyPatch={(patch) => {
@@ -353,6 +356,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               }}
             />
           </div>
+        )}
 
         {/* Tabs */}
         <div className="px-4 pt-4">

@@ -11,12 +11,14 @@ import AdminAIChatPanel from './AdminAIChatPanel';
 import OrdersModal from './OrdersModal';
 import ProductsModal from './ProductsModal';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
+import { isAdminAiUiEnabled } from '@/lib/adminAi';
 import type { SiteConfig } from '@/types/site';
 
 type PickerKind = 'generic' | 'video-files' | 'video-posters';
 
 export default function AdminBar() {
   const { config, setConfig } = useSite();
+  const adminAiEnabled = isAdminAiUiEnabled();
   const [openPicker, setOpenPicker] = useState(false);
   const [kind, setKind] = useState<PickerKind>('generic');
   const [showConfig, setShowConfig] = useState(false);
@@ -81,13 +83,15 @@ export default function AdminBar() {
             Theme
           </button>
 
-          <button
-            className={showAI ? 'btn btn-primary' : 'btn btn-inverted'}
-            onClick={() => setShowAI((v) => !v)}
-            title="AI assistant"
-          >
-            AI
-          </button>
+          {adminAiEnabled && (
+            <button
+              className={showAI ? 'btn btn-primary' : 'btn btn-inverted'}
+              onClick={() => setShowAI((v) => !v)}
+              title="AI assistant"
+            >
+              AI
+            </button>
+          )}
 
           <button
             className={showOrders ? 'btn btn-primary' : 'btn btn-inverted'}
@@ -191,7 +195,7 @@ export default function AdminBar() {
       {showThemePanel && <AdminThemePanel />}
 
       {/* AI assistant drawer */}
-      {showAI && config && (
+      {adminAiEnabled && showAI && config && (
         <AdminAIChatPanel
           title="AI Assistant"
           config={config}
