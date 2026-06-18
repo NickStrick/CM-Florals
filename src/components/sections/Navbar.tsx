@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { handleHashClick } from '@/lib/scrollToHash';
 
 function normalizeNavHref(href: string) {
+  console.log('Normalizing nav href:', href);
   if (href.startsWith('#')) {
     return { linkHref: `/${href}`, hashHref: href };
   }
