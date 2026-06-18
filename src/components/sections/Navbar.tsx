@@ -10,16 +10,12 @@ import Image from 'next/image';
 import { handleHashClick } from '@/lib/scrollToHash';
 
 function normalizeNavHref(href: string) {
-  console.log('Normalizing nav href:', href);
   if (href.startsWith('#')) {
-    console.log('Returning default values for nav href:', href);
     return { linkHref: `/${href}`, hashHref: href };
   }
   if (href.startsWith('/#')) {
-    console.log('Returning default values for nav href:', href);
     return { linkHref: href, hashHref: href.slice(1) };
   }
-  console.log('Returning default values for nav href:', href);
   return { linkHref: href, hashHref: href };
 }
 
@@ -145,11 +141,21 @@ export default function Navbar() {
 
   // Close menu on nav click (mobile)
   const onNav = () => setOpen(false);
-  const handleAnchorClick = (href: string, closeMenu: boolean) =>
-    handleHashClick(normalizeNavHref(href).hashHref, {
+  const handleAnchorClick = (href: string, closeMenu: boolean) => {
+    const { hashHref } = normalizeNavHref(href);
+    const isSectionLink = hashHref.startsWith('#');
+
+    if (!isSectionLink || pathname !== '/') {
+      return () => {
+        if (closeMenu) onNav();
+      };
+    }
+
+    return handleHashClick(hashHref, {
       setActiveHref,
       onAfterScroll: closeMenu ? onNav : undefined,
     });
+  };
 
   return (
     <>
