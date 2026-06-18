@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useSite } from '@/context/SiteContext';
 import AnimatedSection from '@/components/AnimatedSection';
 import type { SendAMessageSection, SendAMessageField } from '@/types/site';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
 type FieldValues = Record<string, string>;
 
@@ -43,7 +44,8 @@ export default function SendAMessage(props: SendAMessageSection) {
     overlayOpacity = 50,
   } = props;
 
-  const hasBg = !!backgroundUrl;
+  const resolvedBackgroundUrl = resolveAssetUrl(backgroundUrl);
+  const hasBg = !!resolvedBackgroundUrl;
 
   const { config } = useSite();
   const sectionRef = useRef<HTMLElement>(null);
@@ -137,7 +139,7 @@ export default function SendAMessage(props: SendAMessageSection) {
         hasBg ? 'bg-cover bg-center bg-fixed' : '',
         backgroundClass ?? '',
       ].join(' ')}
-      style={hasBg ? { backgroundImage: `url(${backgroundUrl})` } : undefined}
+      style={hasBg ? { backgroundImage: `url(${resolvedBackgroundUrl})` } : undefined}
     >
       {hasBg && (
         <div

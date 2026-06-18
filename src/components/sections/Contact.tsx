@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faMapMarkerAlt, faPhone, faGlobe, faLink } from '@fortawesome/free-solid-svg-icons';
 import { faLinkedin, faInstagram, faFacebook, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
 // ---- typed social keys + icon map ----
 type SocialType = 'linkedin' | 'instagram' | 'facebook' | 'youtube' | 'tiktok' | 'website' | 'linktree';
@@ -36,12 +37,13 @@ export function Contact({
   socials,
   backgroundUrl,
 }: ContactSection) {
+  const resolvedBackgroundUrl = resolveAssetUrl(backgroundUrl);
 
   return (
     <section
       id={id}
       className="relative bg-fixed bg-cover bg-center py-[10rem]"
-      style={{ backgroundImage: `url(${backgroundUrl})` }}
+      style={resolvedBackgroundUrl ? { backgroundImage: `url(${resolvedBackgroundUrl})` } : undefined}
     >
       {/* optional overlay for contrast */}
       <div className="absolute inset-0 bg-black/50" aria-hidden />
