@@ -191,7 +191,10 @@ function SidebarFilters({
 export default function ProductShop({ id, title, subtitle, topWaveType, bottomWaveType }: ProductShopSection) {
   const { config } = useSite();
   const shopConfig = config?.products;
-  const allProducts = useMemo(() => shopConfig?.items ?? [], [shopConfig?.items]);
+  const allProducts = useMemo(
+    () => (shopConfig?.items ?? []).filter((p) => !p.hideFromShop),
+    [shopConfig?.items]
+  );
   const showFilters = shopConfig?.showFilters !== false;
   const categoryOrder = shopConfig?.categoryOrder ?? [];
 

@@ -37,6 +37,7 @@ function blankProduct(category = ''): LocalProduct {
     thumbnailUrl: '',
     summary: '',
     featured: false,
+    hideFromShop: false,
     stock: 'in_stock',
     ctaLabel: '',
     options: [],
@@ -396,8 +397,8 @@ function ProductEditForm({
         onChange={(next) => onChange({ options: next })}
       />
 
-      {/* Stock + CTA + Featured */}
-      <div className="grid md:grid-cols-3 gap-3">
+      {/* Stock + CTA + Featured + Hide from shop */}
+      <div className="grid md:grid-cols-4 gap-3">
         <div>
           <label className="block text-sm font-medium mb-1">Stock</label>
           <select
@@ -427,6 +428,15 @@ function ProductEditForm({
             className="accent-[var(--admin-primary)]"
           />
           <span className="text-sm">Featured</span>
+        </label>
+        <label className="flex items-end gap-2 pb-2">
+          <input
+            type="checkbox"
+            checked={product.hideFromShop === true}
+            onChange={(e) => onChange({ hideFromShop: e.target.checked })}
+            className="accent-[var(--admin-primary)]"
+          />
+          <span className="text-sm">Hide from shop</span>
         </label>
       </div>
 

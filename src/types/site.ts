@@ -723,6 +723,7 @@ export type SiteProduct = {
   maxQuantity?: number;
   taxable?: boolean;
   featured?: boolean;         // shows in Best Sellers strip on All tab
+  hideFromShop?: boolean;     // excluded from ProductShop, still listable via ProductListings
   ctaLabel?: string;
   purchaseUrl?: string;
 };
