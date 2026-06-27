@@ -362,20 +362,70 @@ export default function ConfigModal({
   // ---------------------------
   // Page CRUD
   // ---------------------------
+  // Custom pages are kept in sync with the header/footer nav: adding a page
+  // appends a nav link, renaming/re-slugging updates it in place, and
+  // deleting the page removes it — so the nav never points at a dead page.
+  const pageHref = (slug: string) => `/${slug}`;
+
+  const syncNavLinks = (
+    links: { label: string; href: string }[],
+    oldHref: string,
+    nextLink: { label: string; href: string } | null
+  ) =>
+    nextLink
+      ? links.map((l) => (l.href === oldHref ? nextLink : l))
+      : links.filter((l) => l.href !== oldHref);
+
   const addPage = useCallback(() => {
     const slug = `page-${Math.random().toString(36).slice(2, 6)}`;
-    const newPage: SitePage = { slug, title: 'New Page', sections: [] };
+    const title = 'New Page';
+    const newPage: SitePage = { slug, title, sections: [] };
+    const navLink = { label: title, href: pageHref(slug) };
+
     setDraft((prev) => {
       if (!prev) return prev;
-      return { ...prev, pages: [...(prev.pages ?? []), newPage] };
+
+      const header: HeaderSection | undefined = prev.header
+        ? { ...prev.header, links: [...(prev.header.links ?? []), navLink] }
+        : prev.header;
+
+      let footer: FooterSection | undefined = prev.footer;
+      if (footer) {
+        const columns = deepClone(footer.columns ?? []);
+        if (columns.length > 0) {
+          columns[0] = { ...columns[0], links: [...columns[0].links, navLink] };
+        } else {
+          columns.push({ title: 'Pages', links: [navLink] });
+        }
+        footer = { ...footer, columns };
+      }
+
+      return { ...prev, pages: [...(prev.pages ?? []), newPage], header, footer };
     });
   }, []);
 
   const deletePage = useCallback((pageIdx: number) => {
     setDraft((prev) => {
       if (!prev) return prev;
+      const target = prev.pages?.[pageIdx];
       const pages = (prev.pages ?? []).filter((_, i) => i !== pageIdx);
-      return { ...prev, pages };
+      if (!target) return { ...prev, pages };
+
+      const oldHref = pageHref(target.slug);
+      const header: HeaderSection | undefined = prev.header
+        ? { ...prev.header, links: syncNavLinks(prev.header.links ?? [], oldHref, null) }
+        : prev.header;
+      const footer: FooterSection | undefined = prev.footer
+        ? {
+            ...prev.footer,
+            columns: (prev.footer.columns ?? []).map((c) => ({
+              ...c,
+              links: syncNavLinks(c.links, oldHref, null),
+            })),
+          }
+        : prev.footer;
+
+      return { ...prev, pages, header, footer };
     });
     setEditingPageIndex(null);
   }, []);
@@ -384,8 +434,28 @@ export default function ConfigModal({
     setDraft((prev) => {
       if (!prev) return prev;
       const pages = deepClone(prev.pages ?? []);
-      pages[pageIdx] = { ...pages[pageIdx], ...patch };
-      return { ...prev, pages };
+      const oldPage = pages[pageIdx];
+      if (!oldPage) return prev;
+      const updated = { ...oldPage, ...patch };
+      pages[pageIdx] = updated;
+
+      const oldHref = pageHref(oldPage.slug);
+      const newLink = { label: updated.title, href: pageHref(updated.slug) };
+
+      const header: HeaderSection | undefined = prev.header
+        ? { ...prev.header, links: syncNavLinks(prev.header.links ?? [], oldHref, newLink) }
+        : prev.header;
+      const footer: FooterSection | undefined = prev.footer
+        ? {
+            ...prev.footer,
+            columns: (prev.footer.columns ?? []).map((c) => ({
+              ...c,
+              links: syncNavLinks(c.links, oldHref, newLink),
+            })),
+          }
+        : prev.footer;
+
+      return { ...prev, pages, header, footer };
     });
   }, []);
 
