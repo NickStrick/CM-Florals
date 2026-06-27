@@ -103,6 +103,8 @@ export type SectionBase = {
     | 'persons'
     | 'productShop'
     | 'sendAMessage'
+    | 'pageLinks'
+    | 'banner'
     ;
 
   // visible/editable flags to support your builder UI
@@ -138,7 +140,9 @@ export type AnySection =
   | ProductListingsSection
   | PersonsSection
   | ProductShopSection
-  | SendAMessageSection;
+  | SendAMessageSection
+  | PageLinksSection
+  | BannerSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -167,6 +171,36 @@ export type HeroSection = SectionBase & {
   primaryCta?: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
   imageUrl?: string;
+};
+
+export type PageLinkItem = {
+  label: string;
+  href: string;
+  variant?: 'primary' | 'inverted';
+};
+
+export type PageLinksStyle = {
+  align?: 'left' | 'center' | 'right';
+};
+
+export type PageLinksSection = SectionBase & {
+  type: 'pageLinks';
+  title?: string;
+  subtitle?: string;
+  items: PageLinkItem[];
+  style?: PageLinksStyle;
+};
+
+export type BannerVariant = 'announcement' | 'promo' | 'alert';
+
+export type BannerSection = SectionBase & {
+  type: 'banner';
+  variant?: BannerVariant; // default 'announcement'
+  title?: string;          // bold lead-in, e.g. "New:" or "Reminder:"
+  body?: string;           // supporting copy, e.g. "Spring collection is here."
+  imageUrl?: string;       // optional small badge/product image
+  cta?: { label: string; href: string };
+  dismissible?: boolean;   // show a close (X) button; remembered for the session
 };
 
 // ✅ NEW: About

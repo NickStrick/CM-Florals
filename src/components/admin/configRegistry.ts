@@ -26,6 +26,8 @@ import type {
   PersonsSection,
   ProductShopSection,
   SendAMessageSection,
+  PageLinksSection,
+  BannerSection,
 } from '@/types/site';
 
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
@@ -404,6 +406,36 @@ export const SECTION_REGISTRY: SectionRegistry = {
         { id: 'email', label: 'Email', type: 'email', placeholder: 'your@email.com', required: true },
         { id: 'message', label: 'Message', type: 'textarea', placeholder: 'How can we help?', required: true },
       ],
+    }),
+  },
+
+  pageLinks: {
+    label: 'Page Links',
+    allowed: true,
+    create: (): PageLinksSection => ({
+      id: newId('pageLinks'),
+      type: 'pageLinks',
+      visible: true,
+      title: 'Explore',
+      subtitle: '',
+      items: [],
+      style: { align: 'center' },
+    }),
+  },
+
+  banner: {
+    label: 'Banner (Alert / Ad)',
+    allowed: true,
+    create: (): BannerSection => ({
+      id: newId('banner'),
+      type: 'banner',
+      visible: true,
+      variant: 'announcement',
+      title: 'New:',
+      body: 'Something exciting is happening — tell visitors about it here.',
+      imageUrl: '',
+      cta: undefined,
+      dismissible: true,
     }),
   },
 };

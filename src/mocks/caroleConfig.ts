@@ -486,7 +486,7 @@ export const mockSiteConfig: SiteConfig = {
       id: "hero",
       type: "hero",
       eyebrow: "CM Florals • Floral Design • Gifts",
-      title: "Floral Design and Gifts for Chicago",
+      title: "Floral Design and Gifts for Chicago's Suburbs",
       subtitle:
         "Custom florals for celebrations, weddings, holidays, and everyday gifting. Crafted with warmth and color to fit your story. Founded by Carole Murray.",
       primaryCta: { label: "Order Delivery Now", href: "#shop" },
