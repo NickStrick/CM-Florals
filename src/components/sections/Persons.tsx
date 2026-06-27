@@ -78,7 +78,7 @@ export default function Persons({
                     </div>
 
                     {/* Name */}
-                    <h3 className="text-xl font-bold mb-1">{person.name}</h3>
+                    <h3 className="text-xl font-bold mb-1 text-[var(--text-1)]">{person.name}</h3>
 
                     {/* Title */}
                     {person.title && (
