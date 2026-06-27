@@ -8,7 +8,7 @@ import MediaPicker from './MediaPicker';
 import { SECTION_REGISTRY, getAllowedSectionTypes } from './configRegistry';
 import { getEditorForSection } from './EditSections';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faChevronDown, faTrash, faClone } from '@fortawesome/free-solid-svg-icons';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { getAdminSectionSlots, getAdminPageSectionSlots, normalizeSiteConfig } from '@/lib/siteConfigSections';
@@ -286,6 +286,62 @@ export default function ConfigModal({
       return { ...prev, pages };
     });
   }, []);
+
+  // ---------------------------
+  // Duplicate-an-existing-section (cross-page) support
+  // ---------------------------
+  type DuplicateSourceOption = { key: string; label: string };
+
+  const duplicateSourceOptions = useMemo((): DuplicateSourceOption[] => {
+    if (!draft) return [];
+    const opts: DuplicateSourceOption[] = [];
+    draft.sections.forEach((s, i) => {
+      const label = SECTION_REGISTRY[s.type]?.label ?? s.type;
+      opts.push({ key: `main:${i}`, label: `Main Page — ${label} (${s.id})` });
+    });
+    (draft.pages ?? []).forEach((p, pi) => {
+      p.sections.forEach((s, i) => {
+        const label = SECTION_REGISTRY[s.type]?.label ?? s.type;
+        const pageName = p.title || p.slug || `Page ${pi + 1}`;
+        opts.push({ key: `page:${pi}:${i}`, label: `${pageName} — ${label} (${s.id})` });
+      });
+    });
+    return opts;
+  }, [draft]);
+
+  const findSectionByKey = useCallback((cfg: SiteConfig, key: string): AnySection | undefined => {
+    const [kind, a, b] = key.split(':');
+    if (kind === 'main') return cfg.sections[Number(a)];
+    if (kind === 'page') return cfg.pages?.[Number(a)]?.sections[Number(b)];
+    return undefined;
+  }, []);
+
+  const cloneWithNewId = (section: AnySection): AnySection => ({
+    ...deepClone(section),
+    id: `${section.type}-${Math.random().toString(36).slice(2, 7)}`,
+  });
+
+  const duplicateSectionIntoMain = useCallback((key: string) => {
+    setDraft((prev) => {
+      if (!prev || !key) return prev;
+      const source = findSectionByKey(prev, key);
+      if (!source) return prev;
+      return { ...prev, sections: [...prev.sections, cloneWithNewId(source)] };
+    });
+  }, [findSectionByKey]);
+
+  const duplicateSectionIntoPage = useCallback((pageIdx: number, key: string) => {
+    setDraft((prev) => {
+      if (!prev || !key) return prev;
+      const source = findSectionByKey(prev, key);
+      if (!source) return prev;
+      const pages = deepClone(prev.pages ?? []);
+      pages[pageIdx].sections = [...pages[pageIdx].sections, cloneWithNewId(source)];
+      return { ...prev, pages };
+    });
+  }, [findSectionByKey]);
+
+  const [duplicateSourceKey, setDuplicateSourceKey] = useState<string>('');
 
   const movePageSection = useCallback((pageIdx: number, from: number, to: number) => {
     setDraft((prev) => {
@@ -783,6 +839,33 @@ export default function ConfigModal({
                       </button>
                     ))}
                   </div>
+
+                  <div className="text-sm opacity-70 mt-3 mb-2">Duplicate existing section</div>
+                  <div className="flex flex-col gap-2">
+                    <select
+                      className="select w-full"
+                      value={duplicateSourceKey}
+                      onChange={(e) => setDuplicateSourceKey(e.target.value)}
+                    >
+                      <option value="">— choose a section —</option>
+                      {duplicateSourceOptions.map((opt) => (
+                        <option key={opt.key} value={opt.key}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn btn-inverted w-full"
+                      disabled={!duplicateSourceKey}
+                      onClick={() => {
+                        duplicateSectionIntoPage(editingPageIndex, duplicateSourceKey);
+                        setDuplicateSourceKey('');
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faClone} className="text-sm" />
+                      Duplicate
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -861,6 +944,33 @@ export default function ConfigModal({
                         {SECTION_REGISTRY[t].label}
                       </button>
                     ))}
+                  </div>
+
+                  <div className="text-sm opacity-70 mt-3 mb-2">Duplicate existing section</div>
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      className="select flex-1 min-w-0"
+                      value={duplicateSourceKey}
+                      onChange={(e) => setDuplicateSourceKey(e.target.value)}
+                    >
+                      <option value="">— choose a section —</option>
+                      {duplicateSourceOptions.map((opt) => (
+                        <option key={opt.key} value={opt.key}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn btn-inverted"
+                      disabled={!duplicateSourceKey}
+                      onClick={() => {
+                        duplicateSectionIntoMain(duplicateSourceKey);
+                        setDuplicateSourceKey('');
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faClone} className="text-sm" />
+                      Duplicate
+                    </button>
                   </div>
                 </div>
               </>
