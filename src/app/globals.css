@@ -706,6 +706,19 @@ max-height: calc(100vh - 135px);
 .save-config-btns .btn-ghost{
    background-color: var(--admin-bg-2);
 }
+/* ConfigModal only: the header (title + save-config-btns) and the unsaved-changes
+   banner beneath it stick together as one unit while the modal body scrolls, instead
+   of save-config-btns floating fixed on its own at a guessed offset. */
+.config-modal-root .save-config-btns{
+  position: static;
+  right: auto;
+}
+.config-modal-root .config-modal-sticky-header{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: var(--admin-bg-2);
+}
 .fa-trash{
   color:rgb(255, 90, 90);
 }

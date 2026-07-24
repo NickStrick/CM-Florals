@@ -24,6 +24,43 @@ function deepClone<T>(obj: T): T {
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
 // -----------------------------
+// Local draft autosave (crash/close recovery, not a substitute for real Save)
+// -----------------------------
+const AUTOSAVE_DEBOUNCE_MS = 1200;
+const draftStorageKey = (siteId: string) => `cm-admin-draft:${siteId}`;
+
+type StoredDraft = { draft: SiteConfig; savedAt: number };
+
+function readStoredDraft(siteId: string): StoredDraft | null {
+  try {
+    const raw = window.localStorage.getItem(draftStorageKey(siteId));
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredDraft;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredDraft(siteId: string, draft: SiteConfig) {
+  try {
+    window.localStorage.setItem(
+      draftStorageKey(siteId),
+      JSON.stringify({ draft, savedAt: Date.now() } satisfies StoredDraft)
+    );
+  } catch {
+    // best-effort only (storage full/unavailable) — real Save is unaffected
+  }
+}
+
+function clearStoredDraft(siteId: string) {
+  try {
+    window.localStorage.removeItem(draftStorageKey(siteId));
+  } catch {
+    // ignore
+  }
+}
+
+// -----------------------------
 // Props
 // -----------------------------
 export type ConfigModalProps = {
@@ -62,6 +99,8 @@ export default function ConfigModal({
   const ignoreConfigSyncRef = useRef(false);
   const initialPatchAppliedRef = useRef(false);
   const lastExternalPatchNonceRef = useRef<number>(0);
+  const restoreCheckedRef = useRef(false);
+  const [pendingLocalDraft, setPendingLocalDraft] = useState<StoredDraft | null>(null);
 
   useEffect(() => {
     if (ignoreConfigSyncRef.current) {
@@ -73,8 +112,18 @@ export default function ConfigModal({
       setDraft(copy);
       originalRef.current = copy;
       setSelectedIndex(0); // default to header on open/load
+
+      // One-time check (per modal mount) for a locally autosaved draft that
+      // never made it to the server — e.g. a crash/closed-tab after edits.
+      if (!restoreCheckedRef.current) {
+        restoreCheckedRef.current = true;
+        const stored = readStoredDraft(siteId);
+        if (stored && JSON.stringify(stored.draft) !== JSON.stringify(copy)) {
+          setPendingLocalDraft(stored);
+        }
+      }
     }
-  }, [config]);
+  }, [config, siteId]);
 
   const startPreview = useCallback(() => {
     if (!draft) return;
@@ -138,6 +187,47 @@ export default function ConfigModal({
     if (!draft || !originalRef.current) return false;
     return JSON.stringify(draft) !== JSON.stringify(originalRef.current);
   }, [draft]);
+
+  // Debounced local autosave: protects against lost work from a closed tab,
+  // crash, or navigating away without hitting Save. This never talks to the
+  // server — it only writes to localStorage, so it can't push a half-edited
+  // field to the live site the way a save-on-blur-to-server would.
+  useEffect(() => {
+    if (!draft || !isDirty) return;
+    const handle = window.setTimeout(() => {
+      writeStoredDraft(siteId, draft);
+    }, AUTOSAVE_DEBOUNCE_MS);
+    return () => window.clearTimeout(handle);
+  }, [draft, isDirty, siteId]);
+
+  // Warn on tab close/refresh while there are unsaved edits.
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  const acceptLocalDraft = useCallback(() => {
+    if (!pendingLocalDraft) return;
+    setDraft(deepClone(pendingLocalDraft.draft));
+    setPendingLocalDraft(null);
+  }, [pendingLocalDraft]);
+
+  const dismissLocalDraft = useCallback(() => {
+    clearStoredDraft(siteId);
+    setPendingLocalDraft(null);
+  }, [siteId]);
+
+  const handleCancel = useCallback(() => {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard them and close?')) {
+      return;
+    }
+    onClose();
+  }, [isDirty, onClose]);
 
   // ---------------------------
   // MediaPicker bridge (Promise-based)
@@ -490,6 +580,7 @@ export default function ConfigModal({
       const saved: SiteConfig = await res.json();
       setConfig(saved);
       originalRef.current = deepClone(saved);
+      clearStoredDraft(siteId);
       onClose();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to save.';
@@ -504,7 +595,8 @@ export default function ConfigModal({
     const restored = deepClone(originalRef.current);
     setDraft(restored);
     setSelectedIndex(0);
-  }, []);
+    clearStoredDraft(siteId);
+  }, [siteId]);
 
   const returnToEditor = useCallback(() => {
     if (previewDraftRef.current) {
@@ -522,8 +614,9 @@ export default function ConfigModal({
     setDraft(restored);
     previewDraftRef.current = null;
     setIsPreviewing(false);
+    clearStoredDraft(siteId);
     onClose();
-  }, [onClose, setConfig]);
+  }, [onClose, setConfig, siteId]);
 
   // ---------------------------
   // Single-section editor renderer
@@ -707,31 +800,58 @@ export default function ConfigModal({
           : undefined;
 
   return (
-    <div className="fixed edit-modal inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
-      <div className="card card-solid admin-card p-4 relative w-fit !max-w-full pr-[70px] overflow-hidden card-screen-height">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="font-semibold text-lg">Edit Site Content</div>
-          <div className="flex items-center gap-2 save-config-btns">
-            {error && <div className="text-red-600 text-sm mr-3">{error}</div>}
-            {isDirty && (
-              <button className="btn btn-inverted" onClick={startPreview}>
-                Preview
+    <div className="fixed edit-modal config-modal-root inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
+      <div className="card card-solid admin-card p-4 relative w-fit !max-w-full pr-[70px] overflow-hidden card-screen-height !pt-0">
+        {/* Header + unsaved-changes banner stay pinned together while the modal scrolls */}
+        <div className="config-modal-sticky-header">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="font-semibold text-lg">Edit Site Content</div>
+            <div className="flex items-center gap-2 save-config-btns">
+              {error && <div className="text-red-600 text-sm mr-3">{error}</div>}
+              {isDirty && (
+                <button className="btn btn-inverted" onClick={startPreview}>
+                  Preview
+                </button>
+              )}
+              {isDirty && (
+                <button className="btn btn-ghost" onClick={onRestore}>
+                  Restore
+                </button>
+              )}
+              <button className="btn btn-ghost" onClick={handleCancel}>
+                Cancel
               </button>
-            )}
-            {isDirty && (
-              <button className="btn btn-ghost" onClick={onRestore}>
+              <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving}>
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+          {isDirty && !pendingLocalDraft && (
+            <div className="text-right px-4 py-2 border-b bg-blue-50 font-bold text-red-900 text-sm flex flex-wrap justify-end items-center content-end gap-2">
+              <span aria-hidden="true">⚠</span>
+              <span>
+                You have unsaved changes. They&apos;re autosaved in this browser as a backup, but click{' '}
+                <strong>Save Changes</strong> to actually publish them.
+              </span>
+            </div>
+          )}
+        </div>
+        {pendingLocalDraft && (
+          <div className="p-3 border-b bg-amber-50 text-amber-900 flex items-center justify-between gap-3 text-sm">
+            <div>
+              We found unsaved edits from {new Date(pendingLocalDraft.savedAt).toLocaleString()} that were never saved
+              (e.g. a closed tab or crash). Restore them?
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button className="btn btn-primary" onClick={dismissLocalDraft}>
+                Discard
+              </button>
+              <button className="btn btn-primary" onClick={acceptLocalDraft}>
                 Restore
               </button>
-            )}
-            <button className="btn btn-ghost" onClick={onClose}>
-              Cancel
-            </button>
-            <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
+            </div>
           </div>
-        </div>
+        )}
         {adminAiEnabled && (
           <div className="p-4 border-b">
             <AdminAIChatPanel
