@@ -4,6 +4,7 @@ import {
   ListObjectsV2Command,
   DeleteObjectCommand,
   PutObjectCommand,
+  GetObjectCommand,
   _Object as S3Object,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -117,6 +118,54 @@ export async function getPresignedPutUrl(opts: {
 
   const url = await getSignedUrl(s3, cmd, { expiresIn });
   return { url, bucket, key: opts.key };
+}
+
+// Helper for AWS SDK v3 body -> string (Node stream or Web ReadableStream)
+async function streamToString(stream: unknown): Promise<string> {
+  if (!stream) return '';
+  if (typeof stream === 'object' && stream !== null && 'on' in stream && typeof (stream as Record<string, unknown>).on === 'function') {
+    return await new Promise<string>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      const s = stream as NodeJS.ReadableStream;
+      s.on('data', (chunk: Buffer) => chunks.push(chunk));
+      s.on('error', reject);
+      s.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+    });
+  }
+  if (typeof stream === 'object' && stream !== null && 'getReader' in stream && typeof (stream as Record<string, unknown>).getReader === 'function') {
+    const reader = (stream as ReadableStream<Uint8Array>).getReader();
+    const chunks: Uint8Array[] = [];
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(value);
+    }
+    const merged = new Uint8Array(chunks.reduce((a, b) => a + b.length, 0));
+    let offset = 0;
+    for (const c of chunks) {
+      merged.set(c, offset);
+      offset += c.length;
+    }
+    return new TextDecoder().decode(merged);
+  }
+  return String(stream);
+}
+
+/** GET → read + parse a JSON object from S3. Returns null if the key doesn't exist. */
+export async function getObjectJson<T = unknown>(opts: {
+  key: string;
+  bucket?: string;
+}): Promise<T | null> {
+  const bucket = opts.bucket || DEFAULT_BUCKET;
+  try {
+    const out = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: opts.key }));
+    const text = await streamToString(out.Body);
+    return JSON.parse(text) as T;
+  } catch (err: unknown) {
+    const e = err as { name?: string; $metadata?: { httpStatusCode?: number } };
+    if (e?.name === 'NoSuchKey' || e?.$metadata?.httpStatusCode === 404) return null;
+    throw err;
+  }
 }
 
 /** PUT /api/admin/config → save JSON config to S3 */

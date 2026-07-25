@@ -329,6 +329,13 @@ export type SiteConfig = {
   pages?: SitePage[];
 };
 
+/** Metadata for a named, saved snapshot of a SiteConfig (see /api/admin/config/[siteId]/versions). */
+export type SiteConfigVersionMeta = {
+  id: string;
+  name: string;
+  savedAt: string; // ISO timestamp
+};
+
 
 export type TestimonialItem = {
   quote: string;

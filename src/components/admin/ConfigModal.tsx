@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { WAVE_TYPES, type SiteConfig, type AnySection, type HeaderSection, type FooterSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
+import { adminFetch } from '@/lib/adminClient';
 import MediaPicker from './MediaPicker';
 import { SECTION_REGISTRY, getAllowedSectionTypes } from './configRegistry';
 import { getEditorForSection } from './EditSections';
@@ -13,7 +14,7 @@ import AdminAIChatPanel from './AdminAIChatPanel';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { getAdminSectionSlots, getAdminPageSectionSlots, normalizeSiteConfig } from '@/lib/siteConfigSections';
 import { isAdminAiUiEnabled } from '@/lib/adminAi';
-import type { SitePage } from '@/types/site';
+import type { SitePage, SiteConfigVersionMeta } from '@/types/site';
 
 // -----------------------------
 // Utilities
@@ -619,6 +620,114 @@ export default function ConfigModal({
   }, [onClose, setConfig, siteId]);
 
   // ---------------------------
+  // Named versions (save/list/load/delete snapshots in S3)
+  // ---------------------------
+  const versionsUrl = `/api/admin/config/${encodeURIComponent(siteId)}/versions`;
+
+  const [showVersionsPanel, setShowVersionsPanel] = useState(false);
+  const [versions, setVersions] = useState<SiteConfigVersionMeta[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [versionsError, setVersionsError] = useState<string | null>(null);
+  const [newVersionName, setNewVersionName] = useState('');
+  const [savingVersion, setSavingVersion] = useState(false);
+  const [busyVersionId, setBusyVersionId] = useState<string | null>(null);
+
+  const fetchVersions = useCallback(async () => {
+    setVersionsLoading(true);
+    setVersionsError(null);
+    try {
+      const res = await adminFetch(versionsUrl);
+      if (!res.ok) throw new Error(`Failed to load versions (HTTP ${res.status})`);
+      const data: { versions: SiteConfigVersionMeta[] } = await res.json();
+      setVersions(Array.isArray(data.versions) ? data.versions : []);
+    } catch (e) {
+      setVersionsError(e instanceof Error ? e.message : 'Failed to load versions.');
+    } finally {
+      setVersionsLoading(false);
+    }
+  }, [versionsUrl]);
+
+  const openVersionsPanel = useCallback(() => {
+    setShowVersionsPanel(true);
+    fetchVersions();
+  }, [fetchVersions]);
+
+  const saveAsVersion = useCallback(async () => {
+    if (!draft) return;
+    const name = newVersionName.trim();
+    if (!name) return;
+
+    setSavingVersion(true);
+    setVersionsError(null);
+    try {
+      const res = await adminFetch(versionsUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, config: normalizeSiteConfig(draft) }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `Failed to save version (HTTP ${res.status})`);
+      }
+      const meta: SiteConfigVersionMeta = await res.json();
+      setVersions((prev) => [meta, ...prev]);
+      setNewVersionName('');
+    } catch (e) {
+      setVersionsError(e instanceof Error ? e.message : 'Failed to save version.');
+    } finally {
+      setSavingVersion(false);
+    }
+  }, [draft, newVersionName, versionsUrl]);
+
+  const loadVersion = useCallback(
+    async (version: SiteConfigVersionMeta) => {
+      if (
+        isDirty &&
+        !window.confirm(
+          `Loading "${version.name}" will replace your current unsaved changes in the editor. Continue?`
+        )
+      ) {
+        return;
+      }
+      setBusyVersionId(version.id);
+      setVersionsError(null);
+      try {
+        const res = await adminFetch(`${versionsUrl}/${encodeURIComponent(version.id)}`);
+        if (!res.ok) throw new Error(`Failed to load "${version.name}" (HTTP ${res.status})`);
+        const loaded: SiteConfig = await res.json();
+        setDraft(loaded);
+        setSelectedIndex(0);
+        setShowVersionsPanel(false);
+      } catch (e) {
+        setVersionsError(e instanceof Error ? e.message : 'Failed to load version.');
+      } finally {
+        setBusyVersionId(null);
+      }
+    },
+    [isDirty, versionsUrl]
+  );
+
+  const deleteVersion = useCallback(
+    async (version: SiteConfigVersionMeta) => {
+      if (!window.confirm(`Delete saved version "${version.name}"? This cannot be undone.`)) return;
+      setBusyVersionId(version.id);
+      setVersionsError(null);
+      try {
+        const res = await adminFetch(`${versionsUrl}/${encodeURIComponent(version.id)}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) throw new Error(`Failed to delete "${version.name}" (HTTP ${res.status})`);
+        setVersions((prev) => prev.filter((v) => v.id !== version.id));
+      } catch (e) {
+        setVersionsError(e instanceof Error ? e.message : 'Failed to delete version.');
+      } finally {
+        setBusyVersionId(null);
+      }
+    },
+    [versionsUrl]
+  );
+
+  // ---------------------------
   // Single-section editor renderer
   // ---------------------------
   function renderEditor(
@@ -818,6 +927,9 @@ export default function ConfigModal({
                   Restore
                 </button>
               )}
+              <button className="btn btn-ghost" onClick={openVersionsPanel}>
+                Versions
+              </button>
               <button className="btn btn-ghost" onClick={handleCancel}>
                 Cancel
               </button>
@@ -1219,6 +1331,82 @@ export default function ConfigModal({
                 handlePick(key);
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Saved Versions Overlay */}
+      {showVersionsPanel && (
+        <div className="fixed inset-0 z-[13000] bg-black/60 flex items-center justify-center p-4">
+          <div className="card card-solid admin-card p-4 relative w-full max-w-lg max-h-[85vh] flex flex-col gap-4">
+            <button
+              onClick={() => setShowVersionsPanel(false)}
+              className="absolute right-3 top-3 btn btn-ghost"
+              aria-label="Close saved versions"
+            >
+              ✕
+            </button>
+
+            <div className="font-semibold text-lg">Saved Versions</div>
+
+            <div className="flex items-center gap-2">
+              <input
+                className="input flex-1"
+                placeholder="Name this version…"
+                value={newVersionName}
+                onChange={(e) => setNewVersionName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newVersionName.trim() && !savingVersion) saveAsVersion();
+                }}
+              />
+              <button
+                className="btn btn-primary flex-shrink-0"
+                onClick={saveAsVersion}
+                disabled={!newVersionName.trim() || savingVersion}
+              >
+                {savingVersion ? 'Saving…' : 'Save Current As Version'}
+              </button>
+            </div>
+            <p className="text-xs text-muted -mt-2">
+              Saves what&apos;s currently in the editor (including unsaved changes) as a named snapshot you can come back to.
+            </p>
+
+            {versionsError && <div className="text-red-600 text-sm">{versionsError}</div>}
+
+            <div className="overflow-y-auto space-y-2 pr-1">
+              {versionsLoading && <div className="text-sm text-muted">Loading versions…</div>}
+              {!versionsLoading && versions.length === 0 && (
+                <div className="text-sm text-muted">No saved versions yet.</div>
+              )}
+              {versions.map((v) => (
+                <div
+                  key={v.id}
+                  className="card card-solid admin-card p-3 flex items-center justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{v.name}</div>
+                    <div className="text-xs text-muted">{new Date(v.savedAt).toLocaleString()}</div>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button
+                      className="btn btn-ghost text-sm"
+                      onClick={() => loadVersion(v)}
+                      disabled={busyVersionId === v.id}
+                    >
+                      {busyVersionId === v.id ? '…' : 'Load'}
+                    </button>
+                    <button
+                      className="btn btn-ghost text-red-500 text-sm"
+                      onClick={() => deleteVersion(v)}
+                      disabled={busyVersionId === v.id}
+                      title="Delete version"
+                    >
+                      <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
