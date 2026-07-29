@@ -34,6 +34,12 @@ export const s3 = new S3Client({
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
         }
       : undefined,
+  // SDK v3 defaults to attaching a flexible checksum (x-amz-checksum-crc32) to
+  // every request, including presigned ones. At presign time there's no body
+  // yet, so the placeholder checksum baked into the signature doesn't match
+  // what the browser's plain PUT actually sends — S3 then rejects the
+  // presigned upload with 403. Only compute checksums when explicitly asked.
+  requestChecksumCalculation: 'WHEN_REQUIRED',
 });
 
 /** Turn an S3 key into a public URL (prefers CloudFront if configured) */
