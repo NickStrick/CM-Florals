@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import PaymentForm from './PaymentForm';
+import DriverTipStep from './DriverTipStep';
 import { X, Plus, Trash2, CheckCircle, Check, ArrowBigLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { CheckoutInput, GoogleFormOptions, PromoCode } from '@/types/site';
@@ -47,6 +48,7 @@ export default function PaymentPage({
     type?: 'flat' | 'uber' | 'doordash';
     flatFeeCents?: number;
     mode?: 'pickup' | 'delivery' | 'both';
+    driverTipEnabled?: boolean;
     addressCapture?: {
       enabled?: boolean;
       required?: boolean;
@@ -111,11 +113,8 @@ export default function PaymentPage({
     ...(checkoutInputs ?? []).filter((field) => field.id !== 'email' && !field.hidden),
   ];
   const hasDetailsStep = effectiveCheckoutInputs.length > 0;
-  const steps = ([
-    hasDetailsStep ? { key: 'details', label: 'Details' } : null,
-    { key: 'payment', label: 'Payment' },
-  ].filter(Boolean) as Array<{ key: 'details' | 'payment'; label: string }>);
   const [stepIndex, setStepIndex] = useState(0);
+  const [tipInput, setTipInput] = useState('');
 
   const taxableSubtotalCents = items.reduce((sum, item) => {
     const taxable = typeof item.taxable === 'boolean' ? item.taxable : taxes?.defaultProductTaxable === true;
@@ -130,6 +129,13 @@ export default function PaymentPage({
     if (deliveryMode === 'pickup') setFulfillment('pickup');
     if (deliveryMode === 'delivery') setFulfillment('delivery');
   }, [deliveryMode]);
+
+  const showTipStep = delivery?.driverTipEnabled === true && fulfillment === 'delivery';
+  const steps = ([
+    hasDetailsStep ? { key: 'details', label: 'Details' } : null,
+    showTipStep ? { key: 'tip', label: 'Tip' } : null,
+    { key: 'payment', label: 'Payment' },
+  ].filter(Boolean) as Array<{ key: 'details' | 'tip' | 'payment'; label: string }>);
 
   useEffect(() => {
     if (stepIndex >= steps.length) {
@@ -163,6 +169,7 @@ export default function PaymentPage({
     delivery?.type === 'flat'
       ? Math.max(0, Number(delivery.flatFeeCents ?? 0))
       : 0;
+  const tipCents = showTipStep ? Math.max(0, Math.round((parseFloat(tipInput) || 0) * 100)) : 0;
   const taxBaseCents = taxableSubtotalCents + (taxes?.taxShipping ? deliveryFeeCents : 0);
   const taxCents = taxes?.enabled ? Math.round(taxBaseCents * (taxRate / 100)) : 0;
   const promoCodes = settingsPayments?.promoCodes ?? [];
@@ -171,7 +178,7 @@ export default function PaymentPage({
       ? Math.round(totalCents * (appliedPromo.value / 100))
       : Math.min(Math.round(appliedPromo.value * 100), totalCents)
     : 0;
-  const totalWithFeesCents = totalCents + taxCents + deliveryFeeCents - discountCents;
+  const totalWithFeesCents = totalCents + taxCents + deliveryFeeCents + tipCents - discountCents;
 
   useEffect(() => {
     if (paymentType !== 'converge') return;
@@ -364,6 +371,10 @@ export default function PaymentPage({
         address: deliveryAddress.trim(),
         addressConfirmed: deliveryConfirmed === true,
         flatFeeCents: deliveryFeeCents,
+      },
+      tip: {
+        enabled: showTipStep,
+        amountCents: tipCents,
       },
       customer: customValues,
       checkoutInputs: effectiveCheckoutInputs ?? [],
@@ -564,6 +575,12 @@ export default function PaymentPage({
                       <span className="font-medium">{formatPrice(deliveryFeeCents, currency)}</span>
                     </div>
                   )}
+                  {showTipStep && tipCents > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Driver Tip</span>
+                      <span className="font-medium">{formatPrice(tipCents, currency)}</span>
+                    </div>
+                  )}
                   {appliedPromo && discountCents > 0 && (
                     <div className="flex justify-between text-emerald-700">
                       <span>
@@ -684,21 +701,30 @@ export default function PaymentPage({
                     aria-disabled={missingRequired || missingDeliveryAddress}
                     className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white py-4 font-bold shadow-lg shadow-emerald-200 transition-all rounded-[999px]"
                   >
-                    Continue to Payment
+                    {steps[stepIndex + 1]?.key === 'payment' ? 'Continue to Payment' : 'Continue'}
                   </button>
               </div>
+            )}
+            {steps[stepIndex]?.key === 'tip' && (
+              <DriverTipStep
+                value={tipInput}
+                currencySymbol={currency === 'USD' ? '$' : ''}
+                onChange={setTipInput}
+                onBack={() => setStepIndex(Math.max(0, stepIndex - 1))}
+                onContinue={() => setStepIndex(Math.min(stepIndex + 1, steps.length - 1))}
+              />
             )}
             {steps[stepIndex]?.key === 'payment' && (
               <div id="checkout-payment-section">
             <h2 className="text-2xl font-bold mb-4 ml-4 md:ml-1">Payment</h2>
-            {hasDetailsStep && (
+            {stepIndex > 0 && (
               <button
                 type="button"
                 onClick={() => setStepIndex(Math.max(0, stepIndex - 1))}
                 className="flex justify-center items-center mb-4 text-sm font-medium text-emerald-700 hover:text-emerald-800"
               >
                 <ArrowBigLeft size={28} className="text-emerald-700" />
-                <span className="ml-1 flex justify-center items-center">Back to details</span> 
+                <span className="ml-1 flex justify-center items-center">Back to {steps[stepIndex - 1]?.label.toLowerCase()}</span>
               </button>
             )}
             {paymentType === 'converge' && convergeTokenStatus === 'loading' && (

@@ -732,6 +732,7 @@ export type PaymentsSettings = {
     type?: 'flat' | 'uber' | 'doordash';
     flatFeeCents?: number;
     mode?: 'pickup' | 'delivery' | 'both';
+    driverTipEnabled?: boolean; // shows an optional driver tip step during delivery checkout
     addressCapture?: {
       enabled?: boolean;
       required?: boolean;

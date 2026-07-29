@@ -693,6 +693,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   placeholder="0"
                 />
               </div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={payments.delivery?.driverTipEnabled === true}
+                  onChange={(e) =>
+                    updatePayments('delivery', {
+                      ...payments.delivery,
+                      driverTipEnabled: e.target.checked,
+                    })
+                  }
+                />
+                <span>Enable Delivery Driver Tip</span>
+              </label>
 
               <div className="rounded-lg border border-gray-200 p-3 space-y-3">
                 <div className="text-sm font-semibold">Delivery Address</div>
