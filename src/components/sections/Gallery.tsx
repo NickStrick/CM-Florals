@@ -24,7 +24,7 @@ type GapKey = keyof typeof gaps;
  */
 export default function Gallery({
   id,
-  title = 'Gallery',
+  title = '',
   subtitle,
   items = [],                         // <— default safe for “no items yet”
   style,
