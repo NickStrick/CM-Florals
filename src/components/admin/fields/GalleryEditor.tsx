@@ -11,8 +11,6 @@ import GalleryImageCard from './GalleryImageCard';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
-const GALLERY_UPLOAD_PREFIX = 'gallery/';
-
 // tiny immutable helper
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
@@ -22,8 +20,13 @@ export default function EditGallery({
   section,
   onChange,
   openMediaPickerMulti,
+  siteId,
 }: EditorProps<GallerySection>) {
   const style: GalleryStyle = section.style ?? {};
+  // Scoped under this site's own config folder, like every other uploaded
+  // asset, so galleries don't collide with (or need permissions on) a
+  // bucket-root prefix shared across every site.
+  const uploadPrefix = `configs/${siteId}/gallery/`;
 
   // Galleries are always a hand-picked static list now. Migrate any
   // legacy S3-prefix-scan sections over automatically.
@@ -38,24 +41,25 @@ export default function EditGallery({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // --- Adders (static mode)
-  // Images always upload to the shared "gallery/" prefix; each section just
-  // picks which of those shared images it wants to display. Reopening the
-  // picker pre-checks this section's current picks so (un)checking an image
-  // adds/removes it here too. Manually pasted URLs (outside the shared
-  // prefix) are left untouched by this reconciliation.
+  // Images always upload to this site's own "configs/{siteId}/gallery/"
+  // prefix; each section just picks which of those shared uploads it wants
+  // to display. Reopening the picker pre-checks this section's current
+  // picks so (un)checking an image adds/removes it here too. Manually
+  // pasted URLs (outside that prefix) are left untouched by this
+  // reconciliation.
   const addFromPicker = useCallback(async () => {
     if (!openMediaPickerMulti) return;
     const existing = section.items ?? [];
     const existingKeys = existing
-      .filter((it) => it.imageUrl.startsWith(GALLERY_UPLOAD_PREFIX))
+      .filter((it) => it.imageUrl.startsWith(uploadPrefix))
       .map((it) => it.imageUrl);
-    const picked = await openMediaPickerMulti(GALLERY_UPLOAD_PREFIX, existingKeys);
+    const picked = await openMediaPickerMulti(uploadPrefix, existingKeys);
     if (!picked) return;
 
     const pickedSet = new Set(picked);
-    const untouched = existing.filter((it) => !it.imageUrl.startsWith(GALLERY_UPLOAD_PREFIX));
+    const untouched = existing.filter((it) => !it.imageUrl.startsWith(uploadPrefix));
     const kept = existing.filter(
-      (it) => it.imageUrl.startsWith(GALLERY_UPLOAD_PREFIX) && pickedSet.has(it.imageUrl)
+      (it) => it.imageUrl.startsWith(uploadPrefix) && pickedSet.has(it.imageUrl)
     );
     const keptKeys = new Set(kept.map((it) => it.imageUrl));
     const added: GalleryItem[] = picked
@@ -65,7 +69,7 @@ export default function EditGallery({
     const copy = deepClone(section);
     copy.items = [...untouched, ...kept, ...added];
     onChange(copy);
-  }, [onChange, openMediaPickerMulti, section]);
+  }, [onChange, openMediaPickerMulti, section, uploadPrefix]);
 
   // --- Item mutators (static mode)
   const updateItem = useCallback(
