@@ -38,6 +38,8 @@ import EditBanner from './fields/BannerEditor';
 export type EditorSharedProps = {
   /** Promise-based bridge into your MediaPicker modal */
   openMediaPicker: (prefix: string) => Promise<string | null>;
+  /** Multi-select variant; resolves with the picked keys (or null if cancelled). */
+  openMediaPickerMulti?: (prefix: string, initialSelected?: string[]) => Promise<string[] | null>;
   /** Current site namespace (e.g., "carole") */
   siteId: string;
 };

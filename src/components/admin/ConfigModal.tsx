@@ -24,6 +24,15 @@ function deepClone<T>(obj: T): T {
 }
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
+// Prefer a section's own title (e.g. a Gallery named "Weddings") over its
+// generic type label, so the sidebar can tell apart multiple sections of the
+// same type.
+function sectionLabel(s: AnySection): string {
+  const title = 'title' in s && typeof s.title === 'string' ? s.title.trim() : '';
+  const base = SECTION_REGISTRY[s.type]?.label ?? s.type;
+  return title ? `${base} — ${title}` : base;
+}
+
 // -----------------------------
 // Local draft autosave (crash/close recovery, not a substitute for real Save)
 // -----------------------------
@@ -235,17 +244,34 @@ export default function ConfigModal({
   // ---------------------------
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerPrefix, setPickerPrefix] = useState<string>(`configs/${siteId}/assets/`);
+  const [pickerMultiple, setPickerMultiple] = useState(false);
+  const [pickerInitialSelected, setPickerInitialSelected] = useState<string[]>([]);
   const pickerResolveRef = useRef<((key: string | null) => void) | null>(null);
+  const pickerResolveManyRef = useRef<((keys: string[] | null) => void) | null>(null);
 
   const bucket = process.env.NEXT_PUBLIC_S3_DEFAULT_BUCKET;
 
   const openMediaPicker = useCallback((prefix: string): Promise<string | null> => {
     setPickerPrefix(prefix);
+    setPickerMultiple(false);
     setPickerOpen(true);
     return new Promise<string | null>((resolve) => {
       pickerResolveRef.current = resolve;
     });
   }, []);
+
+  const openMediaPickerMulti = useCallback(
+    (prefix: string, initialSelected?: string[]): Promise<string[] | null> => {
+      setPickerPrefix(prefix);
+      setPickerMultiple(true);
+      setPickerInitialSelected(initialSelected ?? []);
+      setPickerOpen(true);
+      return new Promise<string[] | null>((resolve) => {
+        pickerResolveManyRef.current = resolve;
+      });
+    },
+    []
+  );
 
   const handlePick = useCallback((key: string) => {
     if (pickerResolveRef.current) {
@@ -255,10 +281,22 @@ export default function ConfigModal({
     setPickerOpen(false);
   }, []);
 
+  const handlePickMany = useCallback((keys: string[]) => {
+    if (pickerResolveManyRef.current) {
+      pickerResolveManyRef.current(keys);
+      pickerResolveManyRef.current = null;
+    }
+    setPickerOpen(false);
+  }, []);
+
   const handleCancelPick = useCallback(() => {
     if (pickerResolveRef.current) {
       pickerResolveRef.current(null);
       pickerResolveRef.current = null;
+    }
+    if (pickerResolveManyRef.current) {
+      pickerResolveManyRef.current(null);
+      pickerResolveManyRef.current = null;
     }
     setPickerOpen(false);
   }, []);
@@ -838,6 +876,7 @@ export default function ConfigModal({
               section={section as AnySection}
               onChange={(s: AnySection) => onChange(s)}
               openMediaPicker={openMediaPicker}
+              openMediaPickerMulti={openMediaPickerMulti}
               siteId={siteId}
             />
           ) : (
@@ -1108,7 +1147,7 @@ export default function ConfigModal({
                             )}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-medium">{s.type}</div>
+                            <div className="font-medium">{sectionLabel(s)}</div>
                             <div className="text-xs text-muted break-all">{s.id}</div>
                           </div>
                         </div>
@@ -1212,7 +1251,7 @@ export default function ConfigModal({
                             )}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-medium">{s.type}</div>
+                            <div className="font-medium">{sectionLabel(s)}</div>
                             <div className="text-xs text-muted break-all">{s.id}</div>
                           </div>
                         </div>
@@ -1327,8 +1366,13 @@ export default function ConfigModal({
             <MediaPicker
               bucket={bucket}
               prefix={pickerPrefix}
+              multiple={pickerMultiple}
+              initialSelected={pickerInitialSelected}
               onPick={(key) => {
                 handlePick(key);
+              }}
+              onPickMany={(keys) => {
+                handlePickMany(keys);
               }}
             />
           </div>

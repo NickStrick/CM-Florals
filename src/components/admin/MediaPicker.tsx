@@ -17,15 +17,33 @@ export default function MediaPicker({
   bucket = process.env.NEXT_PUBLIC_S3_DEFAULT_BUCKET,
   prefix,
   onPick,
+  multiple = false,
+  onPickMany,
+  initialSelected,
 }: {
   bucket?: string;
   prefix: string; // e.g., "configs/carole/assets/" or "gallery/"
-  onPick: (key: string) => void;
+  onPick?: (key: string) => void;
+  /** When true, renders checkboxes + an "Add Selected" button instead of a Pick button per item. */
+  multiple?: boolean;
+  onPickMany?: (keys: string[]) => void;
+  /** Multi-select mode only: keys that should start checked (e.g. already used by the caller). */
+  initialSelected?: string[];
 }) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set(initialSelected));
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const toggleSelected = (key: string) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const cdnBase =
     process.env.NEXT_PUBLIC_S3_CDN_BASE ||
@@ -130,6 +148,15 @@ export default function MediaPicker({
           <button className="btn btn-primary" onClick={list}>
             Refresh
           </button>
+          {multiple && (
+            <button
+              className="btn btn-primary"
+              disabled={selectedKeys.size === 0}
+              onClick={() => onPickMany?.(Array.from(selectedKeys))}
+            >
+              Add Selected ({selectedKeys.size})
+            </button>
+          )}
         </div>
       </div>
 
@@ -164,12 +191,27 @@ export default function MediaPicker({
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, 25vw"
               />
+              {multiple && (
+                <input
+                  type="checkbox"
+                  className="absolute top-2 left-2 h-5 w-5"
+                  checked={selectedKeys.has(i.key)}
+                  onChange={() => toggleSelected(i.key)}
+                  aria-label={`Select ${i.key}`}
+                />
+              )}
             </div>
             <div className="mt-2 text-sm break-all">{i.key.replace(prefix, '')}</div>
             <div className="flex justify-end gap-2 mt-2">
-              <button className="btn btn-inverted" onClick={() => onPick(i.key)}>
-                Pick
-              </button>
+              {multiple ? (
+                <button className="btn btn-inverted" onClick={() => toggleSelected(i.key)}>
+                  {selectedKeys.has(i.key) ? 'Selected ✓' : 'Select'}
+                </button>
+              ) : (
+                <button className="btn btn-inverted" onClick={() => onPick?.(i.key)}>
+                  Pick
+                </button>
+              )}
               <button className="btn btn-ghost" onClick={() => onDelete(i.key)}>
                 Delete
               </button>
