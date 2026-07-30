@@ -107,14 +107,14 @@ export default function Partners({ id, title, subtitle, items, style, background
           // Detailed cards variant
           <div className={`grid gap-6 md:gap-8 ${gridCols}`}>
             {items.map((p, i) => (
-              <AnimatedSection delay={i * 0.08} key={`${p.name}-${i}`} className={`card card-outline w-full ${radius} p-6 md:p-7`}>                
+              <AnimatedSection delay={i * 0.08} key={`${p.name}-${i}`} className={`card card-outline w-full ${radius} p-4 md:p-5`}>                
                 <div className="flex items-center gap-4">
                   {`${resolveAssetUrl(p.logoUrl?p.logoUrl:'')}` ? (
                     <Image
                       src={`${resolveAssetUrl(p.logoUrl?p.logoUrl:'')}`}
                       alt={p.name}
-                      width={64}
-                      height={64}
+                      width={80}
+                      height={80}
                       className="rounded-xl object-contain"
                     />
                   ) : (
