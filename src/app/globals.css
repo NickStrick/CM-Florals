@@ -335,7 +335,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Big headings */
 .h-eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: .8rem; font-weight: 700; color: var(--accent); }
-.h-display { font-size: clamp(2.8rem, 7vw, 5rem); line-height: 1.02; font-weight: 900; letter-spacing: -0.02em; }
+.h-display { font-size: clamp(2.8rem, 7vw, 4rem); line-height: 1.02; font-weight: 900; letter-spacing: -0.02em; }
 .h-hero-p { font-size: clamp(1.05rem, 1.4vw, 1.3rem); }
 
 /* Section padding + curved edges */
