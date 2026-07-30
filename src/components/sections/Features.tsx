@@ -6,6 +6,7 @@ import { resolveAssetUrl } from '@/lib/assetUrl';
 import {SeperatorWave} from '@/components/SeperatorWave';
 
 export function Features({ id, title, items, backgroundClass, topWaveType, bottomWaveType }: FeaturesSection) {
+  const columns = items.length === 2 || items.length === 4 ? '2':'3'
   return (
   <div className='relative'>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
@@ -13,7 +14,7 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
       <div className="mx-auto max-w-[1860px] px-0 sm:px-1 md:px-6">
         {title ? <AnimatedSection><h2 className="text-4xl md:text-5xl font-extrabold text-center mb-12">{title}</h2></AnimatedSection> : null}
     
-        <div className="grid gap-8 grid-cols-1 sm:grid-cols-3">
+        <div className={`grid gap-8 grid-cols-1 sm:grid-cols-${columns}`}>
           {items.map((f, i) => {
             const fimgUrl = resolveAssetUrl(f.imageUrl);
             const ink = i % 2 === 0; // alternate deep “ink” panels like your screenshots
