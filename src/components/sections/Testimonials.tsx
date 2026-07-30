@@ -33,7 +33,6 @@ export function Testimonials({
 }: TestimonialsSection) {
   const {
     variant = 'carousel',
-    columns = 3,
     showQuoteIcon = true,
     rounded = 'xl',
     background = 'default',
@@ -46,8 +45,9 @@ export function Testimonials({
   const radius =
     rounded === '2xl' ? 'rounded-3xl' : rounded === 'lg' ? 'rounded-xl' : 'rounded-2xl';
 
+  const columns = items.length === 2 || items.length === 4 ? '2' : '3';
   const gridCols =
-    columns === 2
+    columns === '2'
       ? 'grid-cols-1 md:grid-cols-2'
       : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3';
 
