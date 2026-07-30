@@ -151,7 +151,7 @@ export default function ProductListings({
               <AnimatedSection key={p.id + '-' + i}>
                 <div
                   className={cls(
-                    'relative h-full p-6 sm:p-7 md:p-8 card-ink card-interactive flex flex-col card-hover',
+                    'relative h-full overflow-hidden card-ink card-interactive flex flex-col card-hover',
                     cardInk && 'card-ink',
                     viewType === 'list' && 'cursor-pointer'
                   )}
@@ -187,10 +187,12 @@ export default function ProductListings({
 
                   {/* Image */}
                   {thumb ? (
-                    <Image src={thumb} alt={p.name} className="w-full h-auto rounded-xl mb-4 mt-3 feature-image" width={400} height={300} />
+                    <Image src={thumb} alt={p.name} className="w-full h-auto feature-image" width={400} height={300} />
                   ) : (
-                    <div className="w-full aspect-[4/3] bg-black/10 rounded-xl mb-4" />
+                    <div className="w-full aspect-[4/3] bg-black/10" />
                   )}
+
+                  <div className="flex-1 flex flex-col p-6 sm:p-7 md:p-8 pt-4">
 
                   {/* Header */}
                   <header>
@@ -300,6 +302,7 @@ export default function ProductListings({
                       </div>
                     </div>
                   ) : null}
+                  </div>
                   </div>
               </AnimatedSection>
             );
