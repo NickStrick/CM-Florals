@@ -7,7 +7,7 @@ import Image from "next/image";
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import {SeperatorWave} from '@/components/SeperatorWave';
 
-export function About({ id, title = 'About', body, imageUrl, bullets, align = 'left', backgroundClass = 'bg-[var(--bg)', topWaveType, bottomWaveType }: AboutSection) {
+export function About({ id, title = 'About', subtitle, body, imageUrl, bullets, align = 'left', backgroundClass = 'bg-[var(--bg)', topWaveType, bottomWaveType }: AboutSection) {
   const imageFirst = align === 'left';
   const imgUrl = resolveAssetUrl(imageUrl);
   const hasWaves = backgroundClass.includes('bg-solid-primary');
@@ -31,6 +31,7 @@ export function About({ id, title = 'About', body, imageUrl, bullets, align = 'l
         )}
         <AnimatedSection className="mx-auto max-w-6xl">
           {title && <h2 className="mb-8 text-4xl md:text-5xl font-extrabold text-center ">{title}</h2>}
+          {subtitle ? <p className="h-hero-p text-muted text-lg max-w-xl mb-8">{subtitle}</p> : null}
           <p className="text-lg leading-relaxed indent-[50px]">{body}</p>
           {bullets && bullets.length > 0 && (
             <ul className="mt-6 space-y-2 list-disc pl-5">

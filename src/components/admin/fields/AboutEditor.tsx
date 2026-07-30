@@ -40,6 +40,16 @@ export function EditAbout({
         />
       </div>
 
+      {/* Subtitle */}
+      <div>
+        <label className="block text-sm font-medium">Subtitle</label>
+        <input
+          className="input w-full"
+          value={section.subtitle ?? ''}
+          onChange={(e) => set('subtitle', e.target.value)}
+        />
+      </div>
+
       {/* Body */}
       <div>
         <label className="block text-sm font-medium">Body</label>

@@ -207,6 +207,7 @@ export type BannerSection = SectionBase & {
 export type AboutSection = SectionBase & {
   type: 'about';
   title?: string;
+  subtitle?: string;
   body: string;           // markdown or plain text
   imageUrl?: string;      // headshot or supporting image
   bullets?: string[];     // optional quick facts
