@@ -24,8 +24,8 @@ export function About({ id, title = 'About', body, imageUrl, bullets, align = 'l
               className="relative w-fit mx-auto"
             >
             {/* <div className="absolute -inset-6 rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] blur-2xl z-0" /> */}
-            <div className="overflow-hidden rounded-full max-h-[600px] max-w-[600px] z-2 relative aspect-square">
-              <Image width={600} height={600} src={imgUrl} alt={title} className="w-full rounded-xl object-cover" />
+            <div className="overflow-hidden rounded-full max-h-[800px] max-w-[800px] z-2 relative aspect-square">
+              <Image width={800} height={800} src={imgUrl} alt={title} className="w-full rounded-xl object-cover" />
             </div>
           </motion.div>
         )}
@@ -48,8 +48,8 @@ export function About({ id, title = 'About', body, imageUrl, bullets, align = 'l
             >
               {/* soft blob shadow */}
               {/* <div className="absolute -inset-6 rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] blur-2xl -z-10" /> */}
-              <div className="overflow-hidden rounded-full max-h-[600px] max-w-[600px] mx-auto">
-                <Image src={imgUrl} alt="" width={980} height={740} className="w-full h-auto" />
+              <div className="overflow-hidden rounded-sm max-h-[800px] max-w-[800px] mx-auto">
+                <Image src={imgUrl} alt="" width={1080} height={840} className="w-full h-auto" />
               </div>
             </motion.div>
         )}
