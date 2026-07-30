@@ -41,7 +41,7 @@ export function Testimonials({
   const cardBase =
     'p-6 md:p-7 card-2 card-outline-2 shadow-md';
   const cardInk =
-    'p-6 md:p-7 text-[var(--text-1)] card-2 card-outline-2 shadow-lg';
+    'p-6 md:p-7  card-2 card-outline-2 shadow-lg';
   const radius =
     rounded === '2xl' ? 'rounded-3xl' : rounded === 'lg' ? 'rounded-xl' : 'rounded-2xl';
 
@@ -133,7 +133,7 @@ export function Testimonials({
                       {t.role && <div className="text-sm">{t.role}</div>}
                     </div>
                   </figcaption>
-                  <div className="absolute bottom-4 right-4"><Stars /></div>
+                  <div className="absolute bottom-4 right-4 stars-box"><Stars /></div>
                 </motion.figure>
               )})}
             </div>
@@ -174,7 +174,7 @@ export function Testimonials({
               transition={{ duration: 0.5, ease: 'easeOut', delay: i * 0.05 }}
               className={`relative  flex flex-col ${variant === 'ink' ? cardInk : cardBase} ${radius}`}
             >
-              {showQuoteIcon && <div className="text-2xl mb-3 opacity-70">“</div>}
+              {showQuoteIcon && <div className="text-4xl mb-3 opacity-70">“</div>}
 
               <blockquote className="text-[1.05rem] leading-relaxed">{t.quote}</blockquote>
 
@@ -204,7 +204,7 @@ export function Testimonials({
                   )}
                 </div>
               </figcaption>
-              <div className="absolute bottom-4 right-4"><Stars /></div>
+              <div className="absolute bottom-4 right-4 stars-box"><Stars /></div>
             </motion.figure>
           )})}
         </div>
