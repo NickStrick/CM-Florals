@@ -22,13 +22,13 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
               <AnimatedSection key={i} delay={i * 0.08}>
                 <div className={`overflow-hidden ${ink ? 'card-ink' : 'card'} !max-w-[700px] !mx-auto`}>
                   {fimgUrl ? (
-                    <div className="relative w-full min-h-[300px] aspect-video">
+                    <div className="relative w-full min-h-[300px] aspect-[5/3]">
                       <Image
                         src={fimgUrl}
                         alt={f.title || ''}
                         fill
                         sizes="(max-width: 640px) 100vw, 50vw"
-                        className="object-cover feature-image h-100 aspect-video"
+                        className="object-cover feature-image h-100 aspect-[5/3]"
                         loading="eager"
                       />
                     </div>
