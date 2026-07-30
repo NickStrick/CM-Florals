@@ -20,15 +20,15 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
             const ink = i % 2 === 0; // alternate deep “ink” panels like your screenshots
             return (
               <AnimatedSection key={i} delay={i * 0.08}>
-                <div className={`overflow-hidden !max-w-none !mx-0 ${ink ? 'card-ink' : 'card'}`}>
+                <div className={`overflow-hidden ${ink ? 'card-ink' : 'card'} !max-w-[700px] !mx-auto`}>
                   {fimgUrl ? (
-                    <div className="relative w-full min-h-[300px]">
+                    <div className="relative w-full min-h-[300px] aspect-video">
                       <Image
                         src={fimgUrl}
                         alt={f.title || ''}
                         fill
                         sizes="(max-width: 640px) 100vw, 50vw"
-                        className="object-cover feature-image"
+                        className="object-cover feature-image h-100 aspect-video"
                         loading="eager"
                       />
                     </div>

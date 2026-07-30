@@ -578,6 +578,27 @@ export const mockSiteConfig: SiteConfig = {
         },
       ],
     },
+    {
+      topWaveType: "1-hill",
+      visible: true,
+      id: "create",
+      type: "features",
+      title: "What we create",
+      items: [
+        {
+          title: "Celebration & Event Florals",
+          body:
+            "Wedding parties, holidays, and special events — designed with warmth and color to fit your story.",
+          imageUrl: flowertable.src,
+        },
+        {
+          title: "Bouquets & Gifting",
+          body:
+            "Handcrafted bouquets and arrangements for friends and loved ones — same-day options available.",
+          imageUrl: flowerwall.src,
+        },
+      ],
+    },
 
     {
       visible: true,
