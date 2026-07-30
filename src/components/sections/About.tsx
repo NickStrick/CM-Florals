@@ -15,7 +15,7 @@ export function About({ id, title = 'About', subtitle, body, imageUrl, bullets, 
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className={`relative  !py-6 !pt-12 ${backgroundClass} !pb-8`}>
       
-      <div className={`section container mx-auto px-4 grid gap-10 ${imgUrl?'md:grid-cols-2':'md:grid-cols-1'} items-center ${hasWaves?'!text-[var(--text-2)]':''}`}>
+      <div className={`section container !max-w-[1700px] mx-auto px-4 grid gap-10 ${imgUrl?'md:grid-cols-2':'md:grid-cols-1'} items-center ${hasWaves?'!text-[var(--text-2)]':''}`}>
         {imgUrl && imageFirst && (
           <motion.div
               initial={{ opacity: 0, scale: .94, y: 16 }}
