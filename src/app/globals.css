@@ -272,6 +272,8 @@ h1, h2, h3, h4, h5, h6 {
 .btn-inverted { background: var(--bg); color: var(--primary); box-shadow: var(--elev-1); }
 .btn-inverted:hover { transform: translateY(-2px); box-shadow: var(--elev-2); }
 .btn-ghost { color: var(--text-1); background: transparent; border: 2px solid var(--text-1); }
+.btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn:disabled:hover { transform: none; }
 
 /* Cards */
 .card { background-image: linear-gradient(

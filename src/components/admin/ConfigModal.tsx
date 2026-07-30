@@ -905,7 +905,7 @@ export default function ConfigModal({
         <div className="fixed top-[90px] right-4 z-[12010] pointer-events-auto">
           <div className="card card-solid admin-card px-4 py-3 flex items-center gap-3">
             <div className="text-sm text-muted">Previewing draft</div>
-            <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving}>
+            <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving || !isDirty}>
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button className="btn btn-ghost" onClick={undoChanges}>
@@ -963,7 +963,7 @@ export default function ConfigModal({
               <button className="btn btn-ghost" onClick={handleCancel}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving}>
+              <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving || !isDirty}>
                 {saving ? 'Saving…' : 'Save Changes'}
               </button>
             </div>

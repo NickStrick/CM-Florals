@@ -338,8 +338,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             <button className="btn btn-ghost" onClick={onClose}>
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving}>
-              {saving ? 'Saving...' : 'Save'}
+            <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving || !isDirty}>
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
