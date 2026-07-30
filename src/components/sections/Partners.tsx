@@ -47,8 +47,14 @@ export default function Partners({ id, title, subtitle, items, style, background
   } = style || {};
 
   const radius = rounded === '2xl' ? 'rounded-3xl' : rounded === 'lg' ? 'rounded-xl' : 'rounded-2xl';
-  const gridCols =
-    columns === 2 ? 'grid-cols-1 md:grid-cols-2' : columns === 4 ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3';
+  // flex-basis (instead of a fixed grid) so rows with fewer items than
+  // `columns` center themselves rather than hugging the left edge.
+  const itemBasis =
+    columns === 2
+      ? 'w-full md:w-[calc(50%-1rem)]'
+      : columns === 4
+        ? 'w-full md:w-[calc(50%-1rem)] xl:w-[calc(25%-1.5rem)]'
+        : 'w-full md:w-[calc(50%-1rem)] xl:w-[calc(33.333%-1.5rem)]';
   console.log('Partners section render with items:', items);
   return (
     <>
@@ -68,11 +74,11 @@ export default function Partners({ id, title, subtitle, items, style, background
 
         {variant === 'grid' ? (
           // Simple logo grid
-          <div className={`grid gap-6 md:gap-8 ${gridCols}`}>
+          <div className="flex flex-wrap justify-center gap-6 md:gap-8">
             {items.map((p, i) => {
               const logoUrl = `${resolveAssetUrl(p.logoUrl?p.logoUrl:'')}`;
               return (
-              <AnimatedSection delay={i * 0.08} key={`${p.name}-${i}`} className={`card ${radius} p-6 text-center card-outline`}>                
+              <AnimatedSection delay={i * 0.08} key={`${p.name}-${i}`} className={`card ${radius} p-6 text-center card-outline ${itemBasis}`}>
                 {logoUrl ? (
                   <div className="mx-auto mb-3" >
                     <Image
@@ -105,9 +111,9 @@ export default function Partners({ id, title, subtitle, items, style, background
           </div>
         ) : (
           // Detailed cards variant
-          <div className={`grid gap-6 md:gap-8 ${gridCols}`}>
+          <div className="flex flex-wrap justify-center gap-6 md:gap-8">
             {items.map((p, i) => (
-              <AnimatedSection delay={i * 0.08} key={`${p.name}-${i}`} className={`card card-outline w-full ${radius} p-4 md:p-5`}>                
+              <AnimatedSection delay={i * 0.08} key={`${p.name}-${i}`} className={`card card-outline ${radius} p-4 md:p-5 ${itemBasis}`}>
                 <div className="flex items-center gap-4">
                   {`${resolveAssetUrl(p.logoUrl?p.logoUrl:'')}` ? (
                     <Image
