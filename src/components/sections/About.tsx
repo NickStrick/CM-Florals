@@ -30,7 +30,7 @@ export function About({ id, title = 'About', body, imageUrl, bullets, align = 'l
           </motion.div>
         )}
         <AnimatedSection className="mx-auto max-w-6xl">
-          {title && <h2 className="text-3xl font-semibold mb-4 text-center ">{title}</h2>}
+          {title && <h2 className="mb-8 text-4xl md:text-5xl font-extrabold text-center ">{title}</h2>}
           <p className="text-lg leading-relaxed indent-[50px]">{body}</p>
           {bullets && bullets.length > 0 && (
             <ul className="mt-6 space-y-2 list-disc pl-5">
