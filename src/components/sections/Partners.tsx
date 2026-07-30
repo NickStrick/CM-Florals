@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faInstagram, faFacebook, faLinkedin, faYoutube, faTiktok, faLinktree } from '@fortawesome/free-brands-svg-icons';
 import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { resolveAssetUrl } from '@/lib/assetUrl';
+import { SeperatorWave } from '@/components/SeperatorWave';
 /**
  * Partners component
  * - Displays a list of partners/bands/businesses with logo, name, and social links
@@ -38,7 +39,7 @@ function initials(name: string) {
   return parts.map((p) => p[0]?.toUpperCase() ?? '').join('');
 }
 
-export default function Partners({ id, title, subtitle, items, style, backgroundClass = 'bg-[var(--bg)]' }: PartnersSection) {
+export default function Partners({ id, title, subtitle, items, style, backgroundClass = 'bg-[var(--bg)]', topWaveType, bottomWaveType }: PartnersSection) {
   const {
     variant = 'cards',
     columns = 3,
@@ -50,6 +51,8 @@ export default function Partners({ id, title, subtitle, items, style, background
     columns === 2 ? 'grid-cols-1 md:grid-cols-2' : columns === 4 ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3';
   console.log('Partners section render with items:', items);
   return (
+    <>
+    <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section
       id={id}
       className={[
@@ -120,7 +123,7 @@ export default function Partners({ id, title, subtitle, items, style, background
                     </div>
                   )}
                   <div>
-                    <div className="font-semibold text-lg leading-tight">{p.name}</div>
+                    <div className="font-semibold text-lg leading-tight text-[var(--text-1)]">{p.name}</div>
                     {p.description && <p className="text-sm text-muted mt-1">{p.description}</p>}
                   </div>
                 </div>
@@ -141,5 +144,7 @@ export default function Partners({ id, title, subtitle, items, style, background
         )}
       </div>
     </section>
+    <SeperatorWave type={bottomWaveType} flip={true} color={'var(--bg)'} />
+    </>
   );
 }
