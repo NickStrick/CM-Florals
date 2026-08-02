@@ -16,6 +16,7 @@ module.exports = {
     extend: {
       screens: {
         nav: '1275px',
+        mlg: '975px',
       },
       colors: {
         cream: {
