@@ -11,10 +11,10 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
   <div className='relative'>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className={`section ${backgroundClass}`}>
-      <div className="mx-auto max-w-[1860px] px-0 mgl:px-1 md:px-6">
+      <div className="mx-auto max-w-[1860px] px-0 mlg:px-1 md:px-6">
         {title ? <AnimatedSection><h2 className="text-4xl md:text-5xl font-extrabold text-center mb-12">{title}</h2></AnimatedSection> : null}
     
-        <div className={`grid gap-8 grid-cols-1 mgl:grid-cols-${columns}`}>
+        <div className={`grid gap-8 grid-cols-1 mlg:grid-cols-${columns}`}>
           {items.map((f, i) => {
             const fimgUrl = resolveAssetUrl(f.imageUrl);
             const ink = i % 2 === 0; // alternate deep “ink” panels like your screenshots
