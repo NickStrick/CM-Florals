@@ -185,7 +185,7 @@ export default function Navbar() {
           </div>
 
           {/* Center: Links (desktop) */}
-          <ul className="hidden md:flex flex-1 justify-center gap-6 text-muted">
+          <ul className="hidden nav:flex flex-1 justify-center gap-6 text-muted">
             {(header.links ?? []).map((l, i) => (
               <li key={`${l.href ?? ''}-${l.label ?? ''}-${i}`}>
                 <Link
@@ -210,14 +210,14 @@ export default function Navbar() {
           {/* Right: CTA (optional) & Mobile toggle */}
           <div className="min-w-0 flex-1 flex justify-end items-center gap-3">
             {header.cta ? (
-              <Link href={header.cta.href} className="btn-small text-nowrap btn-gradient hidden md:inline-flex">
+              <Link href={header.cta.href} className="btn-small text-nowrap btn-gradient hidden nav:inline-flex">
                 {header.cta.label}
               </Link>
             ) : null}
 
             {/* Mobile menu button */}
             <button
-              className="md:hidden inline-flex items-center justify-center min-w-9 w-9 h-9 rounded-md
+              className="nav:hidden inline-flex items-center justify-center min-w-9 w-9 h-9 rounded-md
                          border border-[color-mix(in_srgb,var(--fg)_12%,transparent)] text-[var(--text-1)]"
               aria-expanded={open}
               aria-controls="mobile-nav"
@@ -232,7 +232,7 @@ export default function Navbar() {
         <div
           id="mobile-nav"
           className={`
-            md:hidden overflow-hidden transition-[max-height] text-[var(--text-1)]
+            nav:hidden overflow-hidden transition-[max-height] text-[var(--text-1)]
             border-t border-[color-mix(in_srgb,var(--fg)_10%,transparent)]
             ${open ? 'max-h-96' : 'max-h-0'}
           `}

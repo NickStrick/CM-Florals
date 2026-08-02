@@ -14,6 +14,9 @@ module.exports = {
   // },
   theme: {
     extend: {
+      screens: {
+        nav: '1275px',
+      },
       colors: {
         cream: {
           light: "#F5F3E7",  // base cream
