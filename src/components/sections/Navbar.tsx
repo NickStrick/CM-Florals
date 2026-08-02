@@ -171,7 +171,7 @@ export default function Navbar() {
           shadowCls,
         ].join(' ')}
       >
-        <nav className="mx-auto max-w-6xl h-[4rem] px-4 md:px-6 flex items-center">
+        <nav className="mx-auto max-w-6xl h-[4rem] px-4 md:px-6 flex items-center pl-[80px] nav:pl-4">
           {/* Left: Logo */}
           <div className="min-w-0 flex-1 relative">
             <Link href="/" className="absolute left-[-70px] top-[-15px] rounded-full overflow-hidden w-[60px] h-[60px]">
