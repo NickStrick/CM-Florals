@@ -29,7 +29,7 @@ export function About({ id, title = 'About', subtitle, body, imageUrl, bullets, 
             </div>
           </motion.div>
         )}
-        <AnimatedSection className="mx-auto max-w-6xl">
+        <AnimatedSection className="mx-auto max-w-6xl p-4">
           {title && <h2 className="mb-8 text-3xl md:text-4xl font-extrabold text-center ">{title}</h2>}
           {subtitle ? <p className="h-hero-p text-muted text-lg max-w-xl mb-8 text-center font-bold mx-auto">{subtitle}</p> : null}
           <p className="text-lg leading-relaxed indent-[50px]">{body}</p>
