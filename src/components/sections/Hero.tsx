@@ -12,7 +12,7 @@ export function Hero({ id, eyebrow, title, subtitle, primaryCta, secondaryCta, i
   return (
     <section id={id} className="section curve bg-app  !pt-[0] !pr-0">
       <AnimatedSection>
-        <div className="mx-auto  grid md:grid-cols-2  items-center">
+        <div className="mx-auto  grid nav:grid-cols-2  items-center">
           <div className="p-4 max-w-[600px] mx-auto">
             {eyebrow ? <p className="h-eyebrow mb-3">{eyebrow}</p> : null}
             <motion.h1
