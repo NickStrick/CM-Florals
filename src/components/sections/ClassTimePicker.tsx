@@ -155,13 +155,19 @@ export default function ClassTimePicker({ classTimes, selectedTimeId, onSelect, 
             {openTimes.map((t) => {
               const full = isFull(t);
               const active = selectedTimeId === t.id;
+              const remaining = availability?.[t.id]?.remaining;
+              const metaBits = [
+                t.location || null,
+                full ? 'Full' : typeof remaining === 'number' ? `${remaining} spot${remaining === 1 ? '' : 's'} left` : null,
+                t.label || null,
+              ].filter((x): x is string => !!x);
               return (
                 <button
                   key={t.id}
                   type="button"
                   disabled={full}
                   onClick={() => onSelect(t.id)}
-                  className={`px-3 py-1.5 border product-select text-sm ${
+                  className={`px-3 py-1.5 border product-select text-sm text-left flex flex-col items-start gap-0.5 ${
                     active
                       ? 'bg-gradient-colored'
                       : full
@@ -169,9 +175,13 @@ export default function ClassTimePicker({ classTimes, selectedTimeId, onSelect, 
                         : 'border-2 border-black/50 hover:border-black/60'
                   }`}
                 >
-                  {formatTimeLabel(t.startTime)}
-                  {t.endTime ? ` – ${formatTimeLabel(t.endTime)}` : ''}
-                  {full ? ' · Full' : t.label ? ` · ${t.label}` : ''}
+                  <span>
+                    {formatTimeLabel(t.startTime)}
+                    {t.endTime ? ` – ${formatTimeLabel(t.endTime)}` : ''}
+                  </span>
+                  {metaBits.length > 0 && (
+                    <span className="text-xs opacity-70">{metaBits.join(' · ')}</span>
+                  )}
                 </button>
               );
             })}

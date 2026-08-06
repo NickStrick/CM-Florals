@@ -63,6 +63,7 @@ function blankClassTime(): LocalClassTime {
     startTime: '18:00',
     endTime: '',
     capacity: undefined,
+    location: '',
     label: '',
   };
 }
@@ -84,60 +85,73 @@ function ClassTimeCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="card admin-card card-solid p-3 grid md:grid-cols-6 gap-2 items-end">
-      <div>
-        <label className="block text-xs font-medium mb-1">Date</label>
-        <input
-          type="date"
-          className="input w-full"
-          value={time.date}
-          onChange={(e) => onChange({ date: e.target.value })}
-        />
+    <div className="card admin-card card-solid p-3 space-y-2">
+      <div className="grid md:grid-cols-4 gap-2 items-end">
+        <div>
+          <label className="block text-xs font-medium mb-1">Date</label>
+          <input
+            type="date"
+            className="input w-full"
+            value={time.date}
+            onChange={(e) => onChange({ date: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Start</label>
+          <input
+            type="time"
+            className="input w-full"
+            value={time.startTime}
+            onChange={(e) => onChange({ startTime: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">End (optional)</label>
+          <input
+            type="time"
+            className="input w-full"
+            value={time.endTime ?? ''}
+            onChange={(e) => onChange({ endTime: e.target.value || undefined })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Capacity</label>
+          <input
+            type="number"
+            min={0}
+            className="input w-full"
+            value={time.capacity ?? ''}
+            placeholder="Unlimited"
+            onChange={(e) => {
+              const v = e.target.value === '' ? undefined : Math.max(0, Number(e.target.value) || 0);
+              onChange({ capacity: v });
+            }}
+          />
+        </div>
       </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Start</label>
-        <input
-          type="time"
-          className="input w-full"
-          value={time.startTime}
-          onChange={(e) => onChange({ startTime: e.target.value })}
-        />
+      <div className="grid md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+        <div>
+          <label className="block text-xs font-medium mb-1">Location</label>
+          <input
+            className="input w-full"
+            value={time.location ?? ''}
+            placeholder="e.g. 123 Main St, Studio B"
+            onChange={(e) => onChange({ location: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Note</label>
+          <input
+            className="input w-full"
+            value={time.label ?? ''}
+            placeholder="e.g. Beginners"
+            onChange={(e) => onChange({ label: e.target.value })}
+          />
+        </div>
+        <button type="button" className="btn btn-ghost text-red-500 text-sm" onClick={onRemove}>
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">End (optional)</label>
-        <input
-          type="time"
-          className="input w-full"
-          value={time.endTime ?? ''}
-          onChange={(e) => onChange({ endTime: e.target.value || undefined })}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Capacity</label>
-        <input
-          type="number"
-          min={0}
-          className="input w-full"
-          value={time.capacity ?? ''}
-          placeholder="Unlimited"
-          onChange={(e) => {
-            const v = e.target.value === '' ? undefined : Math.max(0, Number(e.target.value) || 0);
-            onChange({ capacity: v });
-          }}
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium mb-1">Note</label>
-        <input
-          className="input w-full"
-          value={time.label ?? ''}
-          placeholder="e.g. Beginners"
-          onChange={(e) => onChange({ label: e.target.value })}
-        />
-      </div>
-      <button type="button" className="btn btn-ghost text-red-500 text-sm justify-self-end" onClick={onRemove}>
-        <Trash2 className="w-4 h-4" />
-      </button>
     </div>
   );
 }
@@ -312,6 +326,7 @@ function ClassItemEditForm({
                 />
                 <span>
                   {t.date} · {formatTimeLabel(t.startTime)}
+                  {t.location ? ` · ${t.location}` : ''}
                   {t.label ? ` · ${t.label}` : ''}
                   {typeof t.capacity === 'number' ? ` · cap ${t.capacity}` : ''}
                 </span>

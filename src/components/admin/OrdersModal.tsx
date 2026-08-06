@@ -79,7 +79,7 @@ function formatItemOptions(item: Record<string, unknown>): string {
   const ignored = new Set([
     'id', 'name', 'quantity', 'price', 'total', 'sku', 'notes', 'options',
     'currency', 'imageUrl', 'taxable',
-    'classItemId', 'classTimeId', 'classTimeLabel',
+    'classItemId', 'classTimeId', 'classTimeLabel', 'classLocation',
   ]);
   const pairs = Object.entries(item)
     .filter(([k, v]) => !ignored.has(k) && v !== undefined && v !== null)
@@ -615,6 +615,7 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
                       <th className="py-2 px-3">Customer</th>
                       <th className="py-2 px-3">Class</th>
                       <th className="py-2 px-3">Time</th>
+                      <th className="py-2 px-3">Location</th>
                       <th className="py-2 px-3">Qty</th>
                       <th className="py-2 px-3">Options</th>
                       <th className="py-2 px-3">Cost</th>
@@ -628,6 +629,7 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
                       const cost = formatItemCost(item);
                       const optionsText = formatItemOptions(item);
                       const timeLabel = typeof item.classTimeLabel === 'string' ? item.classTimeLabel : '-';
+                      const locationLabel = typeof item.classLocation === 'string' ? item.classLocation : '-';
                       return (
                         <tr
                           key={`${order.createdAtOrderId}-${idx}`}
@@ -646,6 +648,7 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
                             <div className="font-semibold">{String(item.name || `Item ${idx + 1}`)}</div>
                           </td>
                           <td className="py-2 px-3 min-w-[160px]">{timeLabel}</td>
+                          <td className="py-2 px-3 min-w-[160px]">{locationLabel}</td>
                           <td className="py-2 px-3">
                             {typeof item.quantity === 'number' ? item.quantity : '-'}
                           </td>
@@ -684,7 +687,7 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
                     })}
                     {!filteredClassItems.length && !loading && (
                       <tr>
-                        <td className="py-6 px-3 text-center opacity-70" colSpan={10}>
+                        <td className="py-6 px-3 text-center opacity-70" colSpan={11}>
                           No class bookings found.
                         </td>
                       </tr>
@@ -713,6 +716,7 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
                     const cost = formatItemCost(item);
                     const optionsText = formatItemOptions(item);
                     const timeLabel = typeof item.classTimeLabel === 'string' ? item.classTimeLabel : '-';
+                    const locationLabel = typeof item.classLocation === 'string' ? item.classLocation : '-';
 
                     nodes.push(
                       <div
@@ -735,6 +739,10 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
                           <div className="orders-mobile-wide">
                             <span className="orders-mobile-label">Time</span>
                             <span className="orders-mobile-value">{timeLabel}</span>
+                          </div>
+                          <div className="orders-mobile-wide">
+                            <span className="orders-mobile-label">Location</span>
+                            <span className="orders-mobile-value">{locationLabel}</span>
                           </div>
                           <div>
                             <span className="orders-mobile-label">Qty</span>

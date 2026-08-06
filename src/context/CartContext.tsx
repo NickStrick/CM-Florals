@@ -16,6 +16,7 @@ export type CartItem = {
   classItemId?: string;
   classTimeId?: string;
   classTimeLabel?: string; // pre-formatted, e.g. "Wed, Mar 4 · 6:00 PM"
+  classLocation?: string;
 };
 
 type CartCtx = {

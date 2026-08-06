@@ -48,9 +48,18 @@ export default function CartModal() {
                         className="h-[100px] w-[100px] rounded-lg object-cover border border-gray-100"
                       />
                     )}
-                    <span className="">
-                      {item.name} {item.quantity > 1 && <span className="opacity-70">x{item.quantity}</span>}
-                    </span>
+                    <div className="min-w-0">
+                      <div>
+                        {item.name} {item.quantity > 1 && <span className="opacity-70">x{item.quantity}</span>}
+                      </div>
+                      {(item.classTimeLabel || item.classLocation) && (
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {item.classTimeLabel}
+                          {item.classTimeLabel && item.classLocation ? ' · ' : ''}
+                          {item.classLocation}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <span className="font-semibold">
                     {formatPrice(item.price * item.quantity, item.currency ?? currency)}

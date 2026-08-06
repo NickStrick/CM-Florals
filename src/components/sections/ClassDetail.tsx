@@ -113,6 +113,7 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
       classItemId: classItem.id,
       classTimeId: selectedTime.id,
       classTimeLabel: timeLabel,
+      classLocation: selectedTime.location || undefined,
     });
     setAdded(true);
     openCart();
@@ -214,6 +215,30 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
                   onSelect={setSelectedTimeId}
                   availability={availability}
                 />
+
+                {selectedTime && (
+                  <div className="rounded-lg border border-[var(--text-1)]/15 bg-[var(--bg-2)]/60 px-3 py-2 text-sm space-y-0.5">
+                    <div className="font-medium">
+                      {new Date(`${selectedTime.date}T00:00:00`).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                      })}{' '}
+                      · {formatTimeLabel(selectedTime.startTime)}
+                      {selectedTime.endTime ? ` – ${formatTimeLabel(selectedTime.endTime)}` : ''}
+                    </div>
+                    {selectedTime.location && <div className="opacity-80">📍 {selectedTime.location}</div>}
+                    {(() => {
+                      const remaining = availability[selectedTime.id]?.remaining;
+                      if (typeof remaining !== 'number') return null;
+                      return (
+                        <div className="opacity-80">
+                          {remaining} spot{remaining === 1 ? '' : 's'} left
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             )}
 

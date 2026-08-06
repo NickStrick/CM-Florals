@@ -70,11 +70,12 @@ function renderItemsList(items: OrderItem[], currency: string): string {
             : Number.NaN;
       const money = lineTotal ? escapeHtml(formatMoney(lineTotal, currency)) : '';
 
-      // Class bookings: show the selected option/type (if any) and the booked time.
+      // Class bookings: show the selected option/type (if any), the booked time, and the location.
       const rec = item as Record<string, unknown>;
       const classTimeLabel = typeof rec.classTimeLabel === 'string' ? rec.classTimeLabel : '';
+      const classLocation = typeof rec.classLocation === 'string' ? rec.classLocation : '';
       const optionsText = formatItemOptionsText(item);
-      const detailBits = [optionsText, classTimeLabel].filter(Boolean).map(escapeHtml);
+      const detailBits = [optionsText, classTimeLabel, classLocation].filter(Boolean).map(escapeHtml);
       const details = detailBits.length
         ? `<br/><span style="opacity:0.7;font-size:0.9em">${detailBits.join(' · ')}</span>`
         : '';

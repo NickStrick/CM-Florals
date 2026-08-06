@@ -849,6 +849,7 @@ export type ClassTime = {
   startTime: string;    // "18:00"
   endTime?: string;     // "19:30"
   capacity?: number;    // max bookings for this slot; undefined = unlimited
+  location?: string;    // e.g. "123 Main St, Studio B"
   label?: string;       // optional note, e.g. "Beginners"
 };
 
