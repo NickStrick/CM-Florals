@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { HeaderSection, HeaderStyle } from '@/types/site';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faTrash, faPlus} from '@fortawesome/free-solid-svg-icons';
@@ -14,7 +14,12 @@ export type EditorProps<T> = {
 };
 
 type NavLink = { label: string; href: string };
-type LocalNavLink = NavLink & { _id: string }; // stable key for React
+
+// tiny immutable helper (avoid local shadow state — resyncing local state from
+// props on every keystroke via useEffect regenerates keys and steals input focus)
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj)) as T;
+}
 
 function ensureStyle(style?: HeaderStyle): HeaderStyle {
   return {
@@ -23,12 +28,6 @@ function ensureStyle(style?: HeaderStyle): HeaderStyle {
     elevation: style?.elevation ?? 'sm',
     transparent: style?.transparent ?? false,
   };
-}
-
-function makeLocalLinks(links: HeaderSection['links']): LocalNavLink[] {
-  const base: NavLink[] = Array.isArray(links) ? links : [];
-  // Attach stable ids
-  return base.map((l) => ({ ...l, _id: crypto.randomUUID() }));
 }
 
 // infer mode from href
@@ -46,62 +45,45 @@ export function EditHeader({
   onChange,
 }: EditorProps<HeaderSection>) {
   const { config } = useSite(); // 👈 get sections without changing props
-  const allSections = useMemo(() => config?.sections ?? [], [config?.sections]);
+  // Dedupe by id: a config can end up with duplicate section ids (bad data),
+  // which would otherwise crash this dropdown on a React "duplicate key" error.
+  const allSections = useMemo(() => {
+    const seen = new Set<string>();
+    return (config?.sections ?? []).filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
+  }, [config?.sections]);
   const allPages = useMemo(() => config?.pages ?? [], [config?.pages]);
 
-  const [localLinks, setLocalLinks] = useState<LocalNavLink[]>(() =>
-    makeLocalLinks(section.links)
-  );
-
-  // If the section.links reference changes from outside, resync local state
-  useEffect(() => {
-    setLocalLinks(makeLocalLinks(section.links));
-  }, [section.links]);
-
+  const links = section.links ?? [];
   const style = ensureStyle(section.style);
 
-  // Push localLinks back to section when they change
-  const commitLinks = (next: LocalNavLink[]) => {
-    setLocalLinks(next);
-    const stripped: NavLink[] = next.map(({ ...rest }) => rest);
-    onChange({ ...section, links: stripped });
-  };
+  const setLinks = (next: NavLink[]) => onChange({ ...section, links: next });
 
   // ---- logo text ----
   const setLogoText = (logoText?: string) =>
     onChange({ ...section, logoText });
 
   // ---- links CRUD ----
-  const updateLink = (id: string, patch: Partial<NavLink>) => {
-    const next = localLinks.map((l) =>
-      l._id === id ? { ...l, ...patch } : l
-    );
-    commitLinks(next);
+  const updateLink = (idx: number, patch: Partial<NavLink>) => {
+    const next = deepClone(links);
+    next[idx] = { ...next[idx], ...patch };
+    setLinks(next);
   };
 
   const addLink = () => {
-    const next = [
-      ...localLinks,
-      { _id: crypto.randomUUID(), label: 'New', href: '' },
-    ];
-    commitLinks(next);
+    setLinks([...links, { label: 'New', href: '' }]);
   };
 
-  const removeLink = (id: string) => {
-    const next = localLinks.filter((l) => l._id !== id);
-    commitLinks(next);
+  const removeLink = (idx: number) => {
+    setLinks(links.filter((_, i) => i !== idx));
   };
 
-  const moveLink = (id: string, dir: -1 | 1) => {
-    const idx = localLinks.findIndex((l) => l._id === id);
-    if (idx < 0) return;
-    const j = idx + dir;
-    if (j < 0 || j >= localLinks.length) return;
-    const next = [...localLinks];
-    const tmp = next[idx];
-    next[idx] = next[j];
-    next[j] = tmp;
-    commitLinks(next);
+  const moveLink = (idx: number, dir: -1 | 1) => {
+    const to = idx + dir;
+    if (to < 0 || to >= links.length) return;
+    const next = deepClone(links);
+    const [row] = next.splice(idx, 1);
+    next.splice(to, 0, row);
+    setLinks(next);
   };
 
   // ---- CTA (optional) ----
@@ -142,12 +124,12 @@ export function EditHeader({
           </button>
         </div>
 
-        {localLinks.length === 0 && (
+        {links.length === 0 && (
           <div className="text-sm text-muted">No nav links yet.</div>
         )}
 
         <div className="space-y-2">
-          {localLinks.map((lnk, i) => {
+          {links.map((lnk, i) => {
             const { kind, sectionId } = hrefKind(lnk.href);
 
             return (
@@ -157,7 +139,7 @@ export function EditHeader({
                   <input
                     className="input w-full"
                     value={lnk.label}
-                    onChange={(e) => updateLink(lnk._id, { label: e.target.value })}
+                    onChange={(e) => updateLink(i, { label: e.target.value })}
                     placeholder="Label (e.g., Home)"
                   />
 
@@ -172,18 +154,20 @@ export function EditHeader({
                         if (nextKind === 'internal') {
                           // switch to internal: default to first section or blank
                           const first = allSections[0]?.id ?? '';
-                          updateLink(lnk._id, { href: first ? `/#${first}` : '' });
+                          updateLink(i, { href: first ? `/#${first}` : '' });
                         } else if (nextKind === 'sub-page') {
                           const first = allPages[0]?.slug ?? '';
-                          updateLink(lnk._id, { href: first ? `/${first.replace(/^\/+/, '')}` : '' });
+                          updateLink(i, { href: first ? `/${first.replace(/^\/+/, '')}` : '' });
                         } else {
                           // switch to external: keep existing external or blank
-                          updateLink(lnk._id, { href: '' });
+                          updateLink(i, { href: '' });
                         }
                       }}
                     >
                       <option value="internal">Internal (section)</option>
-                      <option value="sub-page">Sub-page</option>
+                      <option value="sub-page" disabled={allPages.length === 0}>
+                        Sub-page{allPages.length === 0 ? ' (no pages yet)' : ''}
+                      </option>
                       <option value="external">External URL</option>
                     </select>
 
@@ -194,7 +178,7 @@ export function EditHeader({
                         value={sectionId}
                         onChange={(e) => {
                           const id = e.target.value;
-                          updateLink(lnk._id, { href: id === '/' ? '/' : id ? `/#${id}` : '' });
+                          updateLink(i, { href: id === '/' ? '/' : id ? `/#${id}` : '' });
                         }}
                       >
                         <option value="">— Select section —</option>
@@ -209,7 +193,7 @@ export function EditHeader({
                       <select
                         className="select flex-1"
                         value={lnk.href}
-                        onChange={(e) => updateLink(lnk._id, { href: e.target.value })}
+                        onChange={(e) => updateLink(i, { href: e.target.value })}
                       >
                         <option value="">â€” Select page â€”</option>
                         {allPages.map((page) => {
@@ -225,7 +209,7 @@ export function EditHeader({
                       <input
                         className="input flex-1"
                         value={lnk.href}
-                        onChange={(e) => updateLink(lnk._id, { href: e.target.value })}
+                        onChange={(e) => updateLink(i, { href: e.target.value })}
                         placeholder="https://…, /contact, mailto:…, tel:…"
                       />
                     )}
@@ -236,7 +220,7 @@ export function EditHeader({
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => moveLink(lnk._id, -1)}
+                    onClick={() => moveLink(i, -1)}
                     disabled={i === 0}
                     title="Move up"
                   >
@@ -245,8 +229,8 @@ export function EditHeader({
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => moveLink(lnk._id, +1)}
-                    disabled={i === localLinks.length - 1}
+                    onClick={() => moveLink(i, +1)}
+                    disabled={i === links.length - 1}
                     title="Move down"
                   >
                     <FontAwesomeIcon icon={faChevronDown} className="text-sm" />
@@ -254,7 +238,7 @@ export function EditHeader({
                   <button
                     type="button"
                     className="btn btn-ghost text-red-600 ml-auto"
-                    onClick={() => removeLink(lnk._id)}
+                    onClick={() => removeLink(i)}
                     title="Remove"
                   >
                     <FontAwesomeIcon icon={faTrash} className="text-sm" />

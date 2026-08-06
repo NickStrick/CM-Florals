@@ -31,7 +31,7 @@ import Persons from './sections/Persons';
 import ProductShop from './sections/ProductShop';
 import SendAMessage from './sections/SendAMessage';
 import PageLinks from './sections/PageLinks';
-import Banner from './sections/Banner';
+import BannerCarousel from './sections/BannerCarousel';
 
 // Exhaustiveness helper (nice to have)
 function assertNever(x: never): never {
@@ -134,8 +134,8 @@ export function SectionRenderer({ section }: { section: AnySection }) {
     case 'pageLinks': {
       return <PageLinks {...section} />;
     }
-    case 'banner': {
-      return <Banner {...section} />;
+    case 'bannerCarousel': {
+      return <BannerCarousel {...section} />;
     }
     default: {
       // if you ever add a new type and forget to handle it,

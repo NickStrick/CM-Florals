@@ -104,7 +104,7 @@ export type SectionBase = {
     | 'productShop'
     | 'sendAMessage'
     | 'pageLinks'
-    | 'banner'
+    | 'bannerCarousel'
     ;
 
   // visible/editable flags to support your builder UI
@@ -142,7 +142,7 @@ export type AnySection =
   | ProductShopSection
   | SendAMessageSection
   | PageLinksSection
-  | BannerSection;
+  | BannerCarouselSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -191,16 +191,20 @@ export type PageLinksSection = SectionBase & {
   style?: PageLinksStyle;
 };
 
-export type BannerVariant = 'announcement' | 'promo' | 'alert';
+// Rotating banner strip (same height as the header), one or many ad/link slides
+export type BannerCarouselItem = {
+  backgroundUrl?: string;  // optional background image (S3 key or full URL)
+  overlay?: boolean;       // dark tint over the background image for contrast; default true
+  imageUrl?: string;       // optional flyer/logo image shown to the left of the title/text
+  title?: string;
+  body?: string;
+  href?: string;           // clicking the slide navigates here (internal, sub-page, or external)
+};
 
-export type BannerSection = SectionBase & {
-  type: 'banner';
-  variant?: BannerVariant; // default 'announcement'
-  title?: string;          // bold lead-in, e.g. "New:" or "Reminder:"
-  body?: string;           // supporting copy, e.g. "Spring collection is here."
-  imageUrl?: string;       // optional small badge/product image
-  cta?: { label: string; href: string };
-  dismissible?: boolean;   // show a close (X) button; remembered for the session
+export type BannerCarouselSection = SectionBase & {
+  type: 'bannerCarousel';
+  items: BannerCarouselItem[];
+  intervalMs?: number; // auto-rotate interval in ms; default 5000
 };
 
 // ✅ NEW: About

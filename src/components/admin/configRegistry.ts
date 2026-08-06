@@ -27,7 +27,7 @@ import type {
   ProductShopSection,
   SendAMessageSection,
   PageLinksSection,
-  BannerSection,
+  BannerCarouselSection,
 } from '@/types/site';
 
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
@@ -423,19 +423,17 @@ export const SECTION_REGISTRY: SectionRegistry = {
     }),
   },
 
-  banner: {
-    label: 'Banner (Alert / Ad)',
+  bannerCarousel: {
+    label: 'Banner Carousel (Ads/Links)',
     allowed: true,
-    create: (): BannerSection => ({
-      id: newId('banner'),
-      type: 'banner',
+    create: (): BannerCarouselSection => ({
+      id: newId('bannerCarousel'),
+      type: 'bannerCarousel',
       visible: true,
-      variant: 'announcement',
-      title: 'New:',
-      body: 'Something exciting is happening — tell visitors about it here.',
-      imageUrl: '',
-      cta: undefined,
-      dismissible: true,
+      items: [
+        { title: '', body: '', backgroundUrl: '', overlay: true, imageUrl: '', href: '' },
+      ],
+      intervalMs: 5000,
     }),
   },
 };

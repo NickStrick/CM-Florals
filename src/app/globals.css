@@ -652,9 +652,26 @@ h1, h2, h3, h4, h5, h6 {
   }
   .btn-gradient-inverted:hover{
     border-color: white;
-    
+
   }
-  
+  .banner-gradient-bg {
+      background-image: linear-gradient(
+          to right,
+          var(--primary) 0%,
+          var(--accent) 40%,
+          var(--accent) 50%,
+          var(--primary) 100%
+      );
+      background-size: calc(200% + 4px) calc(100% + 4px);
+      background-position: 0% 0%;
+      animation: btnunhover 2s;
+      animation-play-state: paused;
+  }
+  .banner-gradient-bg:hover {
+      cursor: pointer;
+      animation: btnhover 2s forwards;
+  }
+
 }
 .instagram-media{
       margin-left: -1px !important;

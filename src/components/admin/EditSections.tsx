@@ -30,7 +30,7 @@ import EditProductShop from './fields/ProductShopEditor';
 import EditSocials from './fields/SocialsEditor';
 import EditSkills from './fields/SkillsEditor';
 import EditPageLinks from './fields/PageLinksEditor';
-import EditBanner from './fields/BannerEditor';
+import EditBannerCarousel from './fields/BannerCarouselEditor';
 
 // -----------------------------
 // Shared types & helpers
@@ -86,7 +86,7 @@ export const SECTION_EDITORS: Partial<Record<AnySection['type'], EditorComponent
   socials: EditSocials as EditorComponent<AnySection>,
   skills: EditSkills as EditorComponent<AnySection>,
   pageLinks: EditPageLinks as EditorComponent<AnySection>,
-  banner: EditBanner as EditorComponent<AnySection>,
+  bannerCarousel: EditBannerCarousel as EditorComponent<AnySection>,
   // Add more as you implement them…
 };
 

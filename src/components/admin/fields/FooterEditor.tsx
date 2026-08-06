@@ -28,7 +28,12 @@ export default function EditFooter({
 }: EditorProps<FooterSection>) {
   const columns = section.columns ?? [];
   const { config } = useSite();
-  const allSections = useMemo(() => config?.sections ?? [], [config?.sections]);
+  // Dedupe by id: a config can end up with duplicate section ids (bad data),
+  // which would otherwise crash this dropdown on a React "duplicate key" error.
+  const allSections = useMemo(() => {
+    const seen = new Set<string>();
+    return (config?.sections ?? []).filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
+  }, [config?.sections]);
   const allPages = useMemo(() => config?.pages ?? [], [config?.pages]);
 
   const setField = useCallback(
