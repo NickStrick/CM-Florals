@@ -220,11 +220,16 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
                               key={`opt-${g.label}-${key}`}
                               type="button"
                               onClick={() => setSelectedByGroup((cur) => ({ ...cur, [g.label]: key }))}
-                              className={`px-3 py-1 border product-select ${
+                              className={`relative min-w-[4.5rem] px-3 pt-1.5 pb-4 border product-select text-left ${
                                 active ? 'bg-gradient-colored' : 'border-black/50 hover:border-black/60 border-2'
                               }`}
                             >
-                              {it.label}
+                              <span>{it.label}</span>
+                              {typeof it.price === 'number' && (
+                                <span className="absolute bottom-1 right-1.5 text-[10px] opacity-70 leading-none">
+                                  {formatPrice(it.price, classItem.currency)}
+                                </span>
+                              )}
                             </button>
                           );
                         })}

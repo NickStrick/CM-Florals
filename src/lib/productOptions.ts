@@ -56,19 +56,27 @@ export function normalizeSelection(
   return next;
 }
 
+// Sums the price of the chosen item from every group that has one (e.g. Size: $20 +
+// Add-ons: $5 = $25). Falls back to basePrice only when no group has any pricing
+// configured at all, so a single-priced-group setup (the common case) is unaffected.
 export function effectivePriceForSelection(
   basePrice: number,
   groups: NormOptionGroup[],
   selectedByGroup: Record<string, string> | undefined
 ) {
   const selection = normalizeSelection(groups, selectedByGroup);
+  let sum = 0;
+  let anyPriced = false;
   for (const g of groups) {
     const chosenKey = selection[g.label];
     const chosen =
       g.optionItems.find((it) => (it.value ?? it.label) === chosenKey) ?? g.optionItems[0];
-    if (typeof chosen?.price === 'number') return chosen.price;
+    if (typeof chosen?.price === 'number') {
+      sum += chosen.price;
+      anyPriced = true;
+    }
   }
-  return basePrice;
+  return anyPriced ? sum : basePrice;
 }
 
 export function buildVariantLabel(
