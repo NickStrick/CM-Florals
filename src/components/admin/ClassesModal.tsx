@@ -1,0 +1,718 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import type { SiteConfig, ClassItem, ClassTime, SiteClassesConfig } from '@/types/site';
+import { useSite } from '@/context/SiteContext';
+import { getSiteId } from '@/lib/siteId';
+import { resolveAssetUrl } from '@/lib/assetUrl';
+import MediaPicker from './MediaPicker';
+import { OptionsEditor } from './fields/OptionsEditor';
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj)) as T;
+}
+
+function rid() {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+}
+
+function formatPrice(cents: number, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
+}
+
+function formatTimeLabel(time: string): string {
+  const [hStr, mStr] = time.split(':');
+  const h = Number(hStr);
+  const m = Number(mStr);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return time;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function blankClassItem(): LocalClassItem {
+  return {
+    _localId: rid(),
+    id: `class-${rid().slice(0, 8)}`,
+    name: '',
+    category: '',
+    subtitle: '',
+    description: '',
+    price: 0,
+    compareAtPrice: undefined,
+    currency: 'USD',
+    thumbnailUrl: '',
+    ctaLabel: '',
+    options: [],
+    classTimeIds: [],
+    badges: [],
+  };
+}
+
+function blankClassTime(): LocalClassTime {
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    _localId: rid(),
+    id: `time-${rid().slice(0, 8)}`,
+    date: today,
+    startTime: '18:00',
+    endTime: '',
+    capacity: undefined,
+    label: '',
+  };
+}
+
+// ─── Local Types ──────────────────────────────────────────────────────────────
+
+type LocalClassItem = ClassItem & { _localId: string };
+type LocalClassTime = ClassTime & { _localId: string };
+
+// ─── Class Time Card (inline-edit, no separate edit-mode toggle) ─────────────
+
+function ClassTimeCard({
+  time,
+  onChange,
+  onRemove,
+}: {
+  time: LocalClassTime;
+  onChange: (patch: Partial<LocalClassTime>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="card admin-card card-solid p-3 grid md:grid-cols-6 gap-2 items-end">
+      <div>
+        <label className="block text-xs font-medium mb-1">Date</label>
+        <input
+          type="date"
+          className="input w-full"
+          value={time.date}
+          onChange={(e) => onChange({ date: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Start</label>
+        <input
+          type="time"
+          className="input w-full"
+          value={time.startTime}
+          onChange={(e) => onChange({ startTime: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">End (optional)</label>
+        <input
+          type="time"
+          className="input w-full"
+          value={time.endTime ?? ''}
+          onChange={(e) => onChange({ endTime: e.target.value || undefined })}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Capacity</label>
+        <input
+          type="number"
+          min={0}
+          className="input w-full"
+          value={time.capacity ?? ''}
+          placeholder="Unlimited"
+          onChange={(e) => {
+            const v = e.target.value === '' ? undefined : Math.max(0, Number(e.target.value) || 0);
+            onChange({ capacity: v });
+          }}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Note</label>
+        <input
+          className="input w-full"
+          value={time.label ?? ''}
+          placeholder="e.g. Beginners"
+          onChange={(e) => onChange({ label: e.target.value })}
+        />
+      </div>
+      <button type="button" className="btn btn-ghost text-red-500 text-sm justify-self-end" onClick={onRemove}>
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+// ─── Class Item Edit Form ──────────────────────────────────────────────────────
+
+function ClassItemEditForm({
+  item,
+  allTimes,
+  onChange,
+  onRemove,
+  onDone,
+  openMediaPicker,
+  siteId,
+}: {
+  item: LocalClassItem;
+  allTimes: LocalClassTime[];
+  onChange: (patch: Partial<LocalClassItem>) => void;
+  onRemove: () => void;
+  onDone: () => void;
+  openMediaPicker: (prefix: string) => Promise<string | null>;
+  siteId: string;
+}) {
+  const thumb = resolveAssetUrl(item.thumbnailUrl);
+  const assigned = new Set(item.classTimeIds ?? []);
+  const sortedTimes = useMemo(
+    () => [...allTimes].sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)),
+    [allTimes]
+  );
+
+  const toggleTime = (timeId: string) => {
+    const next = assigned.has(timeId)
+      ? (item.classTimeIds ?? []).filter((id) => id !== timeId)
+      : [...(item.classTimeIds ?? []), timeId];
+    onChange({ classTimeIds: next });
+  };
+
+  return (
+    <div
+      className="card admin-card card-solid p-4 space-y-4"
+      onBlurCapture={(e) => {
+        const nextFocused = e.relatedTarget as Node | null;
+        if (!e.currentTarget.contains(nextFocused)) onDone();
+      }}
+    >
+      <div className="grid md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium mb-1">Name *</label>
+          <input
+            className="input w-full"
+            value={item.name ?? ''}
+            onChange={(e) => onChange({ name: e.target.value })}
+            placeholder="Class name"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Subtitle</label>
+          <input
+            className="input w-full"
+            value={item.subtitle ?? ''}
+            onChange={(e) => onChange({ subtitle: e.target.value })}
+            placeholder="Short descriptor"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Category (optional)</label>
+        <input
+          className="input w-full"
+          value={item.category ?? ''}
+          onChange={(e) => onChange({ category: e.target.value })}
+          placeholder="e.g. Kids, Adults"
+        />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium mb-1">Base Price ($)</label>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            className="input w-full"
+            value={item.price > 0 ? (item.price / 100).toFixed(2) : ''}
+            onChange={(e) => onChange({ price: Math.round(Number(e.target.value) * 100) || 0 })}
+            placeholder="0.00"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Compare-at Price ($)</label>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            className="input w-full"
+            value={item.compareAtPrice ? (item.compareAtPrice / 100).toFixed(2) : ''}
+            onChange={(e) => {
+              const v = Math.round(Number(e.target.value) * 100) || 0;
+              onChange({ compareAtPrice: v > 0 ? v : undefined });
+            }}
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium">Thumbnail</label>
+        {thumb && (
+          <div className="h-24 w-24 overflow-hidden rounded-lg border border-gray-200 bg-black/10">
+            <img src={thumb} alt="Thumbnail preview" className="h-full w-full object-cover" />
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            className="input flex-1"
+            value={item.thumbnailUrl ?? ''}
+            onChange={(e) => onChange({ thumbnailUrl: e.target.value })}
+            placeholder={`configs/${siteId}/assets/… or https://…`}
+          />
+          <button
+            type="button"
+            className="btn btn-inverted flex-shrink-0"
+            onClick={async () => {
+              const picked = await openMediaPicker(`configs/${siteId}/assets/`);
+              if (picked) onChange({ thumbnailUrl: picked });
+            }}
+          >
+            Pick…
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Description</label>
+        <textarea
+          className="input w-full"
+          rows={3}
+          value={item.description ?? ''}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="What this class covers"
+        />
+      </div>
+
+      {/* Options / Variants (e.g. 4x4 / 5x5 / 6x6) */}
+      <OptionsEditor
+        options={item.options ?? []}
+        basePrice={item.price}
+        onChange={(next) => onChange({ options: next })}
+      />
+
+      {/* Assigned times */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between border-b pb-1">
+          <span className="text-sm font-semibold">Assigned Times</span>
+          <span className="text-xs text-muted">{assigned.size} selected</span>
+        </div>
+        {sortedTimes.length === 0 ? (
+          <p className="text-xs text-muted">
+            No class times exist yet — add some in the &ldquo;Class Times&rdquo; tab, then assign them here.
+            Leaving this empty is fine — the class will just show as &ldquo;Coming soon&rdquo; until scheduled.
+          </p>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-1.5 max-h-48 overflow-auto pr-1">
+            {sortedTimes.map((t) => (
+              <label key={t._localId} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={assigned.has(t.id)}
+                  onChange={() => toggleTime(t.id)}
+                  className="accent-[var(--admin-primary)]"
+                />
+                <span>
+                  {t.date} · {formatTimeLabel(t.startTime)}
+                  {t.label ? ` · ${t.label}` : ''}
+                  {typeof t.capacity === 'number' ? ` · cap ${t.capacity}` : ''}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium mb-1">Button Label</label>
+          <input
+            className="input w-full"
+            value={item.ctaLabel ?? ''}
+            onChange={(e) => onChange({ ctaLabel: e.target.value })}
+            placeholder="Book Now"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-between pt-1">
+        <button type="button" className="btn btn-ghost text-red-500 text-sm" onClick={onRemove}>
+          <Trash2 className="w-4 h-4 mr-1 inline" /> Remove
+        </button>
+        <button type="button" className="btn btn-primary text-sm" onClick={onDone}>
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Class Item Card ────────────────────────────────────────────────────────────
+
+function ClassItemCard({
+  item,
+  onEdit,
+  onRemove,
+}: {
+  item: LocalClassItem;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  const thumb = resolveAssetUrl(item.thumbnailUrl);
+  const timesCount = (item.classTimeIds ?? []).length;
+  return (
+    <div className="card admin-card card-solid flex gap-3 p-3">
+      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-black/10">
+        {thumb ? (
+          <img src={thumb} alt={item.name} className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="font-semibold text-sm truncate block">
+          {item.name || <em className="opacity-40">Unnamed</em>}
+        </span>
+        {item.category && <span className="text-xs opacity-50">{item.category}</span>}
+        <div className="text-sm font-medium mt-0.5">
+          {item.price > 0 ? formatPrice(item.price, item.currency) : <span className="opacity-30">No price</span>}
+        </div>
+        <div className="text-xs opacity-50 mt-0.5">
+          {timesCount > 0 ? `${timesCount} time${timesCount === 1 ? '' : 's'} scheduled` : 'No times scheduled yet'}
+        </div>
+      </div>
+      <div className="flex flex-col gap-1 flex-shrink-0">
+        <button className="btn btn-ghost p-1" onClick={onEdit} aria-label="Edit class">
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button className="btn btn-ghost p-1 text-red-500" onClick={onRemove} aria-label="Remove class">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── ClassesModal ─────────────────────────────────────────────────────────────
+
+export type ClassesModalProps = { onClose: () => void };
+
+export default function ClassesModal({ onClose }: ClassesModalProps) {
+  const { config, setConfig } = useSite();
+  const siteId = getSiteId();
+
+  const [draft, setDraft] = useState<SiteConfig | null>(null);
+  const originalRef = useRef<SiteConfig | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'items' | 'times'>('items');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [localItems, setLocalItems] = useState<LocalClassItem[]>([]);
+  const [localTimes, setLocalTimes] = useState<LocalClassTime[]>([]);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // ── Media picker ──────────────────────────────────────────────────────────
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerPrefix, setPickerPrefix] = useState(`configs/${siteId}/assets/`);
+  const pickerResolveRef = useRef<((key: string | null) => void) | null>(null);
+
+  const openMediaPicker = useCallback((prefix: string): Promise<string | null> => {
+    setPickerPrefix(prefix);
+    setPickerOpen(true);
+    return new Promise<string | null>((resolve) => {
+      pickerResolveRef.current = resolve;
+    });
+  }, []);
+
+  const handlePick = useCallback((key: string) => {
+    pickerResolveRef.current?.(key);
+    pickerResolveRef.current = null;
+    setPickerOpen(false);
+  }, []);
+
+  const handleCancelPick = useCallback(() => {
+    pickerResolveRef.current?.(null);
+    pickerResolveRef.current = null;
+    setPickerOpen(false);
+  }, []);
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (config) {
+      const copy = deepClone(config);
+      setDraft(copy);
+      originalRef.current = copy;
+      setLocalItems((copy.classes?.classItems ?? []).map((c) => ({ ...c, _localId: rid() })));
+      setLocalTimes((copy.classes?.classTimes ?? []).map((t) => ({ ...t, _localId: rid() })));
+    }
+  }, [config]);
+
+  // ── Mutations: Class Items ──────────────────────────────────────────────────
+  const commitItems = useCallback((next: LocalClassItem[]) => {
+    setLocalItems(next);
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const classItems: ClassItem[] = next.map(({ _localId: _, ...c }) => c);
+      const classes: SiteClassesConfig = { classItems, classTimes: prev.classes?.classTimes ?? [] };
+      return { ...prev, classes };
+    });
+  }, []);
+
+  const commitTimes = useCallback((next: LocalClassTime[]) => {
+    setLocalTimes(next);
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const classTimes: ClassTime[] = next.map(({ _localId: _, ...t }) => t);
+      const classes: SiteClassesConfig = { classItems: prev.classes?.classItems ?? [], classTimes };
+      return { ...prev, classes };
+    });
+  }, []);
+
+  const addItem = useCallback(() => {
+    const c = blankClassItem();
+    commitItems([c, ...localItems]);
+    setEditingId(c._localId);
+    requestAnimationFrame(() => listRef.current?.scrollTo({ top: 0, behavior: 'smooth' }));
+  }, [commitItems, localItems]);
+
+  const updateItem = useCallback(
+    (localId: string, patch: Partial<LocalClassItem>) => {
+      commitItems(localItems.map((c) => (c._localId === localId ? { ...c, ...patch } : c)));
+    },
+    [commitItems, localItems]
+  );
+
+  const finishEditingItem = useCallback(
+    (localId: string) => {
+      const item = localItems.find((c) => c._localId === localId);
+      if (!item) {
+        setEditingId(null);
+        return;
+      }
+      if (!(item.name ?? '').trim()) {
+        commitItems(localItems.filter((c) => c._localId !== localId));
+        if (editingId === localId) setEditingId(null);
+        return;
+      }
+      if (editingId === localId) setEditingId(null);
+    },
+    [commitItems, editingId, localItems]
+  );
+
+  const removeItem = useCallback(
+    (localId: string) => {
+      commitItems(localItems.filter((c) => c._localId !== localId));
+      if (editingId === localId) setEditingId(null);
+    },
+    [commitItems, editingId, localItems]
+  );
+
+  // ── Mutations: Class Times ──────────────────────────────────────────────────
+  const addTime = useCallback(() => {
+    const t = blankClassTime();
+    commitTimes([t, ...localTimes]);
+  }, [commitTimes, localTimes]);
+
+  const updateTime = useCallback(
+    (localId: string, patch: Partial<LocalClassTime>) => {
+      commitTimes(localTimes.map((t) => (t._localId === localId ? { ...t, ...patch } : t)));
+    },
+    [commitTimes, localTimes]
+  );
+
+  const removeTime = useCallback(
+    (localId: string) => {
+      const removed = localTimes.find((t) => t._localId === localId);
+      commitTimes(localTimes.filter((t) => t._localId !== localId));
+      // Unassign this time from any class items that had it.
+      if (removed) {
+        commitItems(
+          localItems.map((c) => ({
+            ...c,
+            classTimeIds: (c.classTimeIds ?? []).filter((id) => id !== removed.id),
+          }))
+        );
+      }
+    },
+    [commitTimes, localTimes, commitItems, localItems]
+  );
+
+  const isDirty = useMemo(() => {
+    if (!draft || !originalRef.current) return false;
+    return JSON.stringify(draft) !== JSON.stringify(originalRef.current);
+  }, [draft]);
+
+  // ── Save / Restore ────────────────────────────────────────────────────────
+  const onSave = useCallback(async () => {
+    if (!draft) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const variant = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? 'draft') as 'draft' | 'published';
+      const res = await fetch(
+        `/api/admin/config/${encodeURIComponent(siteId)}?variant=${variant}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'x-local-admin': '1' },
+          body: JSON.stringify(draft),
+        }
+      );
+      if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
+      const saved: SiteConfig = await res.json();
+      setConfig(saved);
+      originalRef.current = deepClone(saved);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save.');
+    } finally {
+      setSaving(false);
+    }
+  }, [draft, onClose, setConfig, siteId]);
+
+  const onRestore = useCallback(() => {
+    if (!originalRef.current) return;
+    const restored = deepClone(originalRef.current);
+    setDraft(restored);
+    setLocalItems((restored.classes?.classItems ?? []).map((c) => ({ ...c, _localId: rid() })));
+    setLocalTimes((restored.classes?.classTimes ?? []).map((t) => ({ ...t, _localId: rid() })));
+    setEditingId(null);
+  }, []);
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  if (!draft) {
+    return (
+      <div className="fixed inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
+        <div className="card admin-card p-6 text-sm text-muted">
+          Loading...
+          <div className="mt-4 text-right">
+            <button className="btn btn-ghost" onClick={onClose}>Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const sortedTimes = [...localTimes].sort(
+    (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
+  );
+
+  return (
+    <>
+      <div className="fixed edit-modal inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
+        <div className="card admin-card card-solid p-4 relative w-full max-w-full overflow-hidden card-screen-height flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
+            <div className="font-semibold text-lg">Classes</div>
+            <div className="flex items-center gap-2">
+              {error && <div className="text-red-500 text-sm mr-2">{error}</div>}
+              {isDirty && <button className="btn btn-ghost" onClick={onRestore}>Restore</button>}
+              <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+              <button className="btn btn-primary" onClick={onSave} disabled={!draft || saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="px-4 pt-4 flex-shrink-0">
+            <div className="flex items-center justify-between border-b pb-0">
+              <div className="flex gap-4">
+                {(['items', 'times'] as const).map((t) => (
+                  <button
+                    key={t}
+                    className={[
+                      'px-3 py-2 -mb-px text-sm font-semibold border-b-4 transition-colors admin-tab',
+                      tab === t
+                        ? 'border-transparent text-white active'
+                        : 'border-transparent text-gray-300 hover:text-[var(--admin-primary)]',
+                    ].join(' ')}
+                    onClick={() => setTab(t)}
+                  >
+                    {t === 'items' ? `Class Items (${localItems.length})` : `Class Times (${localTimes.length})`}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="btn btn-primary mb-2 flex items-center gap-1 text-sm"
+                onClick={tab === 'items' ? addItem : addTime}
+              >
+                <Plus className="w-4 h-4" /> {tab === 'items' ? 'Add Class' : 'Add Time'}
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div ref={listRef} className="flex-1 overflow-auto p-4">
+            {tab === 'items' ? (
+              localItems.length === 0 ? (
+                <div className="text-sm text-muted py-8 text-center">
+                  No classes yet. Click &ldquo;Add Class&rdquo; to get started.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {localItems.map((c) =>
+                    editingId === c._localId ? (
+                      <ClassItemEditForm
+                        key={c._localId}
+                        item={c}
+                        allTimes={localTimes}
+                        onChange={(patch) => updateItem(c._localId, patch)}
+                        onRemove={() => removeItem(c._localId)}
+                        onDone={() => finishEditingItem(c._localId)}
+                        openMediaPicker={openMediaPicker}
+                        siteId={siteId}
+                      />
+                    ) : (
+                      <ClassItemCard
+                        key={c._localId}
+                        item={c}
+                        onEdit={() => setEditingId(c._localId)}
+                        onRemove={() => removeItem(c._localId)}
+                      />
+                    )
+                  )}
+                </div>
+              )
+            ) : sortedTimes.length === 0 ? (
+              <div className="text-sm text-muted py-8 text-center">
+                No class times yet. Click &ldquo;Add Time&rdquo; to schedule one, then assign it to a class in
+                the &ldquo;Class Items&rdquo; tab.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {sortedTimes.map((t) => (
+                  <ClassTimeCard
+                    key={t._localId}
+                    time={t}
+                    onChange={(patch) => updateTime(t._localId, patch)}
+                    onRemove={() => removeTime(t._localId)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Close button (mobile) */}
+          <button
+            className="absolute top-4 right-4 text-gray-400 hover:text-white md:hidden"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Media picker overlay */}
+      {pickerOpen && (
+        <div className="fixed inset-0 z-[13000] bg-black/60 flex items-center justify-center p-4">
+          <div className="card admin-card card-solid p-4 w-full max-w-2xl max-h-[80vh] overflow-auto relative">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-semibold">Pick an image</span>
+              <button className="btn btn-ghost" onClick={handleCancelPick}>Cancel</button>
+            </div>
+            <MediaPicker prefix={pickerPrefix} onPick={handlePick} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

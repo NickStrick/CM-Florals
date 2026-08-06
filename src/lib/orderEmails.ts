@@ -43,6 +43,19 @@ export function formatMoney(amount: number, currency: string): string {
   }
 }
 
+// Options selection (e.g. { Size: "4x4" }) rendered as "Size: 4x4" — same field
+// products and classes both use for their variant selection.
+function formatItemOptionsText(item: OrderItem): string {
+  const options = (item as Record<string, unknown>).options;
+  if (options && typeof options === 'object' && !Array.isArray(options)) {
+    const pairs = Object.entries(options as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== '')
+      .map(([k, v]) => `${k}: ${v}`);
+    if (pairs.length) return pairs.join(', ');
+  }
+  return '';
+}
+
 function renderItemsList(items: OrderItem[], currency: string): string {
   if (!items.length) return '<p>(No items)</p>';
   const rows = items
@@ -56,7 +69,17 @@ function renderItemsList(items: OrderItem[], currency: string): string {
             ? item.price * qty
             : Number.NaN;
       const money = lineTotal ? escapeHtml(formatMoney(lineTotal, currency)) : '';
-      return `<li><strong>${name}</strong> × ${qty}${money ? ` — ${money}` : ''}</li>`;
+
+      // Class bookings: show the selected option/type (if any) and the booked time.
+      const rec = item as Record<string, unknown>;
+      const classTimeLabel = typeof rec.classTimeLabel === 'string' ? rec.classTimeLabel : '';
+      const optionsText = formatItemOptionsText(item);
+      const detailBits = [optionsText, classTimeLabel].filter(Boolean).map(escapeHtml);
+      const details = detailBits.length
+        ? `<br/><span style="opacity:0.7;font-size:0.9em">${detailBits.join(' · ')}</span>`
+        : '';
+
+      return `<li><strong>${name}</strong> × ${qty}${money ? ` — ${money}` : ''}${details}</li>`;
     })
     .join('');
   return `<ul>${rows}</ul>`;

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxesStacked, faReceipt } from '@fortawesome/free-solid-svg-icons';
+import { faBoxesStacked, faReceipt, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { adminFetch } from '@/lib/adminClient';
 import { getSiteId } from '@/lib/siteId';
 import type { OrderRecord } from '@/types/orders';
@@ -13,7 +13,7 @@ type OrdersModalProps = {
 
 const STATUS_OPTIONS = ['PLACED', 'PAID', 'FULFILLED', 'CANCELLED', 'REFUNDED'];
 
-type OrdersViewMode = 'items' | 'orders';
+type OrdersViewMode = 'items' | 'orders' | 'classes';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -205,6 +205,11 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
     );
   }, [filteredOrders]);
 
+  const filteredClassItems = useMemo(
+    () => filteredItems.filter(({ item }) => typeof item.classItemId === 'string'),
+    [filteredItems]
+  );
+
   const selectedOrder = useMemo(
     () => orders.find((o) => o.createdAtOrderId === selectedId) || null,
     [orders, selectedId]
@@ -278,7 +283,9 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
       <div className="card admin-card card-full card-solid w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <div>
-            <div className="text-lg font-semibold">{viewMode === 'items' ? 'Items' : 'Orders'}</div>
+            <div className="text-lg font-semibold">
+              {viewMode === 'items' ? 'Items' : viewMode === 'classes' ? 'Class Bookings' : 'Orders'}
+            </div>
             <div className="text-sm opacity-70">Business: {businessId}</div>
           </div>
           <button onClick={onClose} className="btn btn-ghost" aria-label="Close">
@@ -306,6 +313,15 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
               aria-label="Orders view"
             >
               <FontAwesomeIcon icon={faReceipt} className="text-base" />
+            </button>
+            <button
+              type="button"
+              className={viewMode === 'classes' ? 'btn btn-primary' : 'btn btn-inverted'}
+              onClick={() => setViewMode('classes')}
+              title="Class bookings view"
+              aria-label="Class bookings view"
+            >
+              <FontAwesomeIcon icon={faCalendarDays} className="text-base" />
             </button>
           </div>
 
@@ -577,6 +593,197 @@ export default function OrdersModal({ onClose }: OrdersModalProps) {
                     nodes.push(
                       <div key="empty" className="orders-mobile-empty">
                         No orders found.
+                      </div>
+                    );
+                  }
+
+                  return nodes;
+                })()}
+              </div>
+            </>
+          ) : viewMode === 'classes' ? (
+            <>
+              <div className="orders-table-desktop">
+                <table className="w-full text-sm">
+                  <thead className="text-left sticky top-0 bg-[var(--panel)]/90 backdrop-blur border-b border-white/10">
+                    <tr>
+                      <th className="py-2 px-3">Date</th>
+                      <th className="py-2 px-3">Customer</th>
+                      <th className="py-2 px-3">Class</th>
+                      <th className="py-2 px-3">Time</th>
+                      <th className="py-2 px-3">Qty</th>
+                      <th className="py-2 px-3">Options</th>
+                      <th className="py-2 px-3">Cost</th>
+                      <th className="py-2 px-3">Order ID</th>
+                      <th className="py-2 px-3">Status</th>
+                      <th className="py-2 px-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredClassItems.map(({ order, item, idx }) => {
+                      const cost = formatItemCost(item);
+                      const optionsText = formatItemOptions(item);
+                      const timeLabel = typeof item.classTimeLabel === 'string' ? item.classTimeLabel : '-';
+                      return (
+                        <tr
+                          key={`${order.createdAtOrderId}-${idx}`}
+                          className={`border-b border-white/10 hover:bg-white/5 ${
+                            selectedId === order.createdAtOrderId ? 'bg-white/5' : ''
+                          }`}
+                        >
+                          <td className="py-2 px-3">
+                            {order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}
+                          </td>
+                          <td className="py-2 px-3">
+                            <div className="font-semibold">{order.customerName || '-'}</div>
+                            <div className="opacity-70 text-xs">{order.customerEmail}</div>
+                          </td>
+                          <td className="py-2 px-3 min-w-[200px]">
+                            <div className="font-semibold">{String(item.name || `Item ${idx + 1}`)}</div>
+                          </td>
+                          <td className="py-2 px-3 min-w-[160px]">{timeLabel}</td>
+                          <td className="py-2 px-3">
+                            {typeof item.quantity === 'number' ? item.quantity : '-'}
+                          </td>
+                          <td className="py-2 px-3 max-w-[300px] truncate" title={optionsText}>
+                            {optionsText}
+                          </td>
+                          <td className="py-2 px-3">
+                            {typeof cost === 'number' ? formatMoney(cost, order.currency) : '-'}
+                          </td>
+                          <td className="py-2 px-3 font-mono text-xs">{order.orderId}</td>
+                          <td className="py-2 px-3">{order.status}</td>
+                          <td className="py-2 px-3 flex gap-2">
+                            <button
+                              className="btn btn-ghost"
+                              onClick={() => setSelectedId(order.createdAtOrderId)}
+                            >
+                              View
+                            </button>
+                            <button
+                              className="btn btn-ghost"
+                              onClick={() => setSelectedId(order.createdAtOrderId)}
+                            >
+                              Update Status
+                            </button>
+                            <button
+                              className="btn btn-ghost"
+                              onClick={() => void handleDelete(order)}
+                              disabled={deleting}
+                              title="Delete order"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {!filteredClassItems.length && !loading && (
+                      <tr>
+                        <td className="py-6 px-3 text-center opacity-70" colSpan={10}>
+                          No class bookings found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="orders-list-mobile" data-view="classes">
+                {(() => {
+                  let lastDayKey: string | null = null;
+                  const nodes: JSX.Element[] = [];
+
+                  for (const { order, item, idx } of filteredClassItems) {
+                    const dayKey = dayKeyFromISO(order.createdAt);
+                    if (dayKey !== lastDayKey) {
+                      lastDayKey = dayKey;
+                      nodes.push(
+                        <div key={`day-${dayKey}`} className="orders-day-separator">
+                          {formatDayLabel(order.createdAt)}
+                        </div>
+                      );
+                    }
+
+                    const isSelected = selectedId === order.createdAtOrderId;
+                    const cost = formatItemCost(item);
+                    const optionsText = formatItemOptions(item);
+                    const timeLabel = typeof item.classTimeLabel === 'string' ? item.classTimeLabel : '-';
+
+                    nodes.push(
+                      <div
+                        key={`${order.createdAtOrderId}-${idx}`}
+                        className={`orders-mobile-card ${isSelected ? 'is-selected' : ''}`}
+                      >
+                        <div className="orders-mobile-top">
+                          <div className="min-w-0">
+                            <div className="orders-mobile-title truncate">
+                              {String(item.name || `Item ${idx + 1}`)}
+                            </div>
+                            <div className="orders-mobile-sub truncate">
+                              {order.customerName || 'No name'} • {order.customerEmail}
+                            </div>
+                          </div>
+                          <span className="orders-status-badge">{order.status}</span>
+                        </div>
+
+                        <div className="orders-mobile-grid">
+                          <div className="orders-mobile-wide">
+                            <span className="orders-mobile-label">Time</span>
+                            <span className="orders-mobile-value">{timeLabel}</span>
+                          </div>
+                          <div>
+                            <span className="orders-mobile-label">Qty</span>
+                            <span className="orders-mobile-value">
+                              {typeof item.quantity === 'number' ? item.quantity : '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="orders-mobile-label">Cost</span>
+                            <span className="orders-mobile-value">
+                              {typeof cost === 'number' ? formatMoney(cost, order.currency) : '-'}
+                            </span>
+                          </div>
+                          <div className="orders-mobile-wide">
+                            <span className="orders-mobile-label">Options</span>
+                            <span className="orders-mobile-value">{optionsText}</span>
+                          </div>
+                          <div className="orders-mobile-wide">
+                            <span className="orders-mobile-label">Order</span>
+                            <span className="orders-mobile-mono">{order.orderId}</span>
+                          </div>
+                        </div>
+
+                        <div className="orders-mobile-actions">
+                          <button
+                            className="btn btn-ghost"
+                            onClick={() => setSelectedId(order.createdAtOrderId)}
+                          >
+                            View
+                          </button>
+                          <button
+                            className="btn btn-ghost"
+                            onClick={() => setSelectedId(order.createdAtOrderId)}
+                          >
+                            Update Status
+                          </button>
+                          <button
+                            className="btn btn-ghost"
+                            onClick={() => void handleDelete(order)}
+                            disabled={deleting}
+                            title="Delete order"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (!nodes.length && !loading) {
+                    nodes.push(
+                      <div key="empty" className="orders-mobile-empty">
+                        No class bookings found.
                       </div>
                     );
                   }

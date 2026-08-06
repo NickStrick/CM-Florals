@@ -105,6 +105,7 @@ export type SectionBase = {
     | 'sendAMessage'
     | 'pageLinks'
     | 'bannerCarousel'
+    | 'classListings'
     ;
 
   // visible/editable flags to support your builder UI
@@ -142,7 +143,8 @@ export type AnySection =
   | ProductShopSection
   | SendAMessageSection
   | PageLinksSection
-  | BannerCarouselSection;
+  | BannerCarouselSection
+  | ClassListingsSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -330,6 +332,7 @@ export type SiteConfig = {
   meta?: { title?: string; description?: string; favicon?: string };
   settings?: SiteSettings;
   products?: SiteProductsConfig;
+  classes?: SiteClassesConfig;
   /** Custom pages — each gets a dynamic route at /[slug] */
   pages?: SitePage[];
 };
@@ -836,6 +839,52 @@ export type ProductListingsSection = SectionBase & {
   style?: ProductListingsStyle;
   showAllThreshold?: number;     // default 3 — show "Show all" if > threshold
   buyCtaFallback?: string;       // default "Buy Now"
+};
+
+// ---- Classes (separate from Products: time-slot bookings, not one-off purchases) ----
+
+export type ClassTime = {
+  id: string;
+  date: string;         // ISO date, e.g. "2026-03-04"
+  startTime: string;    // "18:00"
+  endTime?: string;     // "19:30"
+  capacity?: number;    // max bookings for this slot; undefined = unlimited
+  label?: string;       // optional note, e.g. "Beginners"
+};
+
+export type ClassItem = {
+  id: string;
+  name: string;
+  category?: string;
+  subtitle?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  images?: ProductImage[];
+  price: number;                // base price, cents
+  compareAtPrice?: number;
+  currency?: string;
+  options?: ProductOptions[];   // e.g. Size: 4x4 / 5x5 / 6x6, each with its own price
+  /** Assigned bookable times, resolved from config.classes.classTimes. Empty = not scheduled yet. */
+  classTimeIds: string[];
+  badges?: string[];
+  ctaLabel?: string;            // button label; defaults to the section's buyCtaFallback
+};
+
+export type SiteClassesConfig = {
+  classItems: ClassItem[];
+  classTimes: ClassTime[];      // shared pool of bookable slots
+};
+
+export type ClassListingsSection = SectionBase & {
+  id: string;
+  type: 'classListings';
+  title?: string;
+  subtitle?: string;
+  /** Ordered list of class IDs resolved from config.classes.classItems */
+  classItemIds: string[];
+  style?: ProductListingsStyle;
+  showAllThreshold?: number;    // default 3 — show "Show all" if > threshold
+  buyCtaFallback?: string;      // default "Book Now"
 };
 
 export type PersonItem = {

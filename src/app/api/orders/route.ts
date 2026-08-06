@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrder } from '@/lib/ordersDb';
+import { reserveSeats, releaseSeats, SlotFullError } from '@/lib/classSlotsDb';
+import { getObjectJson } from '@/lib/s3-admin';
 import type { OrderItem } from '@/types/orders';
+import type { SiteConfig } from '@/types/site';
 
 type CreateOrderBody = {
   businessId?: string;
@@ -55,6 +58,44 @@ export async function POST(req: NextRequest) {
 
   const { customerName, status, notes, ...rest } = body || {};
 
+  // Reserve seats for any class-booking items before the order is created, so we
+  // never create an order for a slot that's actually full. Sequential reserve with
+  // compensating rollback on failure (not a single atomic transaction, but good
+  // enough to prevent overbooking under normal concurrency).
+  const classReservations: { classTimeId: string; qty: number }[] = [];
+  const classItems = items.filter(
+    (it): it is OrderItem & { classTimeId: string } => typeof (it as Record<string, unknown>).classTimeId === 'string'
+  );
+
+  if (classItems.length > 0) {
+    const config = await getObjectJson<SiteConfig>({ key: `configs/${businessId}/site.json` });
+    const capacityById = new Map(
+      (config?.classes?.classTimes ?? []).map((t) => [t.id, t.capacity] as const)
+    );
+
+    for (const item of classItems) {
+      const classTimeId = item.classTimeId as string;
+      const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+      try {
+        await reserveSeats(businessId, classTimeId, qty, capacityById.get(classTimeId));
+        classReservations.push({ classTimeId, qty });
+      } catch (err) {
+        // Roll back anything we already reserved for this order attempt.
+        await Promise.all(
+          classReservations.map((r) => releaseSeats(businessId, r.classTimeId, r.qty).catch(() => {}))
+        );
+        if (err instanceof SlotFullError) {
+          return NextResponse.json(
+            { error: 'That class time just filled up — please pick another time.' },
+            { status: 409 }
+          );
+        }
+        console.error('[orders] class seat reservation failed', err);
+        return NextResponse.json({ error: 'Failed to reserve class seats.' }, { status: 500 });
+      }
+    }
+  }
+
   try {
     const order = await createOrder({
       businessId,
@@ -100,6 +141,10 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     console.error('[orders] create failed', err);
+    // Order row failed to write — release any seats we reserved above so they aren't stuck.
+    await Promise.all(
+      classReservations.map((r) => releaseSeats(businessId, r.classTimeId, r.qty).catch(() => {}))
+    );
     return NextResponse.json({ error: 'Failed to create order.' }, { status: 500 });
   }
 }

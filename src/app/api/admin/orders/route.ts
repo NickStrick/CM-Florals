@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { guardAdmin } from '@/lib/adminGuard';
-import { deleteOrder, listOrdersByBusiness } from '@/lib/ordersDb';
+import { deleteOrder, getOrder, listOrdersByBusiness } from '@/lib/ordersDb';
+import { releaseSeats } from '@/lib/classSlotsDb';
 
 export async function GET(req: NextRequest) {
   const denied = guardAdmin(req);
@@ -66,7 +67,21 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
+    const order = await getOrder(businessId, createdAtOrderId);
     await deleteOrder(businessId, createdAtOrderId);
+
+    // Free up any class seats this order was holding.
+    if (order?.items?.length) {
+      await Promise.all(
+        order.items.map((item) => {
+          const classTimeId = (item as Record<string, unknown>).classTimeId;
+          if (typeof classTimeId !== 'string') return Promise.resolve();
+          const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+          return releaseSeats(businessId, classTimeId, qty).catch(() => {});
+        })
+      );
+    }
+
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error('[orders] delete failed', err);

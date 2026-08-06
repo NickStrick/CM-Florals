@@ -1,4 +1,4 @@
-import type { Product } from '@/types/site';
+import type { ProductOptions } from '@/types/site';
 
 export type NormOptionItem = {
   label: string;
@@ -9,7 +9,9 @@ export type NormOptionItem = {
 };
 export type NormOptionGroup = { label: string; optionItems: NormOptionItem[] };
 
-export function normalizeOptionGroups(options: Product['options']): NormOptionGroup[] {
+// Accepts Product['options'] / SiteProduct['options'] / ClassItem['options'] —
+// all structurally identical, so this one normalizer covers products and classes.
+export function normalizeOptionGroups(options: ProductOptions[] | undefined): NormOptionGroup[] {
   if (!Array.isArray(options)) return [];
   return options
     .map((g: unknown) => {
@@ -85,17 +87,31 @@ export function buildVariantLabel(
   return parts.join(', ');
 }
 
-export function buildLineItemId(
-  productId: string,
-  selectedByGroup: Record<string, string> | undefined
-) {
-  const selection = selectedByGroup ? selectedByGroup : undefined;
-  if (!selection) return productId;
-  const bits = Object.entries(selection)
+function selectionSuffix(selectedByGroup: Record<string, string> | undefined) {
+  if (!selectedByGroup) return '';
+  return Object.entries(selectedByGroup)
     .filter(([, v]) => !!v)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}=${v}`)
     .join('|');
+}
+
+export function buildLineItemId(
+  productId: string,
+  selectedByGroup: Record<string, string> | undefined
+) {
+  const bits = selectionSuffix(selectedByGroup);
   return bits ? `${productId}::${bits}` : productId;
+}
+
+// Distinct cart line per class + time + option combo, so booking the same
+// class at two different times never merges into one line item.
+export function buildClassLineItemId(
+  classItemId: string,
+  classTimeId: string,
+  selectedByGroup: Record<string, string> | undefined
+) {
+  const bits = selectionSuffix(selectedByGroup);
+  return bits ? `${classItemId}::t=${classTimeId}::${bits}` : `${classItemId}::t=${classTimeId}`;
 }
 
