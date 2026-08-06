@@ -55,7 +55,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
     description,
     badges,
     purchaseUrl,
-    ctaLabel = 'Buy Now',
+    ctaLabel,
     colors: rawColors,
   } = product;
 
@@ -306,7 +306,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                   onClose();
                 }}
               >
-                {isSoldOut ? 'Sold out' : 'Add to Cart'}
+                {isSoldOut ? 'Sold out' : (ctaLabel || 'Add to Cart')}
               </button>
             )}
 
@@ -317,7 +317,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                {ctaLabel}
+                {ctaLabel || 'Buy Now'}
               </a>
             )}
             {!cartActive && purchaseUrl && !canBuy && (

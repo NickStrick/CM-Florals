@@ -296,7 +296,7 @@ export default function ProductListings({
                             disabled={isSoldOut}
                             aria-label={`Add ${p.name} to cart`}
                           >
-                            {isSoldOut ? 'Sold out' : 'Add to Cart'}
+                            {isSoldOut ? 'Sold out' : (p.ctaLabel ?? buyCtaFallback)}
                           </button>
                         )}
                       </div>

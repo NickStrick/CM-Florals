@@ -412,7 +412,7 @@ function ProductEditForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">CTA Label</label>
+          <label className="block text-sm font-medium mb-1">Button Text/label</label>
           <input
             className="input w-full"
             value={product.ctaLabel ?? ''}
