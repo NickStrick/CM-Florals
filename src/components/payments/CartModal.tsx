@@ -15,14 +15,14 @@ export default function CartModal() {
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   if (!isCartOpen) return (
     <button onClick={openCart} className="flex flex-row fixed z-[5000] top-[6px] right-4 !p-2 !pr-6 !pl-[25px] btn-gradient text-white rounded-full cart-icon w-[120px]">
-      <ShoppingCart size={24} className="inline-block " /> <span className="ml-1 text-[14px]">Cart</span>
+      <ShoppingCart size={24} className="inline-block " /> <span className="ml-1 text-[14px] cart-text">Cart</span>
       {totalQuantity > 0 && <span className="absolute top-3 left-2 white text-[var(--primary)] rounded-full w-5 h-5 text-xs flex items-center justify-center cart-items-count" >{totalQuantity}</span>}
     </button>
   );
 
   return (<>
     <button onClick={openCart} className="flex flex-row fixed z-[5000] top-[6px] right-4 !p-2 !pr-6 !pl-[25px] btn-gradient text-white rounded-full cart-icon w-[120px]">
-      <ShoppingCart size={24} className="inline-block " /> <span className="ml-1 text-[14px]">Cart</span>
+      <ShoppingCart size={24} className="inline-block " /> <span className="ml-1 text-[14px] cart-text">Cart</span>
       {totalQuantity > 0 && <span className="absolute top-3 left-2 white text-[var(--primary)] rounded-full w-5 h-5 text-xs flex items-center justify-center cart-items-count" >{totalQuantity}</span>}
     </button>
     <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/50 backdrop-blur-sm cart-modal-container">

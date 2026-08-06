@@ -804,15 +804,51 @@ max-height: calc(100vh - 135px);
 
 }
 @media (max-width: 1408px) {
+  .cart-text{
+    display:none;
+  }
   .cart-icon{
-    top:64px;
-    border-bottom-right-radius: 0;
-    border-top-right-radius: 0;
-    right:0;
+    /* Text is hidden now, so drop the 120px/text-sized padding (the base classes are
+       `!p-2 !pr-6 !pl-[25px] w-[120px]`, each forced with Tailwind's `!important`, so
+       these need `!important` too or they're silently ignored) and shrink to a circle
+       (equal width/height keeps `rounded-full`, already on the button, a true circle —
+       the base classes' squared-off right corners were meant for the old edge-flush
+       pill shape, so those get overridden back to fully round here). Vertically center
+       in the header's 64px bar. */
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    top: 2rem;
+    transform: translateY(-50%);
+    border-radius: 9999px !important;
   }
   .cart-modal-container{
     height: 100vh;
     top:0;
+  }
+}
+
+/* Header <nav> is `mx-auto max-w-6xl px-4 md:px-6` — a 1152px content box, 1.5rem
+   side padding above the `md` breakpoint. Between 1275px (where the CTA button
+   appears — see Navbar.tsx's `nav:` breakpoint) and 1408px, that box no longer spans
+   the viewport, so sit the cart icon in the resulting side margin, just past the
+   CTA's own right edge. */
+@media (min-width: 1275px) and (max-width: 1408px) {
+  .cart-icon{
+    right: 1rem;
+  }
+}
+
+/* Below 1275px the CTA is replaced by the hamburger menu button (Navbar.tsx: `w-9
+   h-9`, flush against the nav's own right padding, no CTA in the way). Clear the
+   hamburger + nav padding + a small gap instead of overlapping it. */
+@media (max-width: 1274px) {
+  .cart-icon{
+    right: calc(max(0px, (100vw - 1152px) / 2) + 4.5rem);
   }
 }
 @media (max-width: 768px) {
