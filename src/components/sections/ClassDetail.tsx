@@ -79,18 +79,22 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
   }, [siteId, classItem?.id]);
 
   const [added, setAdded] = useState(false);
+  const [mainIndex, setMainIndex] = useState(0);
 
   // If an admin swaps which class this section points to (live preview), don't
-  // carry over the old class's option/time selection.
+  // carry over the old class's option/time/image selection.
   useEffect(() => {
     setSelectedByGroup({});
     setSelectedTimeId(null);
     setAdded(false);
+    setMainIndex(0);
   }, [classItemId]);
 
   if (!classItem) return null;
 
-  const thumb = resolveAssetUrl(classItem.thumbnailUrl ?? classItem.images?.[0]?.url);
+  const images = classItem.images ?? [];
+  const mainImage = resolveAssetUrl(images[mainIndex]?.url ?? classItem.thumbnailUrl);
+  const thumb = resolveAssetUrl(classItem.thumbnailUrl ?? images[0]?.url);
 
   const handleAddToCart = () => {
     if (!selectedTime) return;
@@ -125,17 +129,46 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
           {/* Media */}
           <div>
-            {thumb ? (
+            {mainImage ? (
               <div className="w-full max-h-[560px] flex items-center justify-center overflow-hidden rounded-xl">
                 <img
-                  src={thumb}
-                  alt={classItem.name}
+                  src={mainImage}
+                  alt={images[mainIndex]?.alt ?? classItem.name}
                   className="rounded-xl object-contain w-full h-full"
                   style={{ maxHeight: '560px', width: 'auto', height: 'auto', maxWidth: '100%' }}
                 />
               </div>
             ) : (
               <div className="w-full aspect-[4/3] bg-black/10 rounded-xl" />
+            )}
+
+            {images.length > 1 && (
+              <div className="mt-3 grid grid-cols-5 gap-2">
+                {images.slice(0, 5).map((im, idx) => {
+                  const resolved = resolveAssetUrl(im.url);
+                  const isActive = idx === mainIndex;
+                  if (!resolved) return null;
+                  return (
+                    <button
+                      type="button"
+                      key={im.url + idx}
+                      onClick={() => setMainIndex(idx)}
+                      className={`overflow-hidden border product-select ${
+                        isActive ? 'bg-gradient-colored' : 'border-2 border-transparent opacity-90 hover:opacity-100'
+                      }`}
+                      aria-label={`Show image ${idx + 1}`}
+                    >
+                      <div className="w-full max-h-[100px] flex items-center justify-center overflow-hidden">
+                        <img
+                          src={resolved}
+                          alt={im.alt ?? `${classItem.name} ${idx + 1}`}
+                          className="object-contain block w-full h-full"
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
 
@@ -151,7 +184,7 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
                   ))}
                 </div>
               )}
-              <h2 className="h-display">{classItem.name}</h2>
+              <h2 className="text-2xl md:text-3xl font-semibold">{classItem.name}</h2>
               {classItem.subtitle && <p className="mt-1 opacity-80">{classItem.subtitle}</p>}
             </div>
 

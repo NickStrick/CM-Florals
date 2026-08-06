@@ -1,13 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
-import type { SiteConfig, ClassItem, ClassTime, SiteClassesConfig } from '@/types/site';
+import { ChevronDown, ChevronUp, Pencil, Plus, Trash2, X } from 'lucide-react';
+import type { SiteConfig, ClassItem, ClassTime, SiteClassesConfig, ProductImage } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import MediaPicker from './MediaPicker';
 import { OptionsEditor } from './fields/OptionsEditor';
+import CurrencyInput from './fields/CurrencyInput';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ function blankClassItem(): LocalClassItem {
     compareAtPrice: undefined,
     currency: 'USD',
     thumbnailUrl: '',
+    images: [],
     ctaLabel: '',
     options: [],
     classTimeIds: [],
@@ -231,29 +233,16 @@ function ClassItemEditForm({
       <div className="grid md:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium mb-1">Base Price ($)</label>
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            className="input w-full"
-            value={item.price > 0 ? (item.price / 100).toFixed(2) : ''}
-            onChange={(e) => onChange({ price: Math.round(Number(e.target.value) * 100) || 0 })}
-            placeholder="0.00"
+          <CurrencyInput
+            cents={item.price}
+            onChange={(cents) => onChange({ price: cents })}
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Compare-at Price ($)</label>
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            className="input w-full"
-            value={item.compareAtPrice ? (item.compareAtPrice / 100).toFixed(2) : ''}
-            onChange={(e) => {
-              const v = Math.round(Number(e.target.value) * 100) || 0;
-              onChange({ compareAtPrice: v > 0 ? v : undefined });
-            }}
-            placeholder="0.00"
+          <CurrencyInput
+            cents={item.compareAtPrice}
+            onChange={(cents) => onChange({ compareAtPrice: cents > 0 ? cents : undefined })}
           />
         </div>
       </div>
@@ -283,6 +272,96 @@ function ClassItemEditForm({
             Pick…
           </button>
         </div>
+      </div>
+
+      {/* Additional Images — shown as a gallery on the class detail page; click a
+          thumbnail there to bring it into the main spot. */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium">Additional Images</label>
+          <button
+            type="button"
+            className="btn btn-ghost text-sm"
+            onClick={async () => {
+              const picked = await openMediaPicker(`configs/${siteId}/assets/`);
+              if (!picked) return;
+              const images = [...(item.images ?? []), { url: picked, alt: '' }];
+              onChange({ images, thumbnailUrl: item.thumbnailUrl || picked });
+            }}
+          >
+            <Plus className="w-3 h-3 inline mr-1" />Add Image
+          </button>
+        </div>
+
+        {(item.images ?? []).length === 0 ? (
+          <p className="text-xs text-muted">
+            No additional images yet — the thumbnail above is used on its own until you add some.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {(item.images ?? []).map((im, ii) => {
+              const images = item.images ?? [];
+              const preview = resolveAssetUrl(im.url);
+              const updateImage = (patch: Partial<ProductImage>) => {
+                const next = images.map((x, i) => (i === ii ? { ...x, ...patch } : x));
+                onChange({ images: next });
+              };
+              return (
+                <div key={ii} className="flex items-center gap-2">
+                  {preview && (
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="h-10 w-10 rounded object-cover flex-shrink-0 border border-gray-200"
+                    />
+                  )}
+                  <input
+                    className="input flex-1"
+                    placeholder="Alt text (optional)"
+                    value={im.alt ?? ''}
+                    onChange={(e) => updateImage({ alt: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      if (ii === 0) return;
+                      const next = [...images];
+                      [next[ii - 1], next[ii]] = [next[ii], next[ii - 1]];
+                      onChange({ images: next });
+                    }}
+                    disabled={ii === 0}
+                    title="Move up"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      if (ii === images.length - 1) return;
+                      const next = [...images];
+                      [next[ii], next[ii + 1]] = [next[ii + 1], next[ii]];
+                      onChange({ images: next });
+                    }}
+                    disabled={ii === images.length - 1}
+                    title="Move down"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost text-red-500"
+                    onClick={() => onChange({ images: images.filter((_, i) => i !== ii) })}
+                    title="Remove"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div>

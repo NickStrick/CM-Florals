@@ -8,6 +8,7 @@ import { getSiteId } from '@/lib/siteId';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import MediaPicker from './MediaPicker';
 import { OptionsEditor } from './fields/OptionsEditor';
+import CurrencyInput from './fields/CurrencyInput';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -173,29 +174,16 @@ function ProductEditForm({
       <div className="grid md:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium mb-1">Base Price ($)</label>
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            className="input w-full"
-            value={product.price > 0 ? (product.price / 100).toFixed(2) : ''}
-            onChange={(e) => onChange({ price: Math.round(Number(e.target.value) * 100) || 0 })}
-            placeholder="0.00"
+          <CurrencyInput
+            cents={product.price}
+            onChange={(cents) => onChange({ price: cents })}
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Compare-at Price ($)</label>
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            className="input w-full"
-            value={product.compareAtPrice ? (product.compareAtPrice / 100).toFixed(2) : ''}
-            onChange={(e) => {
-              const v = Math.round(Number(e.target.value) * 100) || 0;
-              onChange({ compareAtPrice: v > 0 ? v : undefined });
-            }}
-            placeholder="0.00"
+          <CurrencyInput
+            cents={product.compareAtPrice}
+            onChange={(cents) => onChange({ compareAtPrice: cents > 0 ? cents : undefined })}
           />
         </div>
       </div>

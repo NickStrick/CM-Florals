@@ -900,6 +900,15 @@ button[disabled]{
   border-color:var(--admin-text);
   color:var(--admin-text);
 }
+/* Destructive (Remove/Delete) buttons must stay red — .admin-card .btn-ghost above
+   otherwise wins and mutes both the label and any icon (e.g. lucide's Trash2, which
+   inherits color via currentColor) to the same shade as regular buttons. */
+.admin-card .btn-ghost.text-red-500{
+  color:#ef4444;
+}
+.admin-card .btn-ghost.text-red-600{
+  color:#dc2626;
+}
 .admin-card .text-muted{
   color:var(--admin-muted);
 }

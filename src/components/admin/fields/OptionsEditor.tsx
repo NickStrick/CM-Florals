@@ -2,6 +2,7 @@
 
 import { Plus, X } from 'lucide-react';
 import type { ProductOptions, ProductOptionItem } from '@/types/site';
+import CurrencyInput from './CurrencyInput';
 
 // Shared by ProductsModal and ClassesModal — "Size / Option Variants" editor
 // (e.g. product Size: S/M/L, or class Size: 4x4/5x5/6x6), each item with its own price.
@@ -116,16 +117,10 @@ export function OptionsEditor({
                 />
                 <div className="relative">
                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs opacity-50">$</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
+                  <CurrencyInput
                     className="input w-full pl-5"
-                    placeholder="0.00"
-                    value={typeof it.price === 'number' && it.price > 0 ? (it.price / 100).toFixed(2) : ''}
-                    onChange={(e) =>
-                      updateItem(gi, ii, { price: Math.round(Number(e.target.value) * 100) || 0 })
-                    }
+                    cents={it.price}
+                    onChange={(cents) => updateItem(gi, ii, { price: cents })}
                   />
                 </div>
                 <div className="flex justify-center">
