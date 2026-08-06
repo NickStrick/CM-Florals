@@ -68,31 +68,35 @@ export async function POST(req: NextRequest) {
   );
 
   if (classItems.length > 0) {
-    const config = await getObjectJson<SiteConfig>({ key: `configs/${businessId}/site.json` });
-    const capacityById = new Map(
-      (config?.classes?.classTimes ?? []).map((t) => [t.id, t.capacity] as const)
-    );
+    try {
+      const config = await getObjectJson<SiteConfig>({ key: `configs/${businessId}/site.json` });
+      const capacityById = new Map(
+        (config?.classes?.classTimes ?? []).map((t) => [t.id, t.capacity] as const)
+      );
 
-    for (const item of classItems) {
-      const classTimeId = item.classTimeId as string;
-      const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
-      try {
-        await reserveSeats(businessId, classTimeId, qty, capacityById.get(classTimeId));
-        classReservations.push({ classTimeId, qty });
-      } catch (err) {
-        // Roll back anything we already reserved for this order attempt.
-        await Promise.all(
-          classReservations.map((r) => releaseSeats(businessId, r.classTimeId, r.qty).catch(() => {}))
-        );
-        if (err instanceof SlotFullError) {
-          return NextResponse.json(
-            { error: 'That class time just filled up — please pick another time.' },
-            { status: 409 }
+      for (const item of classItems) {
+        const classTimeId = item.classTimeId as string;
+        const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+        try {
+          await reserveSeats(businessId, classTimeId, qty, capacityById.get(classTimeId));
+          classReservations.push({ classTimeId, qty });
+        } catch (err) {
+          // Roll back anything we already reserved for this order attempt.
+          await Promise.all(
+            classReservations.map((r) => releaseSeats(businessId, r.classTimeId, r.qty).catch(() => {}))
           );
+          if (err instanceof SlotFullError) {
+            return NextResponse.json(
+              { error: 'That class time just filled up — please pick another time.' },
+              { status: 409 }
+            );
+          }
+          throw err;
         }
-        console.error('[orders] class seat reservation failed', err);
-        return NextResponse.json({ error: 'Failed to reserve class seats.' }, { status: 500 });
       }
+    } catch (err) {
+      console.error('[orders] class seat reservation failed', err);
+      return NextResponse.json({ error: 'Failed to reserve class seats.' }, { status: 500 });
     }
   }
 

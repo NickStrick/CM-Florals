@@ -105,7 +105,7 @@ export type SectionBase = {
     | 'sendAMessage'
     | 'pageLinks'
     | 'bannerCarousel'
-    | 'classListings'
+    | 'classDetail'
     ;
 
   // visible/editable flags to support your builder UI
@@ -144,7 +144,7 @@ export type AnySection =
   | SendAMessageSection
   | PageLinksSection
   | BannerCarouselSection
-  | ClassListingsSection;
+  | ClassDetailSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -875,15 +875,13 @@ export type SiteClassesConfig = {
   classTimes: ClassTime[];      // shared pool of bookable slots
 };
 
-export type ClassListingsSection = SectionBase & {
+// Single class, shown directly on the page (image, description, options,
+// calendar time picker, book button) — not a browsable grid or a modal.
+export type ClassDetailSection = SectionBase & {
   id: string;
-  type: 'classListings';
-  title?: string;
-  subtitle?: string;
-  /** Ordered list of class IDs resolved from config.classes.classItems */
-  classItemIds: string[];
-  style?: ProductListingsStyle;
-  showAllThreshold?: number;    // default 3 — show "Show all" if > threshold
+  type: 'classDetail';
+  /** Which class to display, resolved from config.classes.classItems */
+  classItemId?: string;
   buyCtaFallback?: string;      // default "Book Now"
 };
 

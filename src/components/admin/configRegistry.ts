@@ -28,7 +28,7 @@ import type {
   SendAMessageSection,
   PageLinksSection,
   BannerCarouselSection,
-  ClassListingsSection,
+  ClassDetailSection,
 } from '@/types/site';
 
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
@@ -363,20 +363,16 @@ export const SECTION_REGISTRY: SectionRegistry = {
     // No Editor yet — your ConfigModal will show "No editor implemented…" until we add one.
   } as SectionRegistryItem<ProductListingsSection>,
 
-  classListings: {
-    label: 'Class Listings',
+  classDetail: {
+    label: 'Class Detail',
     allowed: true,
-    create: (id = `classListings-${crypto.randomUUID().slice(0,6)}`): ClassListingsSection => ({
+    create: (id = `classDetail-${crypto.randomUUID().slice(0,6)}`): ClassDetailSection => ({
       id,
-      type: 'classListings',
-      title: 'Upcoming Classes',
-      subtitle: 'Learn something new with us.',
-      classItemIds: [],
-      style: { columns: 3, cardVariant: 'default', showBadges: true },
-      showAllThreshold: 3,
+      type: 'classDetail',
+      classItemId: undefined,
       buyCtaFallback: 'Book Now',
     }),
-  } as SectionRegistryItem<ClassListingsSection>,
+  } as SectionRegistryItem<ClassDetailSection>,
 
   persons: {
     label: 'Persons',

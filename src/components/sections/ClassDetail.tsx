@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import type { ClassItem } from '@/types/site';
+import type { ClassDetailSection } from '@/types/site';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import { useCart } from '@/context/CartContext';
 import { useSite } from '@/context/SiteContext';
@@ -15,12 +14,6 @@ import {
   normalizeSelection,
 } from '@/lib/productOptions';
 import ClassTimePicker, { type ClassAvailability } from './ClassTimePicker';
-
-type Props = {
-  classItem: ClassItem;
-  onClose: () => void;
-  buyCtaFallback?: string;
-};
 
 function formatPrice(cents: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format((cents || 0) / 100);
@@ -36,29 +29,35 @@ function formatTimeLabel(time: string): string {
   return `${h12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 'Add to Cart' }: Props) {
+export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book Now' }: ClassDetailSection) {
   const { config } = useSite();
   const { addItem, openCart } = useCart();
   const siteId = getSiteId();
+
+  const classItem = useMemo(
+    () => (config?.classes?.classItems ?? []).find((c) => c.id === classItemId) ?? null,
+    [config?.classes?.classItems, classItemId]
+  );
 
   const payments = config?.settings?.payments;
   const cartActive = payments?.cartActive === true;
 
   const classTimes = useMemo(() => {
+    if (!classItem) return [];
     const all = config?.classes?.classTimes ?? [];
     const assigned = new Set(classItem.classTimeIds ?? []);
     return all.filter((t) => assigned.has(t.id));
-  }, [config?.classes?.classTimes, classItem.classTimeIds]);
+  }, [config?.classes?.classTimes, classItem]);
 
-  const optionGroups = useMemo(() => normalizeOptionGroups(classItem.options), [classItem.options]);
+  const optionGroups = useMemo(() => normalizeOptionGroups(classItem?.options), [classItem?.options]);
   const [selectedByGroup, setSelectedByGroup] = useState<Record<string, string>>({});
   const selection = useMemo(
     () => normalizeSelection(optionGroups, selectedByGroup),
     [optionGroups, selectedByGroup]
   );
   const effectivePrice = useMemo(
-    () => effectivePriceForSelection(classItem.price, optionGroups, selection),
-    [classItem.price, optionGroups, selection]
+    () => (classItem ? effectivePriceForSelection(classItem.price, optionGroups, selection) : 0),
+    [classItem, optionGroups, selection]
   );
 
   const [selectedTimeId, setSelectedTimeId] = useState<string | null>(null);
@@ -66,6 +65,7 @@ export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 
 
   const [availability, setAvailability] = useState<ClassAvailability>({});
   useEffect(() => {
+    if (!classItem) return;
     const ids = classTimes.map((t) => t.id);
     if (ids.length === 0) return;
     const params = new URLSearchParams({ businessId: siteId, classTimeIds: ids.join(',') });
@@ -76,10 +76,21 @@ export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteId, classItem.id]);
+  }, [siteId, classItem?.id]);
+
+  const [added, setAdded] = useState(false);
+
+  // If an admin swaps which class this section points to (live preview), don't
+  // carry over the old class's option/time selection.
+  useEffect(() => {
+    setSelectedByGroup({});
+    setSelectedTimeId(null);
+    setAdded(false);
+  }, [classItemId]);
+
+  if (!classItem) return null;
 
   const thumb = resolveAssetUrl(classItem.thumbnailUrl ?? classItem.images?.[0]?.url);
-  const [added, setAdded] = useState(false);
 
   const handleAddToCart = () => {
     if (!selectedTime) return;
@@ -108,27 +119,18 @@ export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 
   };
 
   return (
-    <div className="fixed inset-0 z-[5100] bg-black/60 flex items-center justify-center p-4 product-detail-overlay">
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="card card-modal product-detail-modal relative w-full max-w-3xl p-0 overflow-hidden"
-      >
-        <button className="absolute right-3 top-3 btn btn-ghost" onClick={onClose} aria-label="Close">
-          ✕
-        </button>
-
-        <div className="grid md:grid-cols-2 gap-0 md:max-h-[100vh] overflow-auto">
+    <section id={id} className="section">
+      <div className="mx-auto max-w-5xl px-4">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
           {/* Media */}
-          <div className="p-4 md:p-6 border-b md:border-b-0 md:border-r border-[var(--bg-2)]">
+          <div>
             {thumb ? (
-              <div className="w-full max-h-[500px] flex items-center justify-center overflow-hidden rounded-xl">
+              <div className="w-full max-h-[560px] flex items-center justify-center overflow-hidden rounded-xl">
                 <img
                   src={thumb}
                   alt={classItem.name}
                   className="rounded-xl object-contain w-full h-full"
-                  style={{ maxHeight: '500px', width: 'auto', height: 'auto', maxWidth: '100%' }}
+                  style={{ maxHeight: '560px', width: 'auto', height: 'auto', maxWidth: '100%' }}
                 />
               </div>
             ) : (
@@ -137,7 +139,7 @@ export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 
           </div>
 
           {/* Details */}
-          <div className="p-4 md:p-6 space-y-4 text-[var(--text-1)]">
+          <div className="space-y-4 text-[var(--text-1)]">
             <div>
               {classItem.badges && classItem.badges.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-2">
@@ -148,7 +150,7 @@ export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 
                   ))}
                 </div>
               )}
-              <h3 className="text-2xl font-semibold">{classItem.name}</h3>
+              <h2 className="h-display">{classItem.name}</h2>
               {classItem.subtitle && <p className="mt-1 opacity-80">{classItem.subtitle}</p>}
             </div>
 
@@ -206,6 +208,7 @@ export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 
               <div className="space-y-2">
                 <div className="text-sm font-medium">Choose a time</div>
                 <ClassTimePicker
+                  key={classItem.id}
                   classTimes={classTimes}
                   selectedTimeId={selectedTimeId}
                   onSelect={setSelectedTimeId}
@@ -226,7 +229,7 @@ export default function ClassDetailModal({ classItem, onClose, buyCtaFallback = 
             )}
           </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </section>
   );
 }

@@ -60,6 +60,14 @@ export async function reserveSeats(
     return;
   }
 
+  // A booking that alone exceeds capacity can never succeed — reject up front.
+  // (Without this, "attribute_not_exists(bookedCount)" below would wrongly let a
+  // slot's very first reservation through even if qty > capacity, since the OR
+  // short-circuits before the room check on a brand-new item.)
+  if (qty > capacity) {
+    throw new SlotFullError(classTimeId);
+  }
+
   const room = capacity - qty;
   try {
     await ddb.send(

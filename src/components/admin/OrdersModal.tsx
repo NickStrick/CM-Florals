@@ -76,7 +76,11 @@ function formatItemOptions(item: Record<string, unknown>): string {
     if (vals.length) return vals.slice(0, 4).join(', ');
   }
 
-  const ignored = new Set(['id', 'name', 'quantity', 'price', 'total', 'sku', 'notes', 'options']);
+  const ignored = new Set([
+    'id', 'name', 'quantity', 'price', 'total', 'sku', 'notes', 'options',
+    'currency', 'imageUrl', 'taxable',
+    'classItemId', 'classTimeId', 'classTimeLabel',
+  ]);
   const pairs = Object.entries(item)
     .filter(([k, v]) => !ignored.has(k) && v !== undefined && v !== null)
     .flatMap(([k, v]) => {
