@@ -14,6 +14,7 @@ import {
   normalizeSelection,
 } from '@/lib/productOptions';
 import ClassTimePicker, { type ClassAvailability } from './ClassTimePicker';
+import { SeperatorWave } from '@/components/SeperatorWave';
 
 function formatPrice(cents: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format((cents || 0) / 100);
@@ -29,7 +30,13 @@ function formatTimeLabel(time: string): string {
   return `${h12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book Now' }: ClassDetailSection) {
+export default function ClassDetail({
+  id,
+  classItemId,
+  buyCtaFallback = 'Book Now',
+  topWaveType,
+  bottomWaveType,
+}: ClassDetailSection) {
   const { config } = useSite();
   const { addItem, openCart } = useCart();
   const siteId = getSiteId();
@@ -124,6 +131,8 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
   };
 
   return (
+    <>
+    <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className="section">
       <div className="mx-auto max-w-5xl px-4">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
@@ -294,5 +303,7 @@ export default function ClassDetail({ id, classItemId, buyCtaFallback = 'Book No
         </div>
       </div>
     </section>
+    <SeperatorWave type={bottomWaveType} flip={true} color={'var(--bg)'} />
+    </>
   );
 }
