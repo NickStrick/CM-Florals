@@ -346,30 +346,30 @@ export default function Navbar() {
             ${open ? 'max-h-[80vh] overflow-y-auto' : 'max-h-0'}
           `}
         >
-          <ul className="px-4 py-3 flex flex-col gap-2 bg-[color-mix(in_srgb,var(--bg)_92%,transparent)]">
+          <ul className="flex flex-col bg-[color-mix(in_srgb,var(--bg)_92%,transparent)]">
             {(header.links ?? []).map((l, i) => {
               const isGroup = !!l.children?.length;
               const isMobileGroupOpen = openDropdown === i;
 
               if (isGroup) {
                 return (
-                  <li key={`${l.label ?? ''}-${i}`}>
+                  <li key={`${l.label ?? ''}-${i}`} className="border-b border-[color-mix(in_srgb,var(--fg)_8%,transparent)]">
                     <button
                       type="button"
-                      className="w-full flex items-center justify-between py-2 text-fg/80 hover:text-fg text-nowrap"
+                      className="relative w-full py-3 px-10 text-center text-base text-fg/80 hover:text-fg text-nowrap"
                       aria-expanded={isMobileGroupOpen}
                       onClick={() => setOpenDropdown(isMobileGroupOpen ? null : i)}
                     >
-                      <span>{l.label}</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${isMobileGroupOpen ? 'rotate-180' : ''}`} />
+                      {l.label}
+                      <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-transform ${isMobileGroupOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isMobileGroupOpen && (
-                      <ul className="ml-3 pl-3 border-l border-[color-mix(in_srgb,var(--fg)_15%,transparent)] flex flex-col gap-1 pb-2">
+                      <ul className="pb-1">
                         {l.children!.map((c, ci) => (
-                          <li key={`${c.href ?? ''}-${ci}`}>
+                          <li key={`${c.href ?? ''}-${ci}`} className="border-t border-[color-mix(in_srgb,var(--fg)_6%,transparent)]">
                             <Link
                               href={normalizeNavHref(c.href).linkHref}
-                              className="block py-1.5 text-fg/70 hover:text-fg text-nowrap"
+                              className="block py-2.5 text-center text-fg/70 hover:text-fg text-nowrap"
                               onClick={handleAnchorClick(c.href, true, () => setOpenDropdown(null))}
                             >
                               {c.label}
@@ -383,13 +383,13 @@ export default function Navbar() {
               }
 
               return (
-                <li key={`${l.href ?? ''}-${l.label ?? ''}-${i}`}>
+                <li key={`${l.href ?? ''}-${l.label ?? ''}-${i}`} className="border-b border-[color-mix(in_srgb,var(--fg)_8%,transparent)]">
                   <Link
                     href={normalizeNavHref(l.href).linkHref}
-                    className="block py-2 text-fg/80 hover:text-fg text-nowrap"
+                    className="block py-3 text-center text-base text-fg/80 hover:text-fg text-nowrap"
                     onClick={handleAnchorClick(l.href, true)}
                   >
-                    <span className="inline-flex flex-col items-start gap-2">
+                    <span className="inline-flex flex-col items-center gap-1">
                       {l.label}
                       <div
                         className={[

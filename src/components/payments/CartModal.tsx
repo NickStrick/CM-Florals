@@ -84,7 +84,7 @@ export default function CartModal() {
           className="w-full btn-gradient text-white py-4 rounded-xl font-bold transition-all"
           disabled={items.length === 0}
         >
-          Proceed to Secure Checkout
+          Proceed to Checkout
         </button>)
         : (<><div className="text-center text-gray-600">Add items to your cart to proceed to checkout.</div>
           

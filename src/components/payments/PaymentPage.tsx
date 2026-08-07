@@ -729,7 +729,7 @@ export default function PaymentPage({
             )}
             {paymentType === 'converge' && convergeTokenStatus === 'loading' && (
               <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                Loading secure payment formâ€¦
+                Loading payment form...
               </div>
             )}
             {paymentType === 'converge' && convergeTokenStatus === 'error' && (
