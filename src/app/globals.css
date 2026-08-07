@@ -807,40 +807,16 @@ max-height: calc(100vh - 135px);
   .cart-text{
     display:none;
   }
-  /* Header <nav> is `mx-auto max-w-6xl px-4 md:px-6` — a fixed 1152px box (border-box),
-     so the empty margin outside it is 0 for basically this entire range regardless of
-     viewport width; only the box's own padding creates room on the right. Two
-     independently `position: fixed` elements (this button, the header's CTA/hamburger)
-     can't make room for each other on their own, so the nav itself gets extra right
-     padding — that's what actually pushes the CTA/hamburger left, at every width in
-     this range, instead of letting the cart icon land on top of whichever one is
-     showing. */
-  header nav{
-    padding-right: 4rem;
-  }
   .cart-icon{
-    /* Text is hidden now, so drop the 120px/text-sized padding (the base classes are
-       `!p-2 !pr-6 !pl-[25px] w-[120px]`, each forced with Tailwind's `!important`, so
-       these need `!important` too or they're silently ignored) and shrink to a circle
-       (equal width/height keeps `rounded-full`, already on the button, a true circle —
-       the base classes' squared-off right corners were meant for the old edge-flush
-       pill shape, so those get overridden back to fully round here). Vertically center
-       in the header's 64px bar, and sit inside the padding reserved above. */
     width: 2.5rem !important;
     height: 2.5rem !important;
-    min-width: 0 !important;
+    min-width: 39.9px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center;
     justify-content: center;
-    top: 2rem;
-    right: 1rem;
-    transform: translateY(-50%);
     border-radius: 9999px !important;
   }
-  /* `top-3 left-2` (from CartModal.tsx) was tuned for the old 120px pill — on the new
-     40px circle that lands the badge near dead center instead of a corner. Pin it to
-     the actual top-left corner, slightly overhanging the edge. */
   .cart-items-count{
     top: -0.25rem !important;
     left: -0.25rem !important;

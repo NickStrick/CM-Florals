@@ -1,6 +1,6 @@
 // components/CartModal.tsx
 'use client';
-import { ShoppingCart, X, Trash2, Plus } from 'lucide-react';
+import { X, Trash2, Plus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
 function formatPrice(cents: number, currency = 'USD') {
@@ -11,20 +11,10 @@ function formatPrice(cents: number, currency = 'USD') {
 }
 
 export default function CartModal() {
-  const { items, totalCents, currency, openCheckout, removeItem, addItem, isCartOpen, openCart, closeCart } = useCart();
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  if (!isCartOpen) return (
-    <button onClick={openCart} className="flex flex-row fixed z-[5000] top-[6px] right-4 !p-2 !pr-6 !pl-[25px] btn-gradient text-white rounded-full cart-icon w-[120px]">
-      <ShoppingCart size={24} className="inline-block " /> <span className="ml-1 text-[14px] cart-text">Cart</span>
-      {totalQuantity > 0 && <span className="absolute top-3 left-2 white text-[var(--primary)] rounded-full w-5 h-5 text-xs flex items-center justify-center cart-items-count" >{totalQuantity}</span>}
-    </button>
-  );
+  const { items, totalCents, currency, openCheckout, removeItem, addItem, isCartOpen, closeCart } = useCart();
+  if (!isCartOpen) return null;
 
-  return (<>
-    <button onClick={openCart} className="flex flex-row fixed z-[5000] top-[6px] right-4 !p-2 !pr-6 !pl-[25px] btn-gradient text-white rounded-full cart-icon w-[120px]">
-      <ShoppingCart size={24} className="inline-block " /> <span className="ml-1 text-[14px] cart-text">Cart</span>
-      {totalQuantity > 0 && <span className="absolute top-3 left-2 white text-[var(--primary)] rounded-full w-5 h-5 text-xs flex items-center justify-center cart-items-count" >{totalQuantity}</span>}
-    </button>
+  return (
     <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/50 backdrop-blur-sm cart-modal-container">
       <div className="bg-white w-full max-w-md  p-6 shadow-2xl relative cart-modal-content">
         <button onClick={closeCart} className="absolute z-[5000] top-4 right-4 text-gray-400 hover:text-black">
@@ -100,7 +90,7 @@ export default function CartModal() {
           
         </>)}
         </div>
-    </div></>
+    </div>
   );
 }
 // Next Steps

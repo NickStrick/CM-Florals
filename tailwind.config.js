@@ -17,6 +17,7 @@ module.exports = {
       screens: {
         nav: '1275px',
         mlg: '975px',
+        xs: '445px',
       },
       colors: {
         cream: {

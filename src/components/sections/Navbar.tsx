@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ShoppingCart } from 'lucide-react';
 import { useSite } from '@/context/SiteContext';
+import { useCart } from '@/context/CartContext';
 import type { HeaderSection } from '@/types/site';
 import Image from 'next/image';
 import { handleHashClick } from '@/lib/scrollToHash';
@@ -24,6 +25,9 @@ function normalizeNavHref(href: string) {
 
 export default function Navbar() {
   const { config } = useSite();
+  const { items: cartItems, openCart } = useCart();
+  const cartActive = config?.settings?.payments?.cartActive === true;
+  const cartQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [activeHref, setActiveHref] = useState<string>('');
@@ -171,14 +175,14 @@ export default function Navbar() {
           shadowCls,
         ].join(' ')}
       >
-        <nav className="mx-auto max-w-6xl h-[4rem] px-4 md:px-6 flex items-center pl-[80px] nav:pl-4">
+        <nav className="mx-auto max-w-6xl h-[4rem] px-4 md:pr-6  flex items-center pl-[80px] nav:pl-4 ">
           {/* Left: Logo */}
           <div className="min-w-0 flex-1 relative">
-            <Link href="/" className="absolute left-[-70px] top-[-15px] rounded-full overflow-hidden w-[60px] h-[60px]">
+            <Link href="/" className="absolute left-[-65px] top-[-15px] rounded-full overflow-hidden w-[60px] h-[60px]">
             {header.logoImage&&header.logoImage.length?
               <Image src={header.logoImage} alt="logo" width={140} height={60}  />
               :<></>}</Link>
-            <Link href="/" className="text-lg font-semibold hover:opacity-90 text-[var(--text-1)] gradient-text ">
+            <Link href="/" className="opacity-0 xs:opacity-100 text-sm font-semibold hover:opacity-90 text-[var(--text-1)] gradient-text sm:text-lg">
               
               {header.logoText ?? 'Site-Crafter'}
             </Link>
@@ -210,10 +214,26 @@ export default function Navbar() {
           {/* Right: CTA (optional) & Mobile toggle */}
           <div className="min-w-0 flex-1 flex justify-end items-center gap-3">
             {header.cta ? (
-              <Link href={header.cta.href} className="btn-small text-nowrap btn-gradient hidden nav:inline-flex">
+              <Link href={header.cta.href} className="head-cta-btn btn-small text-nowrap btn-gradient hidden nav:inline-flex">
                 {header.cta.label}
               </Link>
             ) : null}
+
+            {cartActive && (
+              <button
+                onClick={openCart}
+                aria-label="Open cart"
+                className="relative !flex flex-row items-center !p-2 !pr-6 !pl-[25px] btn-gradient text-white rounded-full cart-icon w-[120px]"
+              >
+                <ShoppingCart size={24} className="inline-block" />
+                <span className="ml-1 text-[14px] cart-text">Cart</span>
+                {cartQuantity > 0 && (
+                  <span className="absolute top-2 left-[.45rem] text-[var(--primary)] rounded-full w-5 h-5 text-xs flex items-center justify-center cart-items-count">
+                    {cartQuantity}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Mobile menu button */}
             <button
