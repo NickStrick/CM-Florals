@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { WAVE_TYPES, type SiteConfig, type AnySection, type HeaderSection, type FooterSection } from '@/types/site';
+import { WAVE_TYPES, type SiteConfig, type AnySection, type HeaderSection, type HeaderNavItem, type FooterSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import { adminFetch } from '@/lib/adminClient';
@@ -487,7 +487,7 @@ export default function ConfigModal({
   // deleting the page removes it — so the nav never points at a dead page.
   const pageHref = (slug: string) => `/${slug}`;
 
-  const syncNavLinks = (
+  const syncFlatLinks = (
     links: { label: string; href: string }[],
     oldHref: string,
     nextLink: { label: string; href: string } | null
@@ -495,6 +495,21 @@ export default function ConfigModal({
     nextLink
       ? links.map((l) => (l.href === oldHref ? nextLink : l))
       : links.filter((l) => l.href !== oldHref);
+
+  // Same as syncFlatLinks, but also looks inside dropdown-group children —
+  // a page link can live nested in a header nav group, not just top-level.
+  const syncNavLinks = (
+    links: HeaderNavItem[],
+    oldHref: string,
+    nextLink: { label: string; href: string } | null
+  ): HeaderNavItem[] =>
+    links
+      .map((l) => {
+        if (l.href === oldHref) return nextLink ?? null;
+        if (l.children?.length) return { ...l, children: syncFlatLinks(l.children, oldHref, nextLink) };
+        return l;
+      })
+      .filter((l): l is HeaderNavItem => l !== null);
 
   const addPage = useCallback(() => {
     const slug = `page-${Math.random().toString(36).slice(2, 6)}`;
@@ -540,7 +555,7 @@ export default function ConfigModal({
             ...prev.footer,
             columns: (prev.footer.columns ?? []).map((c) => ({
               ...c,
-              links: syncNavLinks(c.links, oldHref, null),
+              links: syncFlatLinks(c.links, oldHref, null),
             })),
           }
         : prev.footer;
@@ -570,7 +585,7 @@ export default function ConfigModal({
             ...prev.footer,
             columns: (prev.footer.columns ?? []).map((c) => ({
               ...c,
-              links: syncNavLinks(c.links, oldHref, newLink),
+              links: syncFlatLinks(c.links, oldHref, newLink),
             })),
           }
         : prev.footer;

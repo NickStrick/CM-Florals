@@ -154,12 +154,21 @@ export type HeaderStyle = {
   transparent?: boolean;           // if true, no solid bg (uses transparent/overlay)
 };
 
+export type HeaderNavLink = { label: string; href: string };
+
+// A top-level nav item is either a plain link, or — when `children` is
+// present — a dropdown group whose label just toggles the menu (its own
+// `href` is unused) and whose children are the actual links.
+export type HeaderNavItem = HeaderNavLink & {
+  children?: HeaderNavLink[];
+};
+
 // update HeaderSection
 export type HeaderSection = SectionBase & {
   type: 'header';
   logoText?: string;
   logoImage?: string;
-  links?: { label: string; href: string }[];
+  links?: HeaderNavItem[];
   cta?: { label: string; href: string };
   style?: HeaderStyle; // 👈 new
 };

@@ -14,6 +14,7 @@ export type EditorProps<T> = {
 };
 
 type NavLink = { label: string; href: string };
+type NavItem = NavLink & { children?: NavLink[] };
 
 // tiny immutable helper (avoid local shadow state — resyncing local state from
 // props on every keystroke via useEffect regenerates keys and steals input focus)
@@ -40,6 +41,93 @@ function hrefKind(href?: string) {
   return { kind: 'external' as const, sectionId: '' };
 }
 
+// Mode selector (internal section / sub-page / external) + the matching target
+// picker. Shared between top-level links and dropdown-group children.
+function LinkTargetFields({
+  href,
+  allSections,
+  allPages,
+  onChangeHref,
+}: {
+  href: string;
+  allSections: { id: string; type: string }[];
+  allPages: { slug: string; title: string }[];
+  onChangeHref: (href: string) => void;
+}) {
+  const { kind, sectionId } = hrefKind(href);
+
+  return (
+    <div className="flex gap-2">
+      {/* Mode */}
+      <select
+        className="select w-36"
+        value={kind}
+        onChange={(e) => {
+          const nextKind = e.target.value as 'internal' | 'external' | 'sub-page';
+          if (nextKind === 'internal') {
+            const first = allSections[0]?.id ?? '';
+            onChangeHref(first ? `/#${first}` : '');
+          } else if (nextKind === 'sub-page') {
+            const first = allPages[0]?.slug ?? '';
+            onChangeHref(first ? `/${first.replace(/^\/+/, '')}` : '');
+          } else {
+            onChangeHref('');
+          }
+        }}
+      >
+        <option value="internal">Internal (section)</option>
+        <option value="sub-page" disabled={allPages.length === 0}>
+          Sub-page{allPages.length === 0 ? ' (no pages yet)' : ''}
+        </option>
+        <option value="external">External URL</option>
+      </select>
+
+      {/* Target */}
+      {kind === 'internal' ? (
+        <select
+          className="select flex-1"
+          value={sectionId}
+          onChange={(e) => {
+            const id = e.target.value;
+            onChangeHref(id === '/' ? '/' : id ? `/#${id}` : '');
+          }}
+        >
+          <option value="">— Select section —</option>
+          <option value="/">Home • Top of page</option>
+          {allSections.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.type.charAt(0).toUpperCase() + s.type.slice(1)} • {s.id}
+            </option>
+          ))}
+        </select>
+      ) : kind === 'sub-page' ? (
+        <select
+          className="select flex-1"
+          value={href}
+          onChange={(e) => onChangeHref(e.target.value)}
+        >
+          <option value="">— Select page —</option>
+          {allPages.map((page) => {
+            const pageHref = `/${page.slug.replace(/^\/+/, '')}`;
+            return (
+              <option key={page.slug} value={pageHref}>
+                {page.title || page.slug}
+              </option>
+            );
+          })}
+        </select>
+      ) : (
+        <input
+          className="input flex-1"
+          value={href}
+          onChange={(e) => onChangeHref(e.target.value)}
+          placeholder="https://…, /contact, mailto:…, tel:…"
+        />
+      )}
+    </div>
+  );
+}
+
 export function EditHeader({
   section,
   onChange,
@@ -56,7 +144,7 @@ export function EditHeader({
   const links = section.links ?? [];
   const style = ensureStyle(section.style);
 
-  const setLinks = (next: NavLink[]) => onChange({ ...section, links: next });
+  const setLinks = (next: NavItem[]) => onChange({ ...section, links: next });
 
   // ---- logo text ----
   const setLogoText = (logoText?: string) =>
@@ -83,6 +171,51 @@ export function EditHeader({
     const next = deepClone(links);
     const [row] = next.splice(idx, 1);
     next.splice(to, 0, row);
+    setLinks(next);
+  };
+
+  // ---- dropdown-group CRUD (a top-level item with `children` renders as a
+  // "Label ▾" group in the nav instead of a direct link) ----
+  const makeGroup = (idx: number) => {
+    const next = deepClone(links);
+    next[idx] = { ...next[idx], children: next[idx].children ?? [{ label: 'New', href: '' }] };
+    setLinks(next);
+  };
+
+  const removeGroup = (idx: number) => {
+    const next = deepClone(links);
+    delete next[idx].children;
+    setLinks(next);
+  };
+
+  const updateChild = (idx: number, childIdx: number, patch: Partial<NavLink>) => {
+    const next = deepClone(links);
+    const children = next[idx].children ?? [];
+    children[childIdx] = { ...children[childIdx], ...patch };
+    next[idx] = { ...next[idx], children };
+    setLinks(next);
+  };
+
+  const addChild = (idx: number) => {
+    const next = deepClone(links);
+    next[idx] = { ...next[idx], children: [...(next[idx].children ?? []), { label: 'New', href: '' }] };
+    setLinks(next);
+  };
+
+  const removeChild = (idx: number, childIdx: number) => {
+    const next = deepClone(links);
+    next[idx] = { ...next[idx], children: (next[idx].children ?? []).filter((_, i) => i !== childIdx) };
+    setLinks(next);
+  };
+
+  const moveChild = (idx: number, childIdx: number, dir: -1 | 1) => {
+    const next = deepClone(links);
+    const children = next[idx].children ?? [];
+    const to = childIdx + dir;
+    if (to < 0 || to >= children.length) return;
+    const [row] = children.splice(childIdx, 1);
+    children.splice(to, 0, row);
+    next[idx] = { ...next[idx], children };
     setLinks(next);
   };
 
@@ -123,6 +256,9 @@ export function EditHeader({
             <FontAwesomeIcon icon={faPlus} className="text-xs" />Add Link
           </button>
         </div>
+        <p className="text-xs text-muted">
+          Got a lot of links? Group related ones into a dropdown (e.g. "Services") with "+ Make dropdown" below, instead of adding many separate top-level links — it keeps the header from getting crowded.
+        </p>
 
         {links.length === 0 && (
           <div className="text-sm text-muted">No nav links yet.</div>
@@ -130,91 +266,87 @@ export function EditHeader({
 
         <div className="space-y-2">
           {links.map((lnk, i) => {
-            const { kind, sectionId } = hrefKind(lnk.href);
+            const isGroup = !!lnk.children;
 
             return (
               <div key={'linkid-' + i} className="card admin-card card-solid p-3 flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2">
-                  {/* Label */}
+                {isGroup ? (
                   <input
                     className="input w-full"
                     value={lnk.label}
                     onChange={(e) => updateLink(i, { label: e.target.value })}
-                    placeholder="Label (e.g., Home)"
+                    placeholder="Group label (e.g., Services)"
                   />
-
-                  {/* Mode selector + target */}
-                  <div className="flex gap-2">
-                    {/* Mode */}
-                    <select
-                      className="select w-36"
-                      value={kind}
-                      onChange={(e) => {
-                        const nextKind = e.target.value as 'internal' | 'external' | 'sub-page';
-                        if (nextKind === 'internal') {
-                          // switch to internal: default to first section or blank
-                          const first = allSections[0]?.id ?? '';
-                          updateLink(i, { href: first ? `/#${first}` : '' });
-                        } else if (nextKind === 'sub-page') {
-                          const first = allPages[0]?.slug ?? '';
-                          updateLink(i, { href: first ? `/${first.replace(/^\/+/, '')}` : '' });
-                        } else {
-                          // switch to external: keep existing external or blank
-                          updateLink(i, { href: '' });
-                        }
-                      }}
-                    >
-                      <option value="internal">Internal (section)</option>
-                      <option value="sub-page" disabled={allPages.length === 0}>
-                        Sub-page{allPages.length === 0 ? ' (no pages yet)' : ''}
-                      </option>
-                      <option value="external">External URL</option>
-                    </select>
-
-                    {/* Target */}
-                    {kind === 'internal' ? (
-                      <select
-                        className="select flex-1"
-                        value={sectionId}
-                        onChange={(e) => {
-                          const id = e.target.value;
-                          updateLink(i, { href: id === '/' ? '/' : id ? `/#${id}` : '' });
-                        }}
-                      >
-                        <option value="">— Select section —</option>
-                        <option value="/">Home • Top of page</option>
-                        {allSections.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.type.charAt(0).toUpperCase() + s.type.slice(1)} • {s.id}
-                          </option>
-                        ))}
-                      </select>
-                    ) : kind === 'sub-page' ? (
-                      <select
-                        className="select flex-1"
-                        value={lnk.href}
-                        onChange={(e) => updateLink(i, { href: e.target.value })}
-                      >
-                        <option value="">â€” Select page â€”</option>
-                        {allPages.map((page) => {
-                          const href = `/${page.slug.replace(/^\/+/, '')}`;
-                          return (
-                            <option key={page.slug} value={href}>
-                              {page.title || page.slug}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    ) : (
-                      <input
-                        className="input flex-1"
-                        value={lnk.href}
-                        onChange={(e) => updateLink(i, { href: e.target.value })}
-                        placeholder="https://…, /contact, mailto:…, tel:…"
-                      />
-                    )}
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      className="input w-full"
+                      value={lnk.label}
+                      onChange={(e) => updateLink(i, { label: e.target.value })}
+                      placeholder="Label (e.g., Home)"
+                    />
+                    <LinkTargetFields
+                      href={lnk.href}
+                      allSections={allSections}
+                      allPages={allPages}
+                      onChangeHref={(href) => updateLink(i, { href })}
+                    />
                   </div>
-                </div>
+                )}
+
+                {isGroup && (
+                  <div className="ml-4 pl-3 border-l-2 border-[color-mix(in_srgb,var(--fg)_15%,transparent)] space-y-2">
+                    {(lnk.children ?? []).map((child, ci) => (
+                      <div key={'childid-' + i + '-' + ci} className="flex flex-col gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            className="input w-full"
+                            value={child.label}
+                            onChange={(e) => updateChild(i, ci, { label: e.target.value })}
+                            placeholder="Label (e.g., Weddings)"
+                          />
+                          <LinkTargetFields
+                            href={child.href}
+                            allSections={allSections}
+                            allPages={allPages}
+                            onChangeHref={(href) => updateChild(i, ci, { href })}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={() => moveChild(i, ci, -1)}
+                            disabled={ci === 0}
+                            title="Move up"
+                          >
+                            <FontAwesomeIcon icon={faChevronUp} className="text-sm" />
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={() => moveChild(i, ci, +1)}
+                            disabled={ci === (lnk.children?.length ?? 0) - 1}
+                            title="Move down"
+                          >
+                            <FontAwesomeIcon icon={faChevronDown} className="text-sm" />
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost text-red-600 ml-auto"
+                            onClick={() => removeChild(i, ci)}
+                            title="Remove sub-link"
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button className="btn btn-ghost" type="button" onClick={() => addChild(i)}>
+                      <FontAwesomeIcon icon={faPlus} className="text-xs" />Add Sub-link
+                    </button>
+                  </div>
+                )}
 
                 <div className="flex gap-2">
                   <button
@@ -235,6 +367,25 @@ export function EditHeader({
                   >
                     <FontAwesomeIcon icon={faChevronDown} className="text-sm" />
                   </button>
+                  {isGroup ? (
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => removeGroup(i)}
+                      title="Convert back to a single link"
+                    >
+                      Remove dropdown
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => makeGroup(i)}
+                      title="Turn this into a dropdown group"
+                    >
+                      + Make dropdown
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn btn-ghost text-red-600 ml-auto"
