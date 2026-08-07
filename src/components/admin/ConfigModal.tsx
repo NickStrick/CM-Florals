@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { WAVE_TYPES, type SiteConfig, type AnySection, type HeaderSection, type HeaderNavItem, type FooterSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
@@ -9,7 +9,7 @@ import MediaPicker from './MediaPicker';
 import { SECTION_REGISTRY, getAllowedSectionTypes } from './configRegistry';
 import { getEditorForSection } from './EditSections';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown, faTrash, faClone } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faChevronDown, faTrash, faClone, faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { getAdminSectionSlots, getAdminPageSectionSlots, normalizeSiteConfig } from '@/lib/siteConfigSections';
@@ -478,6 +478,73 @@ export default function ConfigModal({
       return sel;
     });
   }, []);
+
+  // ---------------------------
+  // Drag-to-reorder (list-agnostic; works alongside the up/down buttons)
+  // ---------------------------
+  // While dragging, a placeholder gap is rendered before/after the hovered
+  // row (picked from which half of the row the cursor is over) so the list
+  // visibly "pushes" to show where the item will land on drop.
+  const dragFromIndexRef = useRef<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [dropAfter, setDropAfter] = useState(false);
+
+  const clearDragState = () => {
+    dragFromIndexRef.current = null;
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+    setDropAfter(false);
+  };
+
+  const makeDragHandlers = (sectionIndex: number, onMove: (from: number, to: number) => void) => ({
+    draggable: true,
+    onDragStart: (e: React.DragEvent) => {
+      dragFromIndexRef.current = sectionIndex;
+      setDraggingIndex(sectionIndex);
+      e.dataTransfer.effectAllowed = 'move';
+    },
+    onDragOver: (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (dragFromIndexRef.current === null || dragFromIndexRef.current === sectionIndex) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const isAfter = e.clientY - rect.top > rect.height / 2;
+      setDragOverIndex(sectionIndex);
+      setDropAfter(isAfter);
+    },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const from = dragFromIndexRef.current;
+      const over = sectionIndex;
+      const after = dropAfter;
+      clearDragState();
+      if (from === null || from === over) return;
+      // `onMove` splices `from` out before inserting at `to`, so once the
+      // hovered row sits after the removal point its post-removal index
+      // shifts back by one — account for that before adding the after-offset.
+      const overAfterRemoval = over < from ? over : over - 1;
+      const to = after ? overAfterRemoval + 1 : overAfterRemoval;
+      onMove(from, to);
+    },
+    onDragEnd: clearDragState,
+  });
+
+  // Mirrors a real row's classes/content (invisibly) so it matches its size and
+  // border radius exactly, instead of guessing at a fixed height.
+  const dragPlaceholder = (
+    <div className="card  admin-card p-3 w-full flex items-start justify-between gap-2 !border-2 !border-dashed !border-primary/60 !bg-none !bg-primary/5 !shadow-none">
+      <div className="flex flex-row gap-3 invisible opacity-0">
+        <div className="flex flex-col items-center justify-center !my-[-.4rem]">
+          <FontAwesomeIcon icon={faGripVertical} className="text-xs" />
+        </div>
+        <div className="min-w-0">
+          <div className="font-medium">Section</div>
+          <div className="text-xs break-all">placeholder-id</div>
+        </div>
+      </div>
+    </div>
+  );
 
   // ---------------------------
   // Page CRUD
@@ -1121,21 +1188,28 @@ export default function ConfigModal({
                     if (slot.kind !== 'section') return null;
                     const s = slot.section;
                     const isSelected = i === selectedIndex;
+                    const isDragTarget = draggingIndex !== null && dragOverIndex === slot.index;
                     return (
-                      <div
-                        key={`page-sec:${s.id}`}
+                      <Fragment key={`page-sec:${s.id}`}>
+                        {isDragTarget && !dropAfter && dragPlaceholder}
+                        <div
                         onClick={() => setSelectedIndex(i)}
+                        {...makeDragHandlers(slot.index, (from, to) => movePageSection(editingPageIndex, from, to))}
                         className={[
                           'card card-solid admin-card p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
                           isSelected ? 'outline outline-2 outline-primary bg-black/5' : 'hover:bg-black/5',
+                          draggingIndex === slot.index ? 'opacity-40' : '',
                         ].join(' ')}
                         aria-current={isSelected ? 'true' : undefined}
                       >
                         <div className="flex flex-row gap-3">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col items-center justify-center !my-[-.4rem] cursor-grab active:cursor-grabbing text-muted" title="Drag to reorder">
+                            <FontAwesomeIcon icon={faGripVertical} className="text-xs" />
+                          </div>
+                          <div className="flex flex-col gap-1 !my-[-.4rem]">
                             {slot.index > 0 && (
                               <button
-                                className="btn btn-ghost px-2 py-1"
+                                className="btn btn-ghost !px-2 !py-1"
                                 onClick={(e) => { e.stopPropagation(); movePageSection(editingPageIndex, slot.index, slot.index - 1); }}
                                 title="Move up"
                               >
@@ -1144,7 +1218,7 @@ export default function ConfigModal({
                             )}
                             {slot.index < currentSectionCount - 1 && (
                               <button
-                                className="btn btn-ghost px-2 py-1"
+                                className="btn btn-ghost !px-2 !py-1"
                                 onClick={(e) => { e.stopPropagation(); movePageSection(editingPageIndex, slot.index, slot.index + 1); }}
                                 title="Move down"
                               >
@@ -1164,7 +1238,9 @@ export default function ConfigModal({
                         >
                           <FontAwesomeIcon icon={faTrash} className="text-sm" />
                         </button>
-                      </div>
+                        </div>
+                        {isDragTarget && dropAfter && dragPlaceholder}
+                      </Fragment>
                     );
                   })}
                   {currentSectionCount === 0 && (
@@ -1225,21 +1301,34 @@ export default function ConfigModal({
                     const s = slot.section;
                     const isLocked = slot.kind === 'header' || slot.kind === 'footer';
                     const isSelected = i === selectedIndex;
+                    const isDragTarget =
+                      slot.kind === 'section' && draggingIndex !== null && dragOverIndex === slot.index;
                     return (
-                      <div
-                        key={`${slot.kind}:${s.id}`}
+                      <Fragment key={`${slot.kind}:${s.id}`}>
+                        {isDragTarget && !dropAfter && dragPlaceholder}
+                        <div
                         onClick={() => setSelectedIndex(i)}
+                        {...(slot.kind === 'section' ? makeDragHandlers(slot.index, moveSection) : {})}
                         className={[
                           'card card-solid admin-card p-3 w-full text-left flex items-start justify-between gap-2 transition hover:cursor-pointer',
                           isSelected ? 'outline outline-2 outline-primary bg-black/5' : 'hover:bg-black/5',
+                          slot.kind === 'section' && draggingIndex === slot.index ? 'opacity-40' : '',
                         ].join(' ')}
                         aria-current={isSelected ? 'true' : undefined}
                       >
                         <div className="flex flex-row gap-3">
-                          <div className="flex flex-col gap-1">
+                          {!isLocked && (
+                            <div
+                              className="flex flex-col items-center justify-center !my-[-.4rem] cursor-grab active:cursor-grabbing text-muted"
+                              title="Drag to reorder"
+                            >
+                              <FontAwesomeIcon icon={faGripVertical} className="text-xs" />
+                            </div>
+                          )}
+                          <div className="flex flex-col gap-1 !my-[-.4rem]">
                             {!isLocked && slot.kind === 'section' && slot.index > 0 && (
                               <button
-                                className="btn btn-ghost px-2 py-1"
+                                className="btn btn-ghost !px-2 !py-1"
                                 onClick={(e) => { e.stopPropagation(); moveUp(slot.index); }}
                                 title="Move up"
                               >
@@ -1248,7 +1337,7 @@ export default function ConfigModal({
                             )}
                             {!isLocked && slot.kind === 'section' && slot.index < currentSectionCount - 1 && (
                               <button
-                                className="btn btn-ghost px-2 py-1"
+                                className="btn btn-ghost !px-2 !py-1"
                                 onClick={(e) => { e.stopPropagation(); moveDown(slot.index); }}
                                 title="Move down"
                               >
@@ -1270,7 +1359,9 @@ export default function ConfigModal({
                             <FontAwesomeIcon icon={faTrash} className="text-sm" />
                           </button>
                         )}
-                      </div>
+                        </div>
+                        {isDragTarget && dropAfter && dragPlaceholder}
+                      </Fragment>
                     );
                   })}
                   {draft.sections.length === 0 && (
