@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, X } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import type { ProductOptions, ProductOptionItem } from '@/types/site';
 import CurrencyInput from './CurrencyInput';
 
@@ -82,7 +82,7 @@ export function OptionsEditor({
               <Plus className="w-3 h-3 inline mr-1" />Item
             </button>
             <button type="button" className="btn btn-ghost text-red-500 text-sm" onClick={() => removeGroup(gi)}>
-              Remove
+              <Trash2 className="w-4 h-4 mr-1 inline" /> Remove
             </button>
           </div>
 
@@ -93,7 +93,7 @@ export function OptionsEditor({
           <div className="space-y-1.5">
             {/* Column headers */}
             {(g.optionItems ?? []).length > 0 && (
-              <div className="grid grid-cols-[1fr_100px_100px_60px_28px] gap-2 px-1">
+              <div className="grid grid-cols-[1fr_100px_100px_60px_auto] gap-2 px-1">
                 <span className="text-xs text-muted">Label</span>
                 <span className="text-xs text-muted">Value</span>
                 <span className="text-xs text-muted">Price</span>
@@ -102,7 +102,7 @@ export function OptionsEditor({
               </div>
             )}
             {(g.optionItems ?? []).map((it, ii) => (
-              <div key={ii} className="grid grid-cols-[1fr_100px_100px_60px_28px] gap-2 items-center">
+              <div key={ii} className="grid grid-cols-[1fr_100px_100px_60px_auto] gap-2 items-center">
                 <input
                   className="input"
                   placeholder="e.g. Standard"
@@ -134,11 +134,11 @@ export function OptionsEditor({
                 </div>
                 <button
                   type="button"
-                  className="btn btn-ghost text-red-500 p-0.5 text-xs leading-none"
+                  className="btn btn-ghost p-1 text-red-500"
                   onClick={() => removeItem(gi, ii)}
                   title="Remove item"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))}
