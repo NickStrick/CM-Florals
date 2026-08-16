@@ -108,6 +108,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       const copy = deepClone(config);
       setDraft(copy);
       originalRef.current = copy;
+      const paymentsFromConfig = copy.settings?.payments ?? {};
+      setLocalCheckoutInputs(checkoutInputsToLocal(paymentsFromConfig.checkoutInputs ?? []));
+      setLocalPromoCodes(promoCodesToLocal(paymentsFromConfig.promoCodes ?? []));
     }
   }, [config]);
 
@@ -139,16 +142,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     });
   }, []);
 
+  // Seeded once above whenever `config` itself changes (initial load,
+  // Restore). NOT re-synced from `payments.checkoutInputs`/`promoCodes` on
+  // every edit — those change on every keystroke (commit writes back into
+  // `draft.settings.payments`), and re-deriving from them would regenerate
+  // every row's `_id` via `rid()` each time, which changes each row's React
+  // `key` and remounts every input — losing focus after a single keystroke.
   const [localCheckoutInputs, setLocalCheckoutInputs] = useState<LocalCheckoutInput[]>([]);
   const [localPromoCodes, setLocalPromoCodes] = useState<LocalPromoCode[]>([]);
-
-  useEffect(() => {
-    setLocalCheckoutInputs(checkoutInputsToLocal(payments.checkoutInputs ?? []));
-  }, [payments.checkoutInputs]);
-
-  useEffect(() => {
-    setLocalPromoCodes(promoCodesToLocal(payments.promoCodes ?? []));
-  }, [payments.promoCodes]);
 
   const updatePayments = useCallback(
     <K extends keyof PaymentsSettings>(key: K, value: PaymentsSettings[K]) => {
@@ -270,6 +271,9 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     if (!originalRef.current) return;
     const restored = deepClone(originalRef.current);
     setDraft(restored);
+    const restoredPayments = restored.settings?.payments ?? {};
+    setLocalCheckoutInputs(checkoutInputsToLocal(restoredPayments.checkoutInputs ?? []));
+    setLocalPromoCodes(promoCodesToLocal(restoredPayments.promoCodes ?? []));
   }, []);
 
   const sendTestOrderEmail = useCallback(async () => {
