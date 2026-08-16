@@ -29,6 +29,7 @@ import type {
   PageLinksSection,
   BannerCarouselSection,
   ClassDetailSection,
+  ClassListSection,
 } from '@/types/site';
 
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
@@ -373,6 +374,18 @@ export const SECTION_REGISTRY: SectionRegistry = {
       buyCtaFallback: 'Book Now',
     }),
   } as SectionRegistryItem<ClassDetailSection>,
+
+  classList: {
+    label: 'Class List',
+    allowed: true,
+    create: (id = `classList-${crypto.randomUUID().slice(0,6)}`): ClassListSection => ({
+      id,
+      type: 'classList',
+      title: 'Our Classes',
+      subtitle: '',
+      buyCtaFallback: 'Book Now',
+    }),
+  } as SectionRegistryItem<ClassListSection>,
 
   persons: {
     label: 'Persons',

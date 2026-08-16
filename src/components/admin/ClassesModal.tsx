@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarDays, ChevronDown, ChevronUp, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { SiteConfig, ClassItem, ClassTime, SiteClassesConfig, ProductImage } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import MediaPicker from './MediaPicker';
+import ClassTimesPickerModal from './ClassTimesPickerModal';
 import { OptionsEditor } from './fields/OptionsEditor';
 import CurrencyInput from './fields/CurrencyInput';
 
@@ -14,6 +15,13 @@ import CurrencyInput from './fields/CurrencyInput';
 
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
+}
+
+function reorder<T>(arr: T[], from: number, to: number): T[] {
+  const copy = arr.slice();
+  const [moved] = copy.splice(from, 1);
+  copy.splice(to, 0, moved);
+  return copy;
 }
 
 function rid() {
@@ -166,6 +174,7 @@ function ClassItemEditForm({
   onChange,
   onRemove,
   onDone,
+  onCreateAndAssignTimes,
   openMediaPicker,
   siteId,
 }: {
@@ -174,6 +183,7 @@ function ClassItemEditForm({
   onChange: (patch: Partial<LocalClassItem>) => void;
   onRemove: () => void;
   onDone: () => void;
+  onCreateAndAssignTimes: (newTimes: ClassTime[]) => void;
   openMediaPicker: (prefix: string) => Promise<string | null>;
   siteId: string;
 }) {
@@ -183,6 +193,11 @@ function ClassItemEditForm({
     () => [...allTimes].sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)),
     [allTimes]
   );
+  const sortedAssignedTimes = useMemo(
+    () => sortedTimes.filter((t) => assigned.has(t.id)),
+    [sortedTimes, item.classTimeIds] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const [timesPickerOpen, setTimesPickerOpen] = useState(false);
 
   const toggleTime = (timeId: string) => {
     const next = assigned.has(timeId)
@@ -388,30 +403,51 @@ function ClassItemEditForm({
           <span className="text-sm font-semibold">Assigned Times</span>
           <span className="text-xs text-muted">{assigned.size} selected</span>
         </div>
-        {sortedTimes.length === 0 ? (
+
+        {sortedAssignedTimes.length === 0 ? (
           <p className="text-xs text-muted">
-            No class times exist yet — add some in the &ldquo;Class Times&rdquo; tab, then assign them here.
-            Leaving this empty is fine — the class will just show as &ldquo;Coming soon&rdquo; until scheduled.
+            No times assigned yet. Leaving this empty is fine — the class will just show as
+            &ldquo;Coming soon&rdquo; until scheduled.
           </p>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-1.5 max-h-48 overflow-auto pr-1">
-            {sortedTimes.map((t) => (
-              <label key={t._localId} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={assigned.has(t.id)}
-                  onChange={() => toggleTime(t.id)}
-                  className="accent-[var(--admin-primary)]"
-                />
-                <span>
-                  {t.date} · {formatTimeLabel(t.startTime)}
-                  {t.location ? ` · ${t.location}` : ''}
-                  {t.label ? ` · ${t.label}` : ''}
-                  {typeof t.capacity === 'number' ? ` · cap ${t.capacity}` : ''}
-                </span>
-              </label>
+          <div className="flex flex-wrap gap-1.5 max-h-32 overflow-auto pr-1">
+            {sortedAssignedTimes.map((t) => (
+              <span
+                key={t._localId}
+                className="inline-flex items-center gap-1.5 rounded-full bg-black/10 px-2.5 py-1 text-xs"
+              >
+                {t.date} · {formatTimeLabel(t.startTime)}
+                {t.location ? ` · ${t.location}` : ''}
+                <button
+                  type="button"
+                  onClick={() => toggleTime(t.id)}
+                  className="opacity-60 hover:opacity-100"
+                  title="Unassign"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
             ))}
           </div>
+        )}
+
+        <button
+          type="button"
+          className="btn btn-inverted text-sm"
+          onClick={() => setTimesPickerOpen(true)}
+        >
+          <CalendarDays className="w-4 h-4 mr-1 inline" /> Select Times…
+        </button>
+
+        {timesPickerOpen && (
+          <ClassTimesPickerModal
+            classItemName={item.name || 'this class'}
+            allTimes={allTimes}
+            assignedIds={item.classTimeIds ?? []}
+            onToggle={toggleTime}
+            onCreateAndAssign={onCreateAndAssignTimes}
+            onClose={() => setTimesPickerOpen(false)}
+          />
         )}
       </div>
 
@@ -567,6 +603,67 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
     requestAnimationFrame(() => listRef.current?.scrollTo({ top: 0, behavior: 'smooth' }));
   }, [commitItems, localItems]);
 
+  // ── Reordering: up/down buttons + drag-and-drop (mirrors ConfigModal's
+  // section list) ──────────────────────────────────────────────────────────
+  const moveItem = useCallback(
+    (from: number, to: number) => {
+      if (to < 0 || to >= localItems.length) return;
+      commitItems(reorder(localItems, from, to));
+    },
+    [commitItems, localItems]
+  );
+  const moveItemUp = useCallback((index: number) => moveItem(index, index - 1), [moveItem]);
+  const moveItemDown = useCallback((index: number) => moveItem(index, index + 1), [moveItem]);
+
+  const dragFromIndexRef = useRef<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [dropAfter, setDropAfter] = useState(false);
+
+  const clearDragState = () => {
+    dragFromIndexRef.current = null;
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+    setDropAfter(false);
+  };
+
+  const makeDragHandlers = (index: number) => ({
+    draggable: true,
+    onDragStart: (e: React.DragEvent) => {
+      dragFromIndexRef.current = index;
+      setDraggingIndex(index);
+      e.dataTransfer.effectAllowed = 'move';
+    },
+    onDragOver: (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (dragFromIndexRef.current === null || dragFromIndexRef.current === index) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const isAfter = e.clientY - rect.top > rect.height / 2;
+      setDragOverIndex(index);
+      setDropAfter(isAfter);
+    },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const from = dragFromIndexRef.current;
+      const over = index;
+      const after = dropAfter;
+      clearDragState();
+      if (from === null || from === over) return;
+      // `moveItem` splices `from` out before inserting at `to`, so once the
+      // hovered row sits after the removal point its post-removal index
+      // shifts back by one — account for that before adding the after-offset.
+      const overAfterRemoval = over < from ? over : over - 1;
+      const to = after ? overAfterRemoval + 1 : overAfterRemoval;
+      moveItem(from, to);
+    },
+    onDragEnd: clearDragState,
+  });
+
+  const dragPlaceholder = (
+    <div className="card admin-card p-3 w-full !border-2 !border-dashed !border-primary/60 !bg-none !bg-primary/5 !shadow-none h-16" />
+  );
+
   const updateItem = useCallback(
     (localId: string, patch: Partial<LocalClassItem>) => {
       commitItems(localItems.map((c) => (c._localId === localId ? { ...c, ...patch } : c)));
@@ -625,6 +722,26 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
           }))
         );
       }
+    },
+    [commitTimes, localTimes, commitItems, localItems]
+  );
+
+  // Adds newly-generated times (one-off or a recurring series) to the shared
+  // pool and assigns them to `localId`'s class item in a single commit, so
+  // "Select Times" doesn't need a separate "now go check the boxes" step.
+  const createAndAssignTimes = useCallback(
+    (localId: string, newTimes: ClassTime[]) => {
+      if (newTimes.length === 0) return;
+      const withLocalIds: LocalClassTime[] = newTimes.map((t) => ({ ...t, _localId: rid() }));
+      commitTimes([...localTimes, ...withLocalIds]);
+      const newIds = withLocalIds.map((t) => t.id);
+      commitItems(
+        localItems.map((c) =>
+          c._localId === localId
+            ? { ...c, classTimeIds: Array.from(new Set([...(c.classTimeIds ?? []), ...newIds])) }
+            : c
+        )
+      );
     },
     [commitTimes, localTimes, commitItems, localItems]
   );
@@ -742,27 +859,67 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {localItems.map((c) =>
-                    editingId === c._localId ? (
-                      <ClassItemEditForm
-                        key={c._localId}
-                        item={c}
-                        allTimes={localTimes}
-                        onChange={(patch) => updateItem(c._localId, patch)}
-                        onRemove={() => removeItem(c._localId)}
-                        onDone={() => finishEditingItem(c._localId)}
-                        openMediaPicker={openMediaPicker}
-                        siteId={siteId}
-                      />
-                    ) : (
-                      <ClassItemCard
-                        key={c._localId}
-                        item={c}
-                        onEdit={() => setEditingId(c._localId)}
-                        onRemove={() => removeItem(c._localId)}
-                      />
-                    )
-                  )}
+                  {localItems.map((c, i) => {
+                    const isEditing = editingId === c._localId;
+                    const isDragTarget = draggingIndex !== null && dragOverIndex === i;
+                    return (
+                      <Fragment key={c._localId}>
+                        {isDragTarget && !dropAfter && dragPlaceholder}
+                        <div
+                          {...(isEditing ? {} : makeDragHandlers(i))}
+                          className={`flex gap-2 items-start ${draggingIndex === i ? 'opacity-40' : ''}`}
+                        >
+                          <div className="flex flex-col items-center gap-1 pt-3 flex-shrink-0">
+                            <div
+                              className={`text-muted ${isEditing ? 'opacity-30' : 'cursor-grab active:cursor-grabbing'}`}
+                              title={isEditing ? 'Finish editing to drag' : 'Drag to reorder'}
+                            >
+                              <GripVertical className="w-4 h-4" />
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-ghost !px-1 !py-1"
+                              onClick={() => moveItemUp(i)}
+                              disabled={i === 0}
+                              title="Move up"
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-ghost !px-1 !py-1"
+                              onClick={() => moveItemDown(i)}
+                              disabled={i === localItems.length - 1}
+                              title="Move down"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {isEditing ? (
+                              <ClassItemEditForm
+                                item={c}
+                                allTimes={localTimes}
+                                onChange={(patch) => updateItem(c._localId, patch)}
+                                onRemove={() => removeItem(c._localId)}
+                                onDone={() => finishEditingItem(c._localId)}
+                                onCreateAndAssignTimes={(newTimes) => createAndAssignTimes(c._localId, newTimes)}
+                                openMediaPicker={openMediaPicker}
+                                siteId={siteId}
+                              />
+                            ) : (
+                              <ClassItemCard
+                                item={c}
+                                onEdit={() => setEditingId(c._localId)}
+                                onRemove={() => removeItem(c._localId)}
+                              />
+                            )}
+                          </div>
+                        </div>
+                        {isDragTarget && dropAfter && dragPlaceholder}
+                      </Fragment>
+                    );
+                  })}
                 </div>
               )
             ) : sortedTimes.length === 0 ? (

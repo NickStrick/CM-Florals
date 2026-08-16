@@ -106,6 +106,7 @@ export type SectionBase = {
     | 'pageLinks'
     | 'bannerCarousel'
     | 'classDetail'
+    | 'classList'
     ;
 
   // visible/editable flags to support your builder UI
@@ -144,7 +145,8 @@ export type AnySection =
   | SendAMessageSection
   | PageLinksSection
   | BannerCarouselSection
-  | ClassDetailSection;
+  | ClassDetailSection
+  | ClassListSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -892,6 +894,17 @@ export type ClassDetailSection = SectionBase & {
   type: 'classDetail';
   /** Which class to display, resolved from config.classes.classItems */
   classItemId?: string;
+  buyCtaFallback?: string;      // default "Book Now"
+};
+
+// All scheduled classes (config.classes.classItems with >= 1 assigned time),
+// shown as tabs with the selected class's detail below. Tabs are hidden when
+// only one class qualifies.
+export type ClassListSection = SectionBase & {
+  id: string;
+  type: 'classList';
+  title?: string;
+  subtitle?: string;
   buyCtaFallback?: string;      // default "Book Now"
 };
 
