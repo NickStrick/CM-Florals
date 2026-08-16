@@ -74,7 +74,8 @@ export function EditSectional({
       <div>
         <label className="block text-sm font-medium">Body</label>
         <textarea
-          className="textarea w-full"
+          className="input w-full"
+          rows={4}
           value={section.body ?? ''}
           onChange={(e) => set('body', e.target.value)}
         />

@@ -83,7 +83,7 @@ export default function Sectional({
           {title}
         </h1>
         {body && (
-          <p className="hero-subtitle mt-6 text-base md:text-lg text-white/90">
+          <p className="hero-subtitle mt-6 text-base md:text-lg text-white/90 whitespace-pre-wrap">
             {body}
           </p>
         )}
