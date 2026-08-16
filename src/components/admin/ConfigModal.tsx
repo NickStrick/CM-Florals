@@ -1134,16 +1134,7 @@ export default function ConfigModal({
             />
           </div>
         )}
-
-        {/* Body */}
-        <div className="grid md:grid-cols-3 gap-0">
-          {/* Left panel */}
-          <div
-            className="border-r p-4 space-y-3"
-            {...(activeMoveFn ? dragFallbackHandlers(activeMoveFn) : {})}
-          >
-
-            {/* Page tabs: Main Page + every custom page, in one row, plus Add New Page */}
+ {/* Page tabs: Main Page + every custom page, in one row, plus Add New Page */}
             <div className="flex flex-wrap items-center gap-2 border-b pb-3">
               <button
                 className={['btn btn-ghost text-sm px-3 py-1', activeTab === 'main' ? 'font-bold underline' : ''].join(' ')}
@@ -1167,6 +1158,15 @@ export default function ConfigModal({
                 + Add New Page
               </button>
             </div>
+        {/* Body */}
+        <div className="grid md:grid-cols-3 gap-0">
+          {/* Left panel */}
+          <div
+            className="border-r p-4 space-y-3"
+            {...(activeMoveFn ? dragFallbackHandlers(activeMoveFn) : {})}
+          >
+
+           
 
             {/* ── PAGE SECTION EDITING view ── */}
             {activeTab === 'pages' && editingPageIndex !== null && (
