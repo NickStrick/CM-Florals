@@ -497,6 +497,22 @@ export default function ConfigModal({
     setDropAfter(false);
   };
 
+  // Shared by every drop target (a row, its placeholder, and the panel-level
+  // fallback below) so a drop anywhere always resolves against the same
+  // "from / last-hovered-over / before-or-after" state, however it's reached.
+  const commitDrop = (over: number | null, onMove: (from: number, to: number) => void) => {
+    const from = dragFromIndexRef.current;
+    const after = dropAfter;
+    clearDragState();
+    if (from === null || over === null || from === over) return;
+    // `onMove` splices `from` out before inserting at `to`, so once the
+    // hovered row sits after the removal point its post-removal index
+    // shifts back by one — account for that before adding the after-offset.
+    const overAfterRemoval = over < from ? over : over - 1;
+    const to = after ? overAfterRemoval + 1 : overAfterRemoval;
+    onMove(from, to);
+  };
+
   const makeDragHandlers = (sectionIndex: number, onMove: (from: number, to: number) => void) => ({
     draggable: true,
     onDragStart: (e: React.DragEvent) => {
@@ -515,25 +531,42 @@ export default function ConfigModal({
     },
     onDrop: (e: React.DragEvent) => {
       e.preventDefault();
-      const from = dragFromIndexRef.current;
-      const over = sectionIndex;
-      const after = dropAfter;
-      clearDragState();
-      if (from === null || from === over) return;
-      // `onMove` splices `from` out before inserting at `to`, so once the
-      // hovered row sits after the removal point its post-removal index
-      // shifts back by one — account for that before adding the after-offset.
-      const overAfterRemoval = over < from ? over : over - 1;
-      const to = after ? overAfterRemoval + 1 : overAfterRemoval;
-      onMove(from, to);
+      commitDrop(sectionIndex, onMove);
     },
     onDragEnd: clearDragState,
   });
 
+  // Fallback for the area around the list (gaps between rows, a stray pixel
+  // of margin/padding to either side, etc.) that isn't covered by any row or
+  // placeholder's own handlers. Without this, dropping a pixel off-target
+  // shows the browser's "not-allowed" cursor and the drag is silently
+  // cancelled — the row visibly "snaps back" with no reorder applied. This
+  // always resolves to wherever the last real placeholder was shown
+  // (`dragOverIndex`/`dropAfter`), so a drop anywhere still lands there.
+  const dragFallbackHandlers = (onMove: (from: number, to: number) => void) => ({
+    onDragOver: (e: React.DragEvent) => {
+      if (dragFromIndexRef.current === null) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    },
+    onDrop: (e: React.DragEvent) => {
+      if (dragFromIndexRef.current === null) return;
+      e.preventDefault();
+      commitDrop(dragOverIndex, onMove);
+    },
+  });
+
   // Mirrors a real row's classes/content (invisibly) so it matches its size and
   // border radius exactly, instead of guessing at a fixed height.
-  const dragPlaceholder = (
-    <div className="card  admin-card p-3 w-full flex items-start justify-between gap-2 !border-2 !border-dashed !border-primary/60 !bg-none !bg-primary/5 !shadow-none">
+  // Carries the same drag handlers as the row it sits next to: it renders
+  // exactly where the pointer is aiming, so without its own onDragOver/onDrop
+  // the browser sees a drop over a non-target element and reverts the drag
+  // (the row "snaps back") instead of actually reordering.
+  const renderDragPlaceholder = (index: number, onMove: (from: number, to: number) => void) => (
+    <div
+      {...makeDragHandlers(index, onMove)}
+      className="card  admin-card p-3 w-full flex items-start justify-between gap-2 !border-2 !border-dashed !border-primary/60 !bg-none !bg-primary/5 !shadow-none"
+    >
       <div className="flex flex-row gap-3 invisible opacity-0">
         <div className="flex flex-col items-center justify-center !my-[-.4rem]">
           <FontAwesomeIcon icon={faGripVertical} className="text-xs" />
@@ -1020,6 +1053,15 @@ export default function ConfigModal({
           ? draft.sections[selectedSlot.index]
           : undefined;
 
+  // Which list the drag-fallback (see dragFallbackHandlers) should reorder —
+  // whichever section list is actually on screen right now.
+  const activeMoveFn: ((from: number, to: number) => void) | null =
+    activeTab === 'main'
+      ? moveSection
+      : activeTab === 'pages' && editingPageIndex !== null
+        ? (from, to) => movePageSection(editingPageIndex, from, to)
+        : null;
+
   return (
     <div className="fixed edit-modal config-modal-root inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
       <div className="card card-solid admin-card p-4 relative w-fit !max-w-full pr-[70px] overflow-hidden card-screen-height !pt-0">
@@ -1094,7 +1136,10 @@ export default function ConfigModal({
         {/* Body */}
         <div className="grid md:grid-cols-3 gap-0">
           {/* Left panel */}
-          <div className="border-r p-4 space-y-3">
+          <div
+            className="border-r p-4 space-y-3"
+            {...(activeMoveFn ? dragFallbackHandlers(activeMoveFn) : {})}
+          >
 
             {/* Tab strip */}
             <div className="flex gap-1 border-b pb-2">
@@ -1191,7 +1236,9 @@ export default function ConfigModal({
                     const isDragTarget = draggingIndex !== null && dragOverIndex === slot.index;
                     return (
                       <Fragment key={`page-sec:${s.id}`}>
-                        {isDragTarget && !dropAfter && dragPlaceholder}
+                        {isDragTarget &&
+                          !dropAfter &&
+                          renderDragPlaceholder(slot.index, (from, to) => movePageSection(editingPageIndex, from, to))}
                         <div
                         onClick={() => setSelectedIndex(i)}
                         {...makeDragHandlers(slot.index, (from, to) => movePageSection(editingPageIndex, from, to))}
@@ -1239,7 +1286,9 @@ export default function ConfigModal({
                           <FontAwesomeIcon icon={faTrash} className="text-sm" />
                         </button>
                         </div>
-                        {isDragTarget && dropAfter && dragPlaceholder}
+                        {isDragTarget &&
+                          dropAfter &&
+                          renderDragPlaceholder(slot.index, (from, to) => movePageSection(editingPageIndex, from, to))}
                       </Fragment>
                     );
                   })}
@@ -1305,7 +1354,7 @@ export default function ConfigModal({
                       slot.kind === 'section' && draggingIndex !== null && dragOverIndex === slot.index;
                     return (
                       <Fragment key={`${slot.kind}:${s.id}`}>
-                        {isDragTarget && !dropAfter && dragPlaceholder}
+                        {isDragTarget && !dropAfter && renderDragPlaceholder(slot.index, moveSection)}
                         <div
                         onClick={() => setSelectedIndex(i)}
                         {...(slot.kind === 'section' ? makeDragHandlers(slot.index, moveSection) : {})}
@@ -1360,7 +1409,7 @@ export default function ConfigModal({
                           </button>
                         )}
                         </div>
-                        {isDragTarget && dropAfter && dragPlaceholder}
+                        {isDragTarget && dropAfter && renderDragPlaceholder(slot.index, moveSection)}
                       </Fragment>
                     );
                   })}

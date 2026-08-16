@@ -627,6 +627,22 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
     setDropAfter(false);
   };
 
+  // Shared by every drop target (a row, its placeholder, and the list-level
+  // fallback below) so a drop anywhere always resolves against the same
+  // "from / last-hovered-over / before-or-after" state, however it's reached.
+  const commitDrop = (over: number | null) => {
+    const from = dragFromIndexRef.current;
+    const after = dropAfter;
+    clearDragState();
+    if (from === null || over === null || from === over) return;
+    // `moveItem` splices `from` out before inserting at `to`, so once the
+    // hovered row sits after the removal point its post-removal index
+    // shifts back by one — account for that before adding the after-offset.
+    const overAfterRemoval = over < from ? over : over - 1;
+    const to = after ? overAfterRemoval + 1 : overAfterRemoval;
+    moveItem(from, to);
+  };
+
   const makeDragHandlers = (index: number) => ({
     draggable: true,
     onDragStart: (e: React.DragEvent) => {
@@ -645,23 +661,40 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
     },
     onDrop: (e: React.DragEvent) => {
       e.preventDefault();
-      const from = dragFromIndexRef.current;
-      const over = index;
-      const after = dropAfter;
-      clearDragState();
-      if (from === null || from === over) return;
-      // `moveItem` splices `from` out before inserting at `to`, so once the
-      // hovered row sits after the removal point its post-removal index
-      // shifts back by one — account for that before adding the after-offset.
-      const overAfterRemoval = over < from ? over : over - 1;
-      const to = after ? overAfterRemoval + 1 : overAfterRemoval;
-      moveItem(from, to);
+      commitDrop(index);
     },
     onDragEnd: clearDragState,
   });
 
-  const dragPlaceholder = (
-    <div className="card admin-card p-3 w-full !border-2 !border-dashed !border-primary/60 !bg-none !bg-primary/5 !shadow-none h-16" />
+  // Fallback for the area around the list (gaps between rows, a stray pixel
+  // of margin/padding to either side, etc.) that isn't covered by any row or
+  // placeholder's own handlers. Without this, dropping a pixel off-target
+  // shows the browser's "not-allowed" cursor and the drag is silently
+  // cancelled — the row visibly "snaps back" with no reorder applied. This
+  // always resolves to wherever the last real placeholder was shown
+  // (`dragOverIndex`/`dropAfter`), so a drop anywhere still lands there.
+  const dragFallbackHandlers = {
+    onDragOver: (e: React.DragEvent) => {
+      if (dragFromIndexRef.current === null) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    },
+    onDrop: (e: React.DragEvent) => {
+      if (dragFromIndexRef.current === null) return;
+      e.preventDefault();
+      commitDrop(dragOverIndex);
+    },
+  };
+
+  // Carries the same drag handlers as the row it sits next to: it renders
+  // exactly where the pointer is aiming, so without its own onDragOver/onDrop
+  // the browser sees a drop over a non-target element and reverts the drag
+  // (the row "snaps back") instead of actually reordering.
+  const renderDragPlaceholder = (index: number) => (
+    <div
+      {...makeDragHandlers(index)}
+      className="card admin-card p-3 w-full !border-2 !border-dashed !border-primary/60 !bg-none !bg-primary/5 !shadow-none h-16"
+    />
   );
 
   const updateItem = useCallback(
@@ -851,7 +884,7 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
           </div>
 
           {/* Content */}
-          <div ref={listRef} className="flex-1 overflow-auto p-4">
+          <div ref={listRef} className="flex-1 overflow-auto p-4" {...dragFallbackHandlers}>
             {tab === 'items' ? (
               localItems.length === 0 ? (
                 <div className="text-sm text-muted py-8 text-center">
@@ -864,7 +897,7 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
                     const isDragTarget = draggingIndex !== null && dragOverIndex === i;
                     return (
                       <Fragment key={c._localId}>
-                        {isDragTarget && !dropAfter && dragPlaceholder}
+                        {isDragTarget && !dropAfter && renderDragPlaceholder(i)}
                         <div
                           {...(isEditing ? {} : makeDragHandlers(i))}
                           className={`flex gap-2 items-start ${draggingIndex === i ? 'opacity-40' : ''}`}
@@ -916,7 +949,7 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
                             )}
                           </div>
                         </div>
-                        {isDragTarget && dropAfter && dragPlaceholder}
+                        {isDragTarget && dropAfter && renderDragPlaceholder(i)}
                       </Fragment>
                     );
                   })}
