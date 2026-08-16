@@ -86,7 +86,7 @@ export default function Sectional({
         transition={{ duration: motionDuration, ease: 'easeOut' }}
         variants={variants}
       >
-        <h1 className="hero-title pt-[10px] text-white text-3xl md:text-5xl font-semibold leading-tight">
+        <h1 className="hero-title pt-[20px] text-white text-3xl md:text-5xl font-semibold leading-tight">
           {title}
         </h1>
         {body && (
