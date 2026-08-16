@@ -63,16 +63,55 @@ type Props = {
   /** Full shared pool of class times (not just this class's assigned ones). */
   allTimes: TimeWithLocalId[];
   assignedIds: string[];
+  /** Reusable location names, managed in the "Locations" tab. */
+  locations: string[];
   onToggle: (timeId: string) => void;
   /** Adds new times to the shared pool AND assigns them to this class, in one go. */
   onCreateAndAssign: (newTimes: ClassTime[]) => void;
   onClose: () => void;
 };
 
+// Dropdown when there are saved locations to pick from; otherwise falls back
+// to free text so scheduling still works before any locations are set up.
+// If the current value isn't one of the known locations (a legacy free-typed
+// value, or simply unset), it's kept as its own option rather than silently
+// snapping to the first location.
+function LocationField({
+  value,
+  locations,
+  onChange,
+}: {
+  value: string;
+  locations: string[];
+  onChange: (next: string) => void;
+}) {
+  if (locations.length === 0) {
+    return (
+      <input
+        className="input w-full"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="e.g. 123 Main St, Studio B"
+      />
+    );
+  }
+  return (
+    <select className="select w-full" value={value} onChange={(e) => onChange(e.target.value)}>
+      {!locations.includes(value) && <option value={value}>{value || '— none —'}</option>}
+      {locations.map((loc) => (
+        <option key={loc} value={loc}>
+          {loc}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export default function ClassTimesPickerModal({
   classItemName,
   allTimes,
   assignedIds,
+  locations,
   onToggle,
   onCreateAndAssign,
   onClose,
@@ -135,7 +174,7 @@ export default function ClassTimesPickerModal({
   const [quickStart, setQuickStart] = useState('18:00');
   const [quickEnd, setQuickEnd] = useState('');
   const [quickCapacity, setQuickCapacity] = useState('');
-  const [quickLocation, setQuickLocation] = useState('');
+  const [quickLocation, setQuickLocation] = useState(() => locations[0] ?? '');
   const [quickLabel, setQuickLabel] = useState('');
 
   const handleQuickAdd = () => {
@@ -153,7 +192,7 @@ export default function ClassTimesPickerModal({
     ]);
     setQuickEnd('');
     setQuickCapacity('');
-    setQuickLocation('');
+    setQuickLocation(locations[0] ?? '');
     setQuickLabel('');
     setCreateFormOpen(false);
   };
@@ -165,7 +204,7 @@ export default function ClassTimesPickerModal({
   const [seriesStart, setSeriesStart] = useState('18:00');
   const [seriesEnd, setSeriesEnd] = useState('');
   const [seriesCapacity, setSeriesCapacity] = useState('');
-  const [seriesLocation, setSeriesLocation] = useState('');
+  const [seriesLocation, setSeriesLocation] = useState(() => locations[0] ?? '');
   const [seriesLabel, setSeriesLabel] = useState('');
 
   const toggleWeekday = (day: number) => {
@@ -330,11 +369,7 @@ export default function ClassTimesPickerModal({
                           </div>
                           <div>
                             <label className="block text-xs font-medium mb-1">Location</label>
-                            <input
-                              className="input w-full"
-                              value={quickLocation}
-                              onChange={(e) => setQuickLocation(e.target.value)}
-                            />
+                            <LocationField value={quickLocation} locations={locations} onChange={setQuickLocation} />
                           </div>
                         </div>
                         <input
@@ -492,11 +527,7 @@ export default function ClassTimesPickerModal({
             </div>
             <div>
               <label className="block text-xs font-medium mb-1">Location</label>
-              <input
-                className="input w-full"
-                value={seriesLocation}
-                onChange={(e) => setSeriesLocation(e.target.value)}
-              />
+              <LocationField value={seriesLocation} locations={locations} onChange={setSeriesLocation} />
             </div>
           </div>
           <input

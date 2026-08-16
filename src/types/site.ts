@@ -886,6 +886,7 @@ export type ClassItem = {
 export type SiteClassesConfig = {
   classItems: ClassItem[];
   classTimes: ClassTime[];      // shared pool of bookable slots
+  locations?: string[];         // reusable location names, offered as a dropdown when scheduling a class time
 };
 
 // Single class, shown directly on the page (image, description, options,

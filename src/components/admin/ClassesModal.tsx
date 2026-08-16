@@ -64,7 +64,7 @@ function blankClassItem(): LocalClassItem {
   };
 }
 
-function blankClassTime(): LocalClassTime {
+function blankClassTime(defaultLocation = ''): LocalClassTime {
   const today = new Date().toISOString().slice(0, 10);
   return {
     _localId: rid(),
@@ -73,7 +73,7 @@ function blankClassTime(): LocalClassTime {
     startTime: '18:00',
     endTime: '',
     capacity: undefined,
-    location: '',
+    location: defaultLocation,
     label: '',
   };
 }
@@ -82,15 +82,18 @@ function blankClassTime(): LocalClassTime {
 
 type LocalClassItem = ClassItem & { _localId: string };
 type LocalClassTime = ClassTime & { _localId: string };
+type LocalLocation = { _localId: string; value: string };
 
 // ─── Class Time Card (inline-edit, no separate edit-mode toggle) ─────────────
 
 function ClassTimeCard({
   time,
+  locations,
   onChange,
   onRemove,
 }: {
   time: LocalClassTime;
+  locations: string[];
   onChange: (patch: Partial<LocalClassTime>) => void;
   onRemove: () => void;
 }) {
@@ -142,12 +145,29 @@ function ClassTimeCard({
       <div className="grid md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
         <div>
           <label className="block text-xs font-medium mb-1">Location</label>
-          <input
-            className="input w-full"
-            value={time.location ?? ''}
-            placeholder="e.g. 123 Main St, Studio B"
-            onChange={(e) => onChange({ location: e.target.value })}
-          />
+          {locations.length > 0 ? (
+            <select
+              className="select w-full"
+              value={time.location ?? ''}
+              onChange={(e) => onChange({ location: e.target.value })}
+            >
+              {!locations.includes(time.location ?? '') && (
+                <option value={time.location ?? ''}>{time.location || '— none —'}</option>
+              )}
+              {locations.map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className="input w-full"
+              value={time.location ?? ''}
+              placeholder="e.g. 123 Main St, Studio B"
+              onChange={(e) => onChange({ location: e.target.value })}
+            />
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium mb-1">Note</label>
@@ -171,6 +191,7 @@ function ClassTimeCard({
 function ClassItemEditForm({
   item,
   allTimes,
+  locations,
   onChange,
   onRemove,
   onDone,
@@ -180,6 +201,7 @@ function ClassItemEditForm({
 }: {
   item: LocalClassItem;
   allTimes: LocalClassTime[];
+  locations: string[];
   onChange: (patch: Partial<LocalClassItem>) => void;
   onRemove: () => void;
   onDone: () => void;
@@ -450,6 +472,7 @@ function ClassItemEditForm({
             classItemName={item.name || 'this class'}
             allTimes={allTimes}
             assignedIds={item.classTimeIds ?? []}
+            locations={locations}
             onToggle={toggleTime}
             onCreateAndAssign={onCreateAndAssignTimes}
             onClose={() => setTimesPickerOpen(false)}
@@ -539,10 +562,11 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
   const originalRef = useRef<SiteConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<'items' | 'times'>('items');
+  const [tab, setTab] = useState<'items' | 'times' | 'locations'>('items');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [localItems, setLocalItems] = useState<LocalClassItem[]>([]);
   const [localTimes, setLocalTimes] = useState<LocalClassTime[]>([]);
+  const [localLocations, setLocalLocations] = useState<LocalLocation[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
 
   // ── Media picker ──────────────────────────────────────────────────────────
@@ -578,6 +602,7 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
       originalRef.current = copy;
       setLocalItems((copy.classes?.classItems ?? []).map((c) => ({ ...c, _localId: rid() })));
       setLocalTimes((copy.classes?.classTimes ?? []).map((t) => ({ ...t, _localId: rid() })));
+      setLocalLocations((copy.classes?.locations ?? []).map((value) => ({ _localId: rid(), value })));
     }
   }, [config]);
 
@@ -587,7 +612,11 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
     setDraft((prev) => {
       if (!prev) return prev;
       const classItems: ClassItem[] = next.map(({ _localId: _, ...c }) => c);
-      const classes: SiteClassesConfig = { classItems, classTimes: prev.classes?.classTimes ?? [] };
+      const classes: SiteClassesConfig = {
+        classItems,
+        classTimes: prev.classes?.classTimes ?? [],
+        locations: prev.classes?.locations ?? [],
+      };
       return { ...prev, classes };
     });
   }, []);
@@ -597,10 +626,47 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
     setDraft((prev) => {
       if (!prev) return prev;
       const classTimes: ClassTime[] = next.map(({ _localId: _, ...t }) => t);
-      const classes: SiteClassesConfig = { classItems: prev.classes?.classItems ?? [], classTimes };
+      const classes: SiteClassesConfig = {
+        classItems: prev.classes?.classItems ?? [],
+        classTimes,
+        locations: prev.classes?.locations ?? [],
+      };
       return { ...prev, classes };
     });
   }, []);
+
+  // ── Mutations: Locations ─────────────────────────────────────────────────
+  const commitLocations = useCallback((next: LocalLocation[]) => {
+    setLocalLocations(next);
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const locations = next.map((l) => l.value);
+      const classes: SiteClassesConfig = {
+        classItems: prev.classes?.classItems ?? [],
+        classTimes: prev.classes?.classTimes ?? [],
+        locations,
+      };
+      return { ...prev, classes };
+    });
+  }, []);
+
+  const addLocation = useCallback(() => {
+    commitLocations([...localLocations, { _localId: rid(), value: '' }]);
+  }, [commitLocations, localLocations]);
+
+  const updateLocation = useCallback(
+    (localId: string, value: string) => {
+      commitLocations(localLocations.map((l) => (l._localId === localId ? { ...l, value } : l)));
+    },
+    [commitLocations, localLocations]
+  );
+
+  const removeLocation = useCallback(
+    (localId: string) => {
+      commitLocations(localLocations.filter((l) => l._localId !== localId));
+    },
+    [commitLocations, localLocations]
+  );
 
   const addItem = useCallback(() => {
     const c = blankClassItem();
@@ -737,9 +803,9 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
 
   // ── Mutations: Class Times ──────────────────────────────────────────────────
   const addTime = useCallback(() => {
-    const t = blankClassTime();
+    const t = blankClassTime(localLocations[0]?.value ?? '');
     commitTimes([t, ...localTimes]);
-  }, [commitTimes, localTimes]);
+  }, [commitTimes, localTimes, localLocations]);
 
   const updateTime = useCallback(
     (localId: string, patch: Partial<LocalClassTime>) => {
@@ -823,6 +889,7 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
     setDraft(restored);
     setLocalItems((restored.classes?.classItems ?? []).map((c) => ({ ...c, _localId: rid() })));
     setLocalTimes((restored.classes?.classTimes ?? []).map((t) => ({ ...t, _localId: rid() })));
+    setLocalLocations((restored.classes?.locations ?? []).map((value) => ({ _localId: rid(), value })));
     setEditingId(null);
   }, []);
 
@@ -865,7 +932,7 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
           <div className="px-4 pt-4 flex-shrink-0">
             <div className="flex items-center justify-between border-b pb-0">
               <div className="flex gap-4">
-                {(['items', 'times'] as const).map((t) => (
+                {(['items', 'times', 'locations'] as const).map((t) => (
                   <button
                     key={t}
                     className={[
@@ -876,15 +943,20 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
                     ].join(' ')}
                     onClick={() => setTab(t)}
                   >
-                    {t === 'items' ? `Class Items (${localItems.length})` : `Class Times (${localTimes.length})`}
+                    {t === 'items'
+                      ? `Class Items (${localItems.length})`
+                      : t === 'times'
+                        ? `Class Times (${localTimes.length})`
+                        : `Locations (${localLocations.length})`}
                   </button>
                 ))}
               </div>
               <button
                 className="btn btn-primary mb-2 flex items-center gap-1 text-sm"
-                onClick={tab === 'items' ? addItem : addTime}
+                onClick={tab === 'items' ? addItem : tab === 'times' ? addTime : addLocation}
               >
-                <Plus className="w-4 h-4" /> {tab === 'items' ? 'Add Class' : 'Add Time'}
+                <Plus className="w-4 h-4" />{' '}
+                {tab === 'items' ? 'Add Class' : tab === 'times' ? 'Add Time' : 'Add Location'}
               </button>
             </div>
           </div>
@@ -939,6 +1011,7 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
                               <ClassItemEditForm
                                 item={c}
                                 allTimes={localTimes}
+                                locations={localLocations.map((l) => l.value)}
                                 onChange={(patch) => updateItem(c._localId, patch)}
                                 onRemove={() => removeItem(c._localId)}
                                 onDone={() => finishEditingItem(c._localId)}
@@ -961,20 +1034,49 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
                   })}
                 </div>
               )
-            ) : sortedTimes.length === 0 ? (
+            ) : tab === 'times' ? (
+              sortedTimes.length === 0 ? (
+                <div className="text-sm text-muted py-8 text-center">
+                  No class times yet. Click &ldquo;Add Time&rdquo; to schedule one, then assign it to a class in
+                  the &ldquo;Class Items&rdquo; tab.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {sortedTimes.map((t) => (
+                    <ClassTimeCard
+                      key={t._localId}
+                      time={t}
+                      locations={localLocations.map((l) => l.value)}
+                      onChange={(patch) => updateTime(t._localId, patch)}
+                      onRemove={() => removeTime(t._localId)}
+                    />
+                  ))}
+                </div>
+              )
+            ) : localLocations.length === 0 ? (
               <div className="text-sm text-muted py-8 text-center">
-                No class times yet. Click &ldquo;Add Time&rdquo; to schedule one, then assign it to a class in
-                the &ldquo;Class Items&rdquo; tab.
+                No locations yet. Click &ldquo;Add Location&rdquo; to get started — then it&rsquo;ll show up as a
+                dropdown whenever you schedule a class time.
               </div>
             ) : (
               <div className="space-y-2">
-                {sortedTimes.map((t) => (
-                  <ClassTimeCard
-                    key={t._localId}
-                    time={t}
-                    onChange={(patch) => updateTime(t._localId, patch)}
-                    onRemove={() => removeTime(t._localId)}
-                  />
+                {localLocations.map((l) => (
+                  <div key={l._localId} className="card admin-card card-solid p-3 flex items-center gap-2">
+                    <input
+                      className="input flex-1"
+                      value={l.value}
+                      placeholder="e.g. 123 Main St, Studio B"
+                      onChange={(e) => updateLocation(l._localId, e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-ghost text-red-500"
+                      onClick={() => removeLocation(l._localId)}
+                      title="Remove location"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
