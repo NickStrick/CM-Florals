@@ -127,8 +127,7 @@ export default function ClassTimesPickerModal({
     ? (byDate.get(openDate) ?? []).slice().sort((a, b) => a.startTime.localeCompare(b.startTime))
     : [];
 
-  // Quick "add a one-off time on this date"
-  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  // Create-a-time form for whichever date is selected on the calendar
   const [quickStart, setQuickStart] = useState('18:00');
   const [quickEnd, setQuickEnd] = useState('');
   const [quickCapacity, setQuickCapacity] = useState('');
@@ -148,7 +147,6 @@ export default function ClassTimesPickerModal({
         label: quickLabel || undefined,
       },
     ]);
-    setQuickAddOpen(false);
     setQuickEnd('');
     setQuickCapacity('');
     setQuickLocation('');
@@ -225,168 +223,167 @@ export default function ClassTimesPickerModal({
           </button>
         </div>
 
-        {/* Calendar */}
+        {/* Calendar + times for the selected day, side by side */}
         <div className="space-y-3">
           <div className="text-sm font-semibold">Pick from the calendar</div>
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              className="btn btn-ghost p-1"
-              onClick={() => setViewMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
-              aria-label="Previous month"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="text-sm font-semibold">{monthLabel}</span>
-            <button
-              type="button"
-              className="btn btn-ghost p-1"
-              onClick={() => setViewMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
-              aria-label="Next month"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1 text-center">
-            {WEEKDAY_SHORT.map((w, i) => (
-              <div key={`${w}-${i}`} className="text-xs opacity-50 py-1">
-                {w}
-              </div>
-            ))}
-            {grid.map((cell, i) => {
-              if (!cell.dateISO) return <div key={`blank-${i}`} />;
-              const status = dayStatus(cell.dateISO);
-              const isOpen = openDate === cell.dateISO;
-              return (
-                <button
-                  key={cell.dateISO}
-                  type="button"
-                  onClick={() => {
-                    setOpenDate(cell.dateISO);
-                    setQuickAddOpen(false);
-                  }}
-                  className={[
-                    'relative aspect-square rounded-lg text-sm flex items-center justify-center transition-colors',
-                    isOpen ? 'bg-[var(--admin-primary)] text-white' : 'hover:bg-black/10',
-                  ].join(' ')}
-                >
-                  {cell.day}
-                  {status !== 'none' && (
-                    <span
-                      className={[
-                        'absolute bottom-1 h-1.5 w-1.5 rounded-full',
-                        isOpen ? 'bg-white' : status === 'assigned' ? 'bg-[var(--admin-primary)]' : 'bg-black/30',
-                      ].join(' ')}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {openDate && (
-            <div className="space-y-2 pt-2 border-t">
-              <div className="text-sm font-medium">{formatDayHeading(openDate)}</div>
-
-              {openTimes.length === 0 && !quickAddOpen && (
-                <p className="text-xs text-muted">No times on this date yet.</p>
-              )}
-
-              {openTimes.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {openTimes.map((t) => {
-                    const isAssigned = assigned.has(t.id);
-                    return (
-                      <button
-                        key={t._localId}
-                        type="button"
-                        onClick={() => onToggle(t.id)}
-                        className={[
-                          'px-3 py-1.5 rounded-lg border text-sm text-left flex flex-col items-start gap-0.5',
-                          isAssigned
-                            ? 'bg-[var(--admin-primary)] text-white border-transparent'
-                            : 'border-black/20 hover:border-black/40',
-                        ].join(' ')}
-                      >
-                        <span>
-                          {formatTimeLabel(t.startTime)}
-                          {t.endTime ? ` – ${formatTimeLabel(t.endTime)}` : ''}
-                        </span>
-                        {(t.location || t.label) && (
-                          <span className="text-xs opacity-80">
-                            {[t.location, t.label].filter(Boolean).join(' · ')}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {quickAddOpen ? (
-                <div className="card admin-card card-solid p-3 space-y-2">
-                  <div className="grid sm:grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Start</label>
-                      <input
-                        type="time"
-                        className="input w-full"
-                        value={quickStart}
-                        onChange={(e) => setQuickStart(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">End (optional)</label>
-                      <input
-                        type="time"
-                        className="input w-full"
-                        value={quickEnd}
-                        onChange={(e) => setQuickEnd(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Capacity</label>
-                      <input
-                        type="number"
-                        min={0}
-                        className="input w-full"
-                        placeholder="Unlimited"
-                        value={quickCapacity}
-                        onChange={(e) => setQuickCapacity(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Location</label>
-                      <input
-                        className="input w-full"
-                        value={quickLocation}
-                        onChange={(e) => setQuickLocation(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <input
-                    className="input w-full"
-                    placeholder="Note (optional)"
-                    value={quickLabel}
-                    onChange={(e) => setQuickLabel(e.target.value)}
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button type="button" className="btn btn-ghost text-sm" onClick={() => setQuickAddOpen(false)}>
-                      Cancel
-                    </button>
-                    <button type="button" className="btn btn-primary text-sm" onClick={handleQuickAdd}>
-                      Add &amp; Assign
-                    </button>
-                  </div>
-                </div>
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Left: times on the selected date + create-time form */}
+            <div className="flex-1 min-w-0 order-2 md:order-1 space-y-2">
+              {!openDate ? (
+                <p className="text-xs text-muted">Select a date on the calendar to view or add times.</p>
               ) : (
-                <button type="button" className="btn btn-inverted text-sm" onClick={() => setQuickAddOpen(true)}>
-                  <Plus className="w-3 h-3 inline mr-1" /> Add a time on this date
-                </button>
+                <>
+                  <div className="text-sm font-medium">{formatDayHeading(openDate)}</div>
+
+                  {openTimes.length === 0 ? (
+                    <p className="text-xs text-muted">No times on this date yet.</p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-32 overflow-auto pr-1">
+                      {openTimes.map((t) => {
+                        const isAssigned = assigned.has(t.id);
+                        return (
+                          <button
+                            key={t._localId}
+                            type="button"
+                            onClick={() => onToggle(t.id)}
+                            className={[
+                              'w-full px-3 py-1.5 rounded-lg border text-sm text-left flex flex-col items-start gap-0.5',
+                              isAssigned
+                                ? 'bg-[var(--admin-primary)] text-white border-transparent'
+                                : 'border-black/20 hover:border-black/40',
+                            ].join(' ')}
+                          >
+                            <span>
+                              {formatTimeLabel(t.startTime)}
+                              {t.endTime ? ` – ${formatTimeLabel(t.endTime)}` : ''}
+                            </span>
+                            {(t.location || t.label) && (
+                              <span className="text-xs opacity-80">
+                                {[t.location, t.label].filter(Boolean).join(' · ')}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="card admin-card card-solid p-3 space-y-2">
+                    <div className="text-xs font-semibold opacity-70">Create a time on this date</div>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Time</label>
+                        <input
+                          type="time"
+                          className="input w-full"
+                          value={quickStart}
+                          onChange={(e) => setQuickStart(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">End (optional)</label>
+                        <input
+                          type="time"
+                          className="input w-full"
+                          value={quickEnd}
+                          onChange={(e) => setQuickEnd(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Capacity</label>
+                        <input
+                          type="number"
+                          min={0}
+                          className="input w-full"
+                          placeholder="Unlimited"
+                          value={quickCapacity}
+                          onChange={(e) => setQuickCapacity(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Location</label>
+                        <input
+                          className="input w-full"
+                          value={quickLocation}
+                          onChange={(e) => setQuickLocation(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <input
+                      className="input w-full"
+                      placeholder="Note (optional)"
+                      value={quickLabel}
+                      onChange={(e) => setQuickLabel(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary text-sm w-full justify-center"
+                      onClick={handleQuickAdd}
+                    >
+                      <Plus className="w-3 h-3 inline mr-1" /> Create &amp; Assign
+                    </button>
+                  </div>
+                </>
               )}
             </div>
-          )}
+
+            {/* Right: calendar grid, 32×32 day cells */}
+            <div className="flex-shrink-0 order-1 md:order-2 space-y-2 mx-auto md:mx-0">
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost p-1"
+                  onClick={() => setViewMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-semibold whitespace-nowrap">{monthLabel}</span>
+                <button
+                  type="button"
+                  className="btn btn-ghost p-1"
+                  onClick={() => setViewMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-[repeat(7,2rem)] gap-1 text-center">
+                {WEEKDAY_SHORT.map((w, i) => (
+                  <div key={`${w}-${i}`} className="h-8 w-8 flex items-center justify-center text-[10px] opacity-50">
+                    {w}
+                  </div>
+                ))}
+                {grid.map((cell, i) => {
+                  if (!cell.dateISO) return <div key={`blank-${i}`} className="h-8 w-8" />;
+                  const status = dayStatus(cell.dateISO);
+                  const isOpen = openDate === cell.dateISO;
+                  return (
+                    <button
+                      key={cell.dateISO}
+                      type="button"
+                      onClick={() => setOpenDate(cell.dateISO)}
+                      className={[
+                        'relative h-8 w-8 rounded-md text-xs flex items-center justify-center transition-colors',
+                        isOpen ? 'bg-[var(--admin-primary)] text-white' : 'hover:bg-black/10',
+                      ].join(' ')}
+                    >
+                      {cell.day}
+                      {status !== 'none' && (
+                        <span
+                          className={[
+                            'absolute bottom-0.5 h-1 w-1 rounded-full',
+                            isOpen ? 'bg-white' : status === 'assigned' ? 'bg-[var(--admin-primary)]' : 'bg-black/30',
+                          ].join(' ')}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Recurring series */}
