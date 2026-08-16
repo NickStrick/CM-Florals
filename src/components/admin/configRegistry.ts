@@ -222,6 +222,7 @@ export const SECTION_REGISTRY: SectionRegistry = {
       backgroundUrl: '',
       overlay: false,
       align: 'left',
+      subtitleAlign: 'center',
       height: 'md',
       motion: undefined,
     }),

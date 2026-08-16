@@ -70,9 +70,23 @@ export function EditSectional({
         </div>
       </div>
 
-      {/* Body */}
-      <div>
-        <label className="block text-sm font-medium">Body</label>
+      {/* Body + Subtitle Align */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium">Body</label>
+          <div>
+            <label className="block text-xs font-medium text-muted mb-0.5 text-right">Subtitle Align</label>
+            <select
+              className="select"
+              value={section.subtitleAlign ?? 'center'}
+              onChange={(e) => set('subtitleAlign', e.target.value as SectionalSection['subtitleAlign'])}
+            >
+              <option value="left">left</option>
+              <option value="center">center</option>
+              <option value="right">right</option>
+            </select>
+          </div>
+        </div>
         <textarea
           className="input w-full"
           rows={4}

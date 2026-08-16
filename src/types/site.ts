@@ -300,6 +300,7 @@ export type SectionalSection = SectionBase & {
   backgroundUrl?: string;   // accepts /public path or external URL
   overlay?: boolean;        // tint overlay for contrast
   align?: 'left' | 'center' | 'right';
+  subtitleAlign?: 'left' | 'center' | 'right'; // default 'center'; independent of title's `align`
   height?: 'xs' | 'sm' | 'md' | 'lg' | 'full'; // hero height presets
   motion?: {
     direction?: 'x' | 'y';
