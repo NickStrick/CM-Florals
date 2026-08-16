@@ -663,6 +663,8 @@ export default function ConfigModal({
       return { ...prev, pages, header, footer };
     });
     setEditingPageIndex(null);
+    setActiveTab('main');
+    setSelectedIndex(0);
   }, []);
 
   const updatePageMeta = useCallback((pageIdx: number, patch: Partial<SitePage>) => {
@@ -1141,71 +1143,46 @@ export default function ConfigModal({
             {...(activeMoveFn ? dragFallbackHandlers(activeMoveFn) : {})}
           >
 
-            {/* Tab strip */}
-            <div className="flex gap-1 border-b pb-2">
+            {/* Page tabs: Main Page + every custom page, in one row, plus Add New Page */}
+            <div className="flex flex-wrap items-center gap-2 border-b pb-3">
               <button
                 className={['btn btn-ghost text-sm px-3 py-1', activeTab === 'main' ? 'font-bold underline' : ''].join(' ')}
                 onClick={() => { setActiveTab('main'); setEditingPageIndex(null); setSelectedIndex(0); }}
               >
                 Main Page
               </button>
-              <button
-                className={['btn btn-ghost text-sm px-3 py-1', activeTab === 'pages' ? 'font-bold underline' : ''].join(' ')}
-                onClick={() => { setActiveTab('pages'); setEditingPageIndex(null); setSelectedIndex(0); }}
-              >
-                Pages {draft.pages?.length ? `(${draft.pages.length})` : ''}
+              {(draft.pages ?? []).map((page, i) => (
+                <button
+                  key={page.slug}
+                  className={[
+                    'btn btn-ghost text-sm px-3 py-1',
+                    activeTab === 'pages' && editingPageIndex === i ? 'font-bold underline' : '',
+                  ].join(' ')}
+                  onClick={() => { setActiveTab('pages'); setEditingPageIndex(i); setSelectedIndex(0); }}
+                >
+                  {page.title || page.slug || 'Untitled'}
+                </button>
+              ))}
+              <button className="btn btn-ghost text-sm px-3 py-1 ml-auto flex-shrink-0" onClick={addPage}>
+                + Add New Page
               </button>
             </div>
-
-            {/* ── PAGES LIST view ── */}
-            {activeTab === 'pages' && editingPageIndex === null && (
-              <div className="space-y-2">
-                {(draft.pages ?? []).map((page, i) => (
-                  <div
-                    key={page.slug}
-                    className="card card-solid admin-card p-3 flex items-center justify-between gap-2"
-                  >
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{page.title || <em className="opacity-40">Untitled</em>}</div>
-                      <div className="text-xs text-muted">/{page.slug}</div>
-                    </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <button
-                        className="btn btn-ghost text-sm"
-                        onClick={() => { setEditingPageIndex(i); setSelectedIndex(0); }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-ghost text-red-500 text-sm"
-                        onClick={() => deletePage(i)}
-                        title="Delete page"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="text-xs" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {!draft.pages?.length && (
-                  <div className="text-sm text-muted">No custom pages yet.</div>
-                )}
-                <button className="btn btn-inverted w-full mt-2" onClick={addPage}>
-                  + Add Page
-                </button>
-              </div>
-            )}
 
             {/* ── PAGE SECTION EDITING view ── */}
             {activeTab === 'pages' && editingPageIndex !== null && (
               <>
-                {/* Back + page meta */}
+                {/* Page meta */}
                 <div className="space-y-2">
-                  <button
-                    className="btn btn-ghost text-sm"
-                    onClick={() => { setEditingPageIndex(null); setSelectedIndex(0); }}
-                  >
-                    ← Back to pages
-                  </button>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-sm font-semibold">Page Settings</div>
+                    <button
+                      className="btn btn-ghost text-red-500 text-xs !px-2 !py-1"
+                      onClick={() => deletePage(editingPageIndex)}
+                      title="Delete this page"
+                    >
+                      <FontAwesomeIcon icon={faTrash} className="text-xs" /> Delete
+                    </button>
+                  </div>
                   <div>
                     <label className="block text-xs font-medium text-muted mb-0.5">Page Title</label>
                     <input
