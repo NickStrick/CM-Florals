@@ -94,6 +94,12 @@ export default function ClassDetailBody({ classItem, buyCtaFallback = 'Book Now'
   const images = classItem.images ?? [];
   const mainImage = resolveAssetUrl(images[mainIndex]?.url ?? classItem.thumbnailUrl);
   const thumb = resolveAssetUrl(classItem.thumbnailUrl ?? images[0]?.url);
+  // Every image except whichever one is currently shown large, capped so the
+  // strip can't grow unbounded for a big gallery.
+  const thumbnailImages = images
+    .map((image, index) => ({ image, index }))
+    .filter(({ index }) => index !== mainIndex)
+    .slice(0, 4);
 
   const handleAddToCart = () => {
     if (!selectedTime) return;
@@ -139,29 +145,30 @@ export default function ClassDetailBody({ classItem, buyCtaFallback = 'Book Now'
           <div className="w-full aspect-[4/3] bg-black/10 rounded-xl" />
         )}
 
-        {images.length > 1 && (
-          <div className="mt-3 grid grid-cols-5 gap-2">
-            {images.slice(0, 5).map((im, idx) => {
+        {/* Thumbnails for every OTHER image — the selected one is already
+            shown large above, so it's excluded here. Two per row at ~50% of
+            the main image's width/height, so they read as smaller versions
+            of it rather than a separate strip of icons. Clicking one makes
+            it the main image. */}
+        {thumbnailImages.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {thumbnailImages.map(({ image: im, index: idx }) => {
               const resolved = resolveAssetUrl(im.url);
-              const isActive = idx === mainIndex;
               if (!resolved) return null;
               return (
                 <button
                   type="button"
                   key={im.url + idx}
                   onClick={() => setMainIndex(idx)}
-                  className={`overflow-hidden border product-select ${
-                    isActive ? 'bg-gradient-colored' : 'border-2 border-transparent opacity-90 hover:opacity-100'
-                  }`}
+                  className="w-full max-h-[280px] flex items-center justify-center overflow-hidden rounded-xl border-2 border-transparent opacity-90 transition hover:opacity-100"
                   aria-label={`Show image ${idx + 1}`}
                 >
-                  <div className="w-full max-h-[100px] flex items-center justify-center overflow-hidden">
-                    <img
-                      src={resolved}
-                      alt={im.alt ?? `${classItem.name} ${idx + 1}`}
-                      className="object-contain block w-full h-full"
-                    />
-                  </div>
+                  <img
+                    src={resolved}
+                    alt={im.alt ?? `${classItem.name} ${idx + 1}`}
+                    className="rounded-xl object-contain"
+                    style={{ maxHeight: '280px', width: 'auto', height: 'auto', maxWidth: '100%' }}
+                  />
                 </button>
               );
             })}

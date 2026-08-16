@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Plus, X } from 'lucide-react';
 import type { ClassTime } from '@/types/site';
 
 type TimeWithLocalId = ClassTime & { _localId: string };
@@ -127,7 +127,11 @@ export default function ClassTimesPickerModal({
     ? (byDate.get(openDate) ?? []).slice().sort((a, b) => a.startTime.localeCompare(b.startTime))
     : [];
 
-  // Create-a-time form for whichever date is selected on the calendar
+  // Create-a-time form for whichever date is selected on the calendar —
+  // collapsed by default so it doesn't compete with the times list above it.
+  const [createFormOpen, setCreateFormOpen] = useState(false);
+  useEffect(() => setCreateFormOpen(false), [openDate]);
+
   const [quickStart, setQuickStart] = useState('18:00');
   const [quickEnd, setQuickEnd] = useState('');
   const [quickCapacity, setQuickCapacity] = useState('');
@@ -151,6 +155,7 @@ export default function ClassTimesPickerModal({
     setQuickCapacity('');
     setQuickLocation('');
     setQuickLabel('');
+    setCreateFormOpen(false);
   };
 
   // ── Recurring series ───────────────────────────────────────────────────
@@ -211,7 +216,15 @@ export default function ClassTimesPickerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[13000] bg-black/60 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[13000] bg-black/60 flex items-center justify-center p-4"
+      onClick={(e) => {
+        // Only close on the backdrop itself — clicks bubble up from
+        // everything inside the panel too, so without this check any click
+        // on padding/whitespace inside the modal would close it.
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="card admin-card card-solid p-4 w-full max-w-2xl max-h-[85vh] overflow-auto relative space-y-6">
         <div className="flex items-center justify-between border-b pb-3">
           <div>
@@ -268,60 +281,77 @@ export default function ClassTimesPickerModal({
                     </div>
                   )}
 
-                  <div className="card admin-card card-solid p-3 space-y-2">
-                    <div className="text-xs font-semibold opacity-70">Create a time on this date</div>
-                    <div className="grid sm:grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Time</label>
-                        <input
-                          type="time"
-                          className="input w-full"
-                          value={quickStart}
-                          onChange={(e) => setQuickStart(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">End (optional)</label>
-                        <input
-                          type="time"
-                          className="input w-full"
-                          value={quickEnd}
-                          onChange={(e) => setQuickEnd(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Capacity</label>
-                        <input
-                          type="number"
-                          min={0}
-                          className="input w-full"
-                          placeholder="Unlimited"
-                          value={quickCapacity}
-                          onChange={(e) => setQuickCapacity(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Location</label>
-                        <input
-                          className="input w-full"
-                          value={quickLocation}
-                          onChange={(e) => setQuickLocation(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <input
-                      className="input w-full"
-                      placeholder="Note (optional)"
-                      value={quickLabel}
-                      onChange={(e) => setQuickLabel(e.target.value)}
-                    />
+                  <div className="admin-card card-solid p-3 space-y-2">
                     <button
                       type="button"
-                      className="btn btn-primary text-sm w-full justify-center"
-                      onClick={handleQuickAdd}
+                      className="w-full flex items-center justify-between text-xs font-semibold opacity-70"
+                      onClick={() => setCreateFormOpen((v) => !v)}
+                      aria-expanded={createFormOpen}
                     >
-                      <Plus className="w-3 h-3 inline mr-1" /> Create &amp; Assign
+                      <span>Create a time on this date</span>
+                      {createFormOpen ? (
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      )}
                     </button>
+
+                    {createFormOpen && (
+                      <>
+                        <div className="grid sm:grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Time</label>
+                            <input
+                              type="time"
+                              className="input w-full"
+                              value={quickStart}
+                              onChange={(e) => setQuickStart(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium mb-1">End (optional)</label>
+                            <input
+                              type="time"
+                              className="input w-full"
+                              value={quickEnd}
+                              onChange={(e) => setQuickEnd(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Capacity</label>
+                            <input
+                              type="number"
+                              min={0}
+                              className="input w-full"
+                              placeholder="Unlimited"
+                              value={quickCapacity}
+                              onChange={(e) => setQuickCapacity(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Location</label>
+                            <input
+                              className="input w-full"
+                              value={quickLocation}
+                              onChange={(e) => setQuickLocation(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <input
+                          className="input w-full"
+                          placeholder="Note (optional)"
+                          value={quickLabel}
+                          onChange={(e) => setQuickLabel(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-primary text-sm w-full justify-center"
+                          onClick={handleQuickAdd}
+                        >
+                          <Plus className="w-3 h-3 inline mr-1" /> Create &amp; Assign
+                        </button>
+                      </>
+                    )}
                   </div>
                 </>
               )}

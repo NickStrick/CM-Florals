@@ -210,6 +210,12 @@ function ClassItemEditForm({
     <div
       className="card admin-card card-solid p-4 space-y-4"
       onBlurCapture={(e) => {
+        // The times picker renders in this same DOM subtree (no portal), and
+        // is full of plain non-focusable padding/labels — clicking any of
+        // that blurs whatever input last had focus with nowhere clear for
+        // focus to land, which would otherwise read as "focus left the
+        // form" and auto-close it out from under the open modal.
+        if (timesPickerOpen) return;
         const nextFocused = e.relatedTarget as Node | null;
         if (!e.currentTarget.contains(nextFocused)) onDone();
       }}
