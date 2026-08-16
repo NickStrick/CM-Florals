@@ -1135,7 +1135,7 @@ export default function ConfigModal({
           </div>
         )}
  {/* Page tabs: Main Page + every custom page, in one row, plus Add New Page */}
-            <div className="flex flex-wrap items-center gap-2 border-b pb-3">
+            <div className="flex flex-wrap items-center gap-2 border-b pb-3 pt-3">
               <button
                 className={['btn btn-ghost text-sm px-3 py-1', activeTab === 'main' ? 'font-bold underline' : ''].join(' ')}
                 onClick={() => { setActiveTab('main'); setEditingPageIndex(null); setSelectedIndex(0); }}
