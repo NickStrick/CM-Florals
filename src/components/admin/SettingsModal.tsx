@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, PromoCode, SiteConfig, SiteDisabledSettings } from '@/types/site';
+import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, PromoCode, SiteConfig, SiteDisabledSettings, SocialsSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
@@ -169,6 +169,23 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   }, []);
 
   const siteDisabled = useMemo(() => getSiteDisabledSettings(draft), [draft]);
+
+  // Existing Socials sections (home + custom pages) whose links can be copied in.
+  const socialsSources = useMemo(() => {
+    if (!draft) return [];
+    const locations = [
+      { where: 'Home', sections: draft.sections ?? [] },
+      ...(draft.pages ?? []).map((p) => ({ where: p.title || `/${p.slug}`, sections: p.sections ?? [] })),
+    ];
+    return locations.flatMap(({ where, sections }) =>
+      sections
+        .filter((s): s is SocialsSection => s.type === 'socials' && (s as SocialsSection).items?.length > 0)
+        .map((s) => ({
+          label: `${where} — ${s.title || 'Socials'} (${s.items.length} link${s.items.length === 1 ? '' : 's'})`,
+          items: s.items,
+        }))
+    );
+  }, [draft]);
 
   const updateSiteDisabled = useCallback(
     (patch: Partial<SiteDisabledSettings>) => {
@@ -495,7 +512,29 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                   </div>
 
                   <div>
-                    <div className="text-sm font-medium mb-1">Social Links</div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                      <div className="text-sm font-medium">Social Links</div>
+                      {socialsSources.length > 0 && (
+                        <select
+                          className="select"
+                          value=""
+                          onChange={(e) => {
+                            const source = socialsSources[Number(e.target.value)];
+                            if (source) updateSiteDisabled({ socials: source.items.map((it) => ({ ...it })) });
+                          }}
+                          title="Replace these links with a copy of an existing Socials section's links"
+                        >
+                          <option value="" disabled>
+                            Copy links from…
+                          </option>
+                          {socialsSources.map((src, i) => (
+                            <option key={i} value={i}>
+                              {src.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                     <SocialLinksEditor
                       items={siteDisabled.socials ?? []}
                       onChange={(socials) => updateSiteDisabled({ socials })}
