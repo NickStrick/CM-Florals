@@ -16,15 +16,13 @@ export default function ClassList({
 }: ClassListSection) {
   const { config } = useSite();
 
-  // Only classes with at least one still-existing assigned time qualify —
-  // mirrors the resolution ClassDetailBody/ClassTimePicker use, so a class
-  // never shows a tab and then an empty "no times" picker underneath.
+  // Only classes with at least one scheduled time qualify — mirrors the
+  // resolution ClassDetailBody/ClassTimePicker use, so a class never shows a
+  // tab and then an empty "no times" picker underneath.
   const classItems = useMemo(() => {
     const items = config?.classes?.classItems ?? [];
-    const times = config?.classes?.classTimes ?? [];
-    const timeIds = new Set(times.map((t) => t.id));
-    return items.filter((c) => (c.classTimeIds ?? []).some((tid) => timeIds.has(tid)));
-  }, [config?.classes?.classItems, config?.classes?.classTimes]);
+    return items.filter((c) => (c.times ?? []).length > 0);
+  }, [config?.classes?.classItems]);
 
   const [activeTab, setActiveTab] = useState<string | null>(null);
   useEffect(() => {

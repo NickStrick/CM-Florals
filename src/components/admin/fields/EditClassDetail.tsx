@@ -47,7 +47,7 @@ export default function EditClassDetail({ section, onChange }: EditorProps<Class
             <div className="font-medium text-sm truncate">{selected.name}</div>
             {selected.category && <div className="text-xs text-muted">{selected.category}</div>}
             <div className="text-xs text-muted">
-              {(selected.classTimeIds ?? []).length} time{(selected.classTimeIds ?? []).length === 1 ? '' : 's'} scheduled
+              {(selected.times ?? []).length} time{(selected.times ?? []).length === 1 ? '' : 's'} scheduled
             </div>
           </div>
         </div>

@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, PromoCode, SiteConfig } from '@/types/site';
+import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, PromoCode, SiteConfig, SiteDisabledSettings } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { isAdminAiUiEnabled } from '@/lib/adminAi';
+import { getSiteDisabledSettings, SITE_DISABLED_DEFAULT_MESSAGE, SITE_DISABLED_DEFAULT_TITLE } from '@/lib/siteConfigSections';
 
 // -----------------------------
 // Utilities
@@ -141,6 +142,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       return { ...prev, settings: { ...(prev.settings ?? {}), general: nextGeneral } };
     });
   }, []);
+
+  const siteDisabled = useMemo(() => getSiteDisabledSettings(draft), [draft]);
+
+  const updateSiteDisabled = useCallback(
+    (patch: Partial<SiteDisabledSettings>) => {
+      updateGeneral({ siteDisabled: { ...siteDisabled, ...patch } });
+    },
+    [siteDisabled, updateGeneral]
+  );
 
   // Seeded once above whenever `config` itself changes (initial load,
   // Restore). NOT re-synced from `payments.checkoutInputs`/`promoCodes` on
@@ -395,6 +405,47 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           {activeTab === 'general' && (
             <div className="card admin-card card-solid card-full p-4 space-y-3 w-full">
               <div className="font-semibold">General</div>
+
+              <div className="card admin-card card-solid card-full p-4 space-y-3">
+                <div className="font-semibold">Site Availability</div>
+                <div className="text-sm text-muted">
+                  While enabled, every page shows only this notice (plus your social links) — no header, footer, or other sections.
+                </div>
+
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={siteDisabled.enabled === true}
+                    onChange={(e) => updateSiteDisabled({ enabled: e.target.checked })}
+                  />
+                  <span>Toggle Site Unavailable</span>
+                </label>
+
+                <div className="grid gap-3">
+                  <div>
+                    <label className="block text-sm font-medium">Title</label>
+                    <input
+                      className="input w-full"
+                      value={siteDisabled.title ?? ''}
+                      onChange={(e) => updateSiteDisabled({ title: e.target.value })}
+                      placeholder={SITE_DISABLED_DEFAULT_TITLE}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">Message</label>
+                    <textarea
+                      className="input w-full min-h-[96px]"
+                      value={siteDisabled.message ?? ''}
+                      onChange={(e) => updateSiteDisabled({ message: e.target.value })}
+                      placeholder={SITE_DISABLED_DEFAULT_MESSAGE}
+                    />
+                    <div className="text-xs text-muted mt-1">
+                      Tell visitors why the site is down. Leave blank to use the placeholder text.
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="card admin-card card-solid card-full p-4 space-y-3">
                 <div className="font-semibold">Emailing</div>

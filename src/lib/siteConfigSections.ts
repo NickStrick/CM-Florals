@@ -1,4 +1,4 @@
-import type { AnySection, FooterSection, HeaderSection, SiteConfig, SitePage } from '@/types/site';
+import type { AnySection, ClassItem, ClassTime, FooterSection, HeaderSection, SiteConfig, SiteClassesConfig, SiteDisabledSection, SiteDisabledSettings, SitePage, SocialsSection } from '@/types/site';
 
 export function createDefaultHeaderSection(): HeaderSection {
   return {
@@ -23,6 +23,29 @@ export function createDefaultFooterSection(): FooterSection {
 
 function isHeaderOrFooter(section: AnySection | undefined | null): section is HeaderSection | FooterSection {
   return !!section && (section.type === 'header' || section.type === 'footer');
+}
+
+// Every class item is meant to own its bookable times directly (`times`).
+// Older stored configs instead have a flat `classTimeIds` FK list resolved
+// against a separate shared `classes.classTimes` pool — this derives `times`
+// from that legacy shape on every read, without touching the legacy fields,
+// so old data keeps working and new code only ever has to look at `times`.
+export function normalizeClassItems(classes: SiteClassesConfig | undefined): ClassItem[] {
+  const items = classes?.classItems ?? [];
+  const pool = classes?.classTimes ?? [];
+  if (pool.length === 0) {
+    // Nothing to resolve legacy ids against — still guarantee `times` exists.
+    return items.map((item) => (item.times ? item : { ...item, times: [] }));
+  }
+  const poolById = new Map(pool.map((t) => [t.id, t]));
+  return items.map((item) => {
+    if (item.times) return item; // already in the new shape
+    const legacyIds = item.classTimeIds ?? [];
+    const times = legacyIds
+      .map((id) => poolById.get(id))
+      .filter((t): t is ClassTime => !!t);
+    return { ...item, times };
+  });
 }
 
 export function normalizeSiteConfig(input: SiteConfig): SiteConfig {
@@ -50,6 +73,13 @@ export function normalizeSiteConfig(input: SiteConfig): SiteConfig {
 
   const sections = rawSections.filter((s) => !isHeaderOrFooter(s));
 
+  // Non-destructive: keeps `classItems`/`classTimes`/`classTimeIds` exactly
+  // as stored (the admin UI still reads/writes those directly for now) and
+  // only adds `times` alongside them.
+  const classes: SiteClassesConfig | undefined = input.classes
+    ? { ...input.classes, classItems: normalizeClassItems(input.classes) }
+    : input.classes;
+
   return {
     ...input,
     header: { ...createDefaultHeaderSection(), ...header },
@@ -57,11 +87,49 @@ export function normalizeSiteConfig(input: SiteConfig): SiteConfig {
     showHeader,
     showFooter,
     sections,
+    classes,
+  };
+}
+
+export const SITE_DISABLED_DEFAULT_TITLE = 'We’ll Be Back Soon';
+export const SITE_DISABLED_DEFAULT_MESSAGE =
+  'Our site is temporarily unavailable. Follow us on social media for the latest updates.';
+
+/** Reads settings.general.siteDisabled defensively — `general` is free-form JSON. */
+export function getSiteDisabledSettings(config: SiteConfig | null | undefined): SiteDisabledSettings {
+  const raw = config?.settings?.general?.siteDisabled;
+  if (!raw || typeof raw !== 'object') return {};
+  const { enabled, title, message } = raw as Record<string, unknown>;
+  return {
+    enabled: enabled === true,
+    title: typeof title === 'string' ? title : undefined,
+    message: typeof message === 'string' ? message : undefined,
+  };
+}
+
+/** Returns the lone section to render while the site is disabled, or null when the site is live. */
+export function getSiteDisabledSection(config: SiteConfig): SiteDisabledSection | null {
+  const settings = getSiteDisabledSettings(config);
+  if (!settings.enabled) return null;
+
+  // Reuse the site's own social links so visitors know where to follow along.
+  const socialsSection = [...(config.sections ?? []), ...(config.pages ?? []).flatMap((p) => p.sections)]
+    .find((s): s is SocialsSection => s.type === 'socials' && (s as SocialsSection).items?.length > 0);
+
+  return {
+    id: 'site-disabled',
+    type: 'siteDisabled',
+    title: settings.title?.trim() || SITE_DISABLED_DEFAULT_TITLE,
+    message: settings.message?.trim() || SITE_DISABLED_DEFAULT_MESSAGE,
+    socials: socialsSection?.items ?? [],
   };
 }
 
 export function getRenderableSections(config: SiteConfig): AnySection[] {
    console.log("Site config loaded:", config);
+  const disabled = getSiteDisabledSection(config);
+  if (disabled) return [disabled];
+
   const normalized = normalizeSiteConfig(config);
   const out: AnySection[] = [];
 
@@ -93,6 +161,10 @@ export function getAdminSectionSlots(config: SiteConfig): AdminSectionSlot[] {
 
 /** Returns the sections to render for a custom page (with shared header/footer). Returns null if slug not found. */
 export function getRenderablePageSections(config: SiteConfig, slug: string): AnySection[] | null {
+  // Every URL shows the unavailable notice (instead of "Page not found") while disabled.
+  const disabled = getSiteDisabledSection(config);
+  if (disabled) return [disabled];
+
   const normalized = normalizeSiteConfig(config);
   const page = normalized.pages?.find((p) => p.slug === slug);
   if (!page) return null;

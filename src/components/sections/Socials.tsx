@@ -17,7 +17,7 @@ import type { SocialsSection, SocialItem } from '@/types/site';
 
 import {SeperatorWave} from '@/components/SeperatorWave';
 
-const ICONS: Record<SocialItem['type'], IconDefinition> = {
+export const SOCIAL_ICONS: Record<SocialItem['type'], IconDefinition> = {
   instagram: faInstagram,
   facebook: faFacebook,
   linkedin: faLinkedin,
@@ -100,7 +100,7 @@ export default function Socials({
                   className={`btn-gradient btn-gradient-icon ${rounded} ${iconSizeCls} text-4xl inline-flex items-center justify-center !shadow-[var(--elev-2)] bg-[length:150%] transition-border duration-200 border-[2px] border-transparent hover:border-white`}
                   aria-label={s.label ?? s.type}
                 >
-                  <FontAwesomeIcon icon={ICONS[s.type]} />
+                  <FontAwesomeIcon icon={SOCIAL_ICONS[s.type]} />
                 </span>
                 {s.label && (
                   <span className="text-sm text-muted mt-2 capitalize">{s.label}</span>

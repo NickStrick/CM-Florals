@@ -30,6 +30,7 @@ import type {
   BannerCarouselSection,
   ClassDetailSection,
   ClassListSection,
+  SiteDisabledSection,
 } from '@/types/site';
 
 const newId = (p: string) => `${p}-${Math.random().toString(36).slice(2, 7)}`;
@@ -460,6 +461,18 @@ export const SECTION_REGISTRY: SectionRegistry = {
         { title: '', body: '', backgroundUrl: '', overlay: true, imageUrl: '', href: '' },
       ],
       intervalMs: 5000,
+    }),
+  },
+
+  // Toggled from Settings → General, never added to the section list.
+  siteDisabled: {
+    label: 'Site Unavailable',
+    allowed: false,
+    create: (): SiteDisabledSection => ({
+      id: 'site-disabled',
+      type: 'siteDisabled',
+      title: '',
+      message: '',
     }),
   },
 };

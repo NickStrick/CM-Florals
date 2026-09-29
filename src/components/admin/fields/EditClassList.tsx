@@ -8,9 +8,7 @@ import { useSite } from '@/context/SiteContext';
 export default function EditClassList({ section, onChange }: EditorProps<ClassListSection>) {
   const { config } = useSite();
   const items = config?.classes?.classItems ?? [];
-  const times = config?.classes?.classTimes ?? [];
-  const timeIds = new Set(times.map((t) => t.id));
-  const qualifying = items.filter((c) => (c.classTimeIds ?? []).some((tid) => timeIds.has(tid)));
+  const qualifying = items.filter((c) => (c.times ?? []).length > 0);
 
   const set = useCallback(
     <K extends keyof ClassListSection>(key: K, value: ClassListSection[K]) =>

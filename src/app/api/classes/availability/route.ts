@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getObjectJson } from '@/lib/s3-admin';
 import { getBookedCounts } from '@/lib/classSlotsDb';
+import { normalizeClassItems } from '@/lib/siteConfigSections';
 import type { SiteConfig } from '@/types/site';
 
 // Public endpoint: lets the storefront calendar show live remaining-seat counts
@@ -24,8 +25,12 @@ export async function GET(req: NextRequest) {
       getBookedCounts(businessId, classTimeIds),
     ]);
 
+    // `normalizeClassItems` resolves `times` from the legacy `classTimeIds` +
+    // shared pool for old-shape stored configs, so this works regardless of
+    // whether the site has been re-saved through the new admin UI yet.
+    const items = normalizeClassItems(config?.classes);
     const capacityById = new Map(
-      (config?.classes?.classTimes ?? []).map((t) => [t.id, t.capacity] as const)
+      items.flatMap((c) => c.times ?? []).map((t) => [t.id, t.capacity] as const)
     );
 
     const availability: Record<string, { booked: number; capacity: number | null; remaining: number | null }> = {};

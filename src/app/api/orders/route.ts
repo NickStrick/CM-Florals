@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createOrder } from '@/lib/ordersDb';
 import { reserveSeats, releaseSeats, SlotFullError } from '@/lib/classSlotsDb';
 import { getObjectJson } from '@/lib/s3-admin';
+import { normalizeClassItems } from '@/lib/siteConfigSections';
 import type { OrderItem } from '@/types/orders';
 import type { SiteConfig } from '@/types/site';
 
@@ -70,8 +71,12 @@ export async function POST(req: NextRequest) {
   if (classItems.length > 0) {
     try {
       const config = await getObjectJson<SiteConfig>({ key: `configs/${businessId}/site.json` });
+      // `normalizeClassItems` resolves `times` from the legacy `classTimeIds` +
+      // shared pool for old-shape stored configs, so this works regardless of
+      // whether the site has been re-saved through the new admin UI yet.
+      const items = normalizeClassItems(config?.classes);
       const capacityById = new Map(
-        (config?.classes?.classTimes ?? []).map((t) => [t.id, t.capacity] as const)
+        items.flatMap((c) => c.times ?? []).map((t) => [t.id, t.capacity] as const)
       );
 
       for (const item of classItems) {

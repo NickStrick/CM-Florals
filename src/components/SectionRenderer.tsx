@@ -34,6 +34,7 @@ import PageLinks from './sections/PageLinks';
 import BannerCarousel from './sections/BannerCarousel';
 import ClassDetail from './sections/ClassDetail';
 import ClassList from './sections/ClassList';
+import SiteDisabled from './sections/SiteDisabled';
 
 // Exhaustiveness helper (nice to have)
 function assertNever(x: never): never {
@@ -144,6 +145,9 @@ export function SectionRenderer({ section }: { section: AnySection }) {
     }
     case 'classList': {
       return <ClassList key={section.id} {...section} />;
+    }
+    case 'siteDisabled': {
+      return <SiteDisabled {...section} />;
     }
     default: {
       // if you ever add a new type and forget to handle it,

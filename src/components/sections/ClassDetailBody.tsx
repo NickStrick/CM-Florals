@@ -45,11 +45,10 @@ export default function ClassDetailBody({ classItem, buyCtaFallback = 'Book Now'
   const payments = config?.settings?.payments;
   const cartActive = payments?.cartActive === true;
 
-  const classTimes = useMemo(() => {
-    const all = config?.classes?.classTimes ?? [];
-    const assigned = new Set(classItem.classTimeIds ?? []);
-    return all.filter((t) => assigned.has(t.id));
-  }, [config?.classes?.classTimes, classItem]);
+  // `normalizeSiteConfig` (run on every config load) already resolves
+  // `times` for old-shape stored configs too, so this works regardless of
+  // whether the site has been re-saved through the new admin UI yet.
+  const classTimes = classItem.times ?? [];
 
   const optionGroups = useMemo(() => normalizeOptionGroups(classItem.options), [classItem.options]);
   const [selectedByGroup, setSelectedByGroup] = useState<Record<string, string>>({});

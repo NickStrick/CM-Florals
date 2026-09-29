@@ -107,6 +107,7 @@ export type SectionBase = {
     | 'bannerCarousel'
     | 'classDetail'
     | 'classList'
+    | 'siteDisabled'
     ;
 
   // visible/editable flags to support your builder UI
@@ -146,7 +147,8 @@ export type AnySection =
   | PageLinksSection
   | BannerCarouselSection
   | ClassDetailSection
-  | ClassListSection;
+  | ClassListSection
+  | SiteDisabledSection;
   ;
 // add this near other shared types
 export type HeaderStyle = {
@@ -311,7 +313,15 @@ export type SectionalSection = SectionBase & {
 
 
 
+/** Settings → General → "Toggle Site Unavailable". When enabled, every page renders only the siteDisabled section. */
+export type SiteDisabledSettings = {
+  enabled?: boolean;
+  title?: string;
+  message?: string;
+};
+
 export type SiteSettings = {
+  /** Free-form; known keys include businessDisplayName, businessNotificationEmail, siteDisabled (SiteDisabledSettings). */
   general?: Record<string, unknown>;
   payments?: PaymentsSettings;
 };
@@ -877,15 +887,24 @@ export type ClassItem = {
   compareAtPrice?: number;
   currency?: string;
   options?: ProductOptions[];   // e.g. Size: 4x4 / 5x5 / 6x6, each with its own price
-  /** Assigned bookable times, resolved from config.classes.classTimes. Empty = not scheduled yet. */
-  classTimeIds: string[];
+  /**
+   * Bookable times owned by this class. Canonical field — every reader
+   * should use this. Populated automatically (even for old-shape stored
+   * configs) by `normalizeSiteConfig`, which resolves it from the legacy
+   * `classTimeIds` + shared `classTimes` pool below if not already present.
+   * Empty = not scheduled yet.
+   */
+  times?: ClassTime[];
+  /** @deprecated legacy FK list into `config.classes.classTimes`; superseded by `times`. Kept only so old stored configs keep normalizing correctly. */
+  classTimeIds?: string[];
   badges?: string[];
   ctaLabel?: string;            // button label; defaults to the section's buyCtaFallback
 };
 
 export type SiteClassesConfig = {
   classItems: ClassItem[];
-  classTimes: ClassTime[];      // shared pool of bookable slots
+  /** @deprecated legacy shared pool that `classItem.classTimeIds` used to reference; superseded by `ClassItem.times`. Kept only so old stored configs keep normalizing correctly. */
+  classTimes?: ClassTime[];
   locations?: string[];         // reusable location names, offered as a dropdown when scheduling a class time
 };
 
@@ -932,4 +951,15 @@ export type PersonsSection = SectionBase & {
   subtitle?: string;           // description
   items: PersonItem[];
   style?: PersonsStyle;
+};
+
+// Not user-addable — built at render time from settings.general.siteDisabled
+// (see getSiteDisabledSection in src/lib/siteConfigSections.ts). `socials` is
+// copied from the site's first socials section so visitors can find updates.
+export type SiteDisabledSection = SectionBase & {
+  id: string;
+  type: 'siteDisabled';
+  title?: string;
+  message?: string;
+  socials?: SocialItem[];
 };
