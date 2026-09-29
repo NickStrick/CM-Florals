@@ -319,6 +319,8 @@ export type SiteDisabledSettings = {
   title?: string;
   message?: string;
   logoImage?: string; // S3 key or URL, shown above the title
+  logoRounded?: boolean; // crop the logo to a square and show it as a circle
+  logoSize?: 'sm' | 'md' | 'lg'; // default 'md'
   socials?: SocialItem[];
 };
 
@@ -963,5 +965,7 @@ export type SiteDisabledSection = SectionBase & {
   title?: string;
   message?: string;
   logoImage?: string;
+  logoRounded?: boolean;
+  logoSize?: 'sm' | 'md' | 'lg';
   socials?: SocialItem[];
 };

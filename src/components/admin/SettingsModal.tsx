@@ -486,6 +486,28 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                       </button>
                     </div>
                     <div className="text-xs text-muted mt-1">Optional — shown above the title.</div>
+
+                    <label className="flex items-center gap-2 mt-2">
+                      <input
+                        type="checkbox"
+                        checked={siteDisabled.logoRounded === true}
+                        onChange={(e) => updateSiteDisabled({ logoRounded: e.target.checked })}
+                      />
+                      <span>Rounded logo (circle, cropped to a square)</span>
+                    </label>
+
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium">Logo Size</label>
+                      <select
+                        className="select"
+                        value={siteDisabled.logoSize ?? 'md'}
+                        onChange={(e) => updateSiteDisabled({ logoSize: e.target.value as SiteDisabledSettings['logoSize'] })}
+                      >
+                        <option value="sm">Small</option>
+                        <option value="md">Medium</option>
+                        <option value="lg">Large</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div>

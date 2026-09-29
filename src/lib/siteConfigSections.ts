@@ -99,12 +99,14 @@ export const SITE_DISABLED_DEFAULT_MESSAGE =
 export function getSiteDisabledSettings(config: SiteConfig | null | undefined): SiteDisabledSettings {
   const raw = config?.settings?.general?.siteDisabled;
   if (!raw || typeof raw !== 'object') return {};
-  const { enabled, title, message, logoImage, socials } = raw as Record<string, unknown>;
+  const { enabled, title, message, logoImage, logoRounded, logoSize, socials } = raw as Record<string, unknown>;
   return {
     enabled: enabled === true,
     title: typeof title === 'string' ? title : undefined,
     message: typeof message === 'string' ? message : undefined,
     logoImage: typeof logoImage === 'string' ? logoImage : undefined,
+    logoRounded: logoRounded === true,
+    logoSize: logoSize === 'sm' || logoSize === 'md' || logoSize === 'lg' ? logoSize : undefined,
     socials: Array.isArray(socials) ? (socials as SocialItem[]) : [],
   };
 }
@@ -120,6 +122,8 @@ export function getSiteDisabledSection(config: SiteConfig): SiteDisabledSection 
     title: settings.title?.trim() || SITE_DISABLED_DEFAULT_TITLE,
     message: settings.message?.trim() || SITE_DISABLED_DEFAULT_MESSAGE,
     logoImage: settings.logoImage?.trim() || undefined,
+    logoRounded: settings.logoRounded,
+    logoSize: settings.logoSize ?? 'md',
     socials: (settings.socials ?? []).filter((s) => s.href?.trim()),
   };
 }
