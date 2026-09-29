@@ -1,4 +1,4 @@
-import type { AnySection, ClassItem, ClassTime, FooterSection, HeaderSection, SiteConfig, SiteClassesConfig, SiteDisabledSection, SiteDisabledSettings, SitePage, SocialsSection } from '@/types/site';
+import type { AnySection, ClassItem, ClassTime, FooterSection, HeaderSection, SiteConfig, SiteClassesConfig, SiteDisabledSection, SiteDisabledSettings, SitePage, SocialItem } from '@/types/site';
 
 export function createDefaultHeaderSection(): HeaderSection {
   return {
@@ -99,11 +99,13 @@ export const SITE_DISABLED_DEFAULT_MESSAGE =
 export function getSiteDisabledSettings(config: SiteConfig | null | undefined): SiteDisabledSettings {
   const raw = config?.settings?.general?.siteDisabled;
   if (!raw || typeof raw !== 'object') return {};
-  const { enabled, title, message } = raw as Record<string, unknown>;
+  const { enabled, title, message, logoImage, socials } = raw as Record<string, unknown>;
   return {
     enabled: enabled === true,
     title: typeof title === 'string' ? title : undefined,
     message: typeof message === 'string' ? message : undefined,
+    logoImage: typeof logoImage === 'string' ? logoImage : undefined,
+    socials: Array.isArray(socials) ? (socials as SocialItem[]) : [],
   };
 }
 
@@ -112,16 +114,13 @@ export function getSiteDisabledSection(config: SiteConfig): SiteDisabledSection 
   const settings = getSiteDisabledSettings(config);
   if (!settings.enabled) return null;
 
-  // Reuse the site's own social links so visitors know where to follow along.
-  const socialsSection = [...(config.sections ?? []), ...(config.pages ?? []).flatMap((p) => p.sections)]
-    .find((s): s is SocialsSection => s.type === 'socials' && (s as SocialsSection).items?.length > 0);
-
   return {
     id: 'site-disabled',
     type: 'siteDisabled',
     title: settings.title?.trim() || SITE_DISABLED_DEFAULT_TITLE,
     message: settings.message?.trim() || SITE_DISABLED_DEFAULT_MESSAGE,
-    socials: socialsSection?.items ?? [],
+    logoImage: settings.logoImage?.trim() || undefined,
+    socials: (settings.socials ?? []).filter((s) => s.href?.trim()),
   };
 }
 

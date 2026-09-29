@@ -318,6 +318,8 @@ export type SiteDisabledSettings = {
   enabled?: boolean;
   title?: string;
   message?: string;
+  logoImage?: string; // S3 key or URL, shown above the title
+  socials?: SocialItem[];
 };
 
 export type SiteSettings = {
@@ -954,12 +956,12 @@ export type PersonsSection = SectionBase & {
 };
 
 // Not user-addable — built at render time from settings.general.siteDisabled
-// (see getSiteDisabledSection in src/lib/siteConfigSections.ts). `socials` is
-// copied from the site's first socials section so visitors can find updates.
+// (see getSiteDisabledSection in src/lib/siteConfigSections.ts).
 export type SiteDisabledSection = SectionBase & {
   id: string;
   type: 'siteDisabled';
   title?: string;
   message?: string;
+  logoImage?: string;
   socials?: SocialItem[];
 };

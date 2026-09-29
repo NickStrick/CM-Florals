@@ -2,12 +2,16 @@
 
 import AnimatedSection from '@/components/AnimatedSection';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Image from 'next/image';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 import type { SiteDisabledSection } from '@/types/site';
 import { SOCIAL_ICONS } from './Socials';
 
 // Rendered on its own (no header/footer) when Settings → General →
 // "Toggle Site Unavailable" is on. See getSiteDisabledSection.
-export default function SiteDisabled({ id, title, message, socials = [] }: SiteDisabledSection) {
+export default function SiteDisabled({ id, title, message, logoImage, socials = [] }: SiteDisabledSection) {
+  const logoUrl = resolveAssetUrl(logoImage);
+
   return (
     <section
       id={id}
@@ -15,6 +19,16 @@ export default function SiteDisabled({ id, title, message, socials = [] }: SiteD
       className="section bg-[var(--bg)] min-h-screen flex items-center justify-center"
     >
       <AnimatedSection className="mx-auto max-w-3xl text-center">
+        {logoUrl && (
+          <Image
+            src={logoUrl}
+            alt={title ? `${title} logo` : 'logo'}
+            width={320}
+            height={160}
+            priority
+            className="mx-auto mb-8 h-auto w-auto max-h-40 max-w-[240px] md:max-w-[320px] object-contain"
+          />
+        )}
         {title && <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--text-1)]">{title}</h1>}
         {message && <p className="text-muted mt-4 text-lg whitespace-pre-line">{message}</p>}
 

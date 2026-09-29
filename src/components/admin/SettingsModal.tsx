@@ -5,6 +5,8 @@ import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, PromoCode, S
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
+import SocialLinksEditor from './fields/SocialLinksEditor';
+import MediaPicker from './MediaPicker';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { isAdminAiUiEnabled } from '@/lib/adminAi';
 import { getSiteDisabledSettings, SITE_DISABLED_DEFAULT_MESSAGE, SITE_DISABLED_DEFAULT_TITLE } from '@/lib/siteConfigSections';
@@ -141,6 +143,29 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       const nextGeneral = { ...(prev.settings?.general ?? {}), ...patch };
       return { ...prev, settings: { ...(prev.settings ?? {}), general: nextGeneral } };
     });
+  }, []);
+
+  // ── Media picker (same promise pattern as ClassesModal) ──
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerResolveRef = useRef<((key: string | null) => void) | null>(null);
+
+  const openMediaPicker = useCallback((): Promise<string | null> => {
+    setPickerOpen(true);
+    return new Promise<string | null>((resolve) => {
+      pickerResolveRef.current = resolve;
+    });
+  }, []);
+
+  const handlePick = useCallback((key: string) => {
+    pickerResolveRef.current?.(key);
+    pickerResolveRef.current = null;
+    setPickerOpen(false);
+  }, []);
+
+  const handleCancelPick = useCallback(() => {
+    pickerResolveRef.current?.(null);
+    pickerResolveRef.current = null;
+    setPickerOpen(false);
   }, []);
 
   const siteDisabled = useMemo(() => getSiteDisabledSettings(draft), [draft]);
@@ -337,6 +362,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   }
 
   return (
+    <>
     <div className="fixed edit-modal inset-0 z-[12000] bg-black/50 flex items-center justify-center p-4">
       <div className="card admin-card card-solid p-4 relative w-full max-w-5xl !max-w-full overflow-hidden card-screen-height">
         {/* Header */}
@@ -409,7 +435,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="card admin-card card-solid card-full p-4 space-y-3">
                 <div className="font-semibold">Site Availability</div>
                 <div className="text-sm text-muted">
-                  While enabled, every page shows only this notice (plus your social links) — no header, footer, or other sections.
+                  While enabled, every page shows only this notice and the social links below — no header, footer, or other sections.
                 </div>
 
                 <label className="flex items-center gap-2">
@@ -422,6 +448,29 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 </label>
 
                 <div className="grid gap-3">
+                  <div>
+                    <label className="block text-sm font-medium">Logo Image</label>
+                    <div className="flex gap-2">
+                      <input
+                        className="input flex-1"
+                        value={siteDisabled.logoImage ?? ''}
+                        onChange={(e) => updateSiteDisabled({ logoImage: e.target.value })}
+                        placeholder={`configs/${siteId}/assets/… or https://…`}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-inverted flex-shrink-0"
+                        onClick={async () => {
+                          const picked = await openMediaPicker();
+                          if (picked) updateSiteDisabled({ logoImage: picked });
+                        }}
+                      >
+                        Pick…
+                      </button>
+                    </div>
+                    <div className="text-xs text-muted mt-1">Optional — shown above the title.</div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium">Title</label>
                     <input
@@ -443,6 +492,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     <div className="text-xs text-muted mt-1">
                       Tell visitors why the site is down. Leave blank to use the placeholder text.
                     </div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium mb-1">Social Links</div>
+                    <SocialLinksEditor
+                      items={siteDisabled.socials ?? []}
+                      onChange={(socials) => updateSiteDisabled({ socials })}
+                    />
                   </div>
                 </div>
               </div>
@@ -1093,5 +1150,19 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
       </div>
     </div>
+
+      {/* Media picker overlay */}
+      {pickerOpen && (
+        <div className="fixed inset-0 z-[13000] bg-black/60 flex items-center justify-center p-4">
+          <div className="card admin-card card-solid p-4 w-full max-w-2xl max-h-[80vh] overflow-auto relative">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-semibold">Pick an image</span>
+              <button className="btn btn-ghost" onClick={handleCancelPick}>Cancel</button>
+            </div>
+            <MediaPicker prefix={`configs/${siteId}/assets/`} onPick={handlePick} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
