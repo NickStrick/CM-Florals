@@ -41,7 +41,8 @@ export const BUSINESS = {
     'https://www.tiktok.com/@cmflorals',
     'https://www.facebook.com/profile.php?id=61578447401671',
   ],
-  ogImage: '/og.jpg',
+  // Bump ?v= when og.jpg changes so social apps drop their cached preview.
+  ogImage: '/og.jpg?v=2',
 } as const;
 
 export const DEFAULT_TITLE = 'Copper Fox Collective | Gift Shop & Florist in St. Charles, IL';
