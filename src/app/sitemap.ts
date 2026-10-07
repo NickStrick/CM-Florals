@@ -1,23 +1,13 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL, SITEMAP_ROUTES } from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.cmfloralsandgifts.com";
-
-  // Add all *real* pages you want indexed
-  const routes = [
-    "",
-    // "/about",
-    // "/contact",
-    // "/wedding-florist-chicago",
-    // "/event-florals-chicago",
-  ];
-
   const now = new Date();
 
-  return routes.map((route) => ({
-    url: `${baseUrl}${route}`,
+  return SITEMAP_ROUTES.map((slug) => ({
+    url: slug ? `${SITE_URL}/${slug}` : SITE_URL,
     lastModified: now,
     changeFrequency: "weekly",
-    priority: route === "" ? 1 : 0.7,
+    priority: slug === "" ? 1 : slug === "shop" || slug === "classes" ? 0.9 : 0.7,
   }));
 }

@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import type { HeaderSection } from '@/types/site';
 import Image from 'next/image';
 import { handleHashClick } from '@/lib/scrollToHash';
+import { resolveAssetUrl } from '@/lib/assetUrl';
 
 function normalizeNavHref(href: string) {
   if(!href || href === '' ||href === '/') {
@@ -216,8 +217,8 @@ export default function Navbar() {
           {/* Left: Logo */}
           <div className="min-w-0 relative">
             <Link href="/" className="absolute left-[-65px] top-[-15px] rounded-full overflow-hidden w-[60px] h-[60px]">
-            {header.logoImage&&header.logoImage.length?
-              <Image src={header.logoImage} alt="logo" width={140} height={60}  />
+            {resolveAssetUrl(header.logoImage) ?
+              <Image src={resolveAssetUrl(header.logoImage)!} alt={header.logoText ? `${header.logoText} logo` : 'logo'} width={140} height={60} className="w-full h-full object-cover" />
               :<></>}</Link>
             <Link href="/" className="opacity-0 xs:opacity-100 text-sm font-semibold hover:opacity-90 text-[var(--text-1)] gradient-text sm:text-lg text-nowrap">
 

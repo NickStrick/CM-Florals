@@ -1,9 +1,11 @@
 // src/mocks/caroleConfig.ts
-import type { SiteConfig, SiteProduct } from "@/types/site";
+// Copper Fox Collective (formerly CM Florals & Gifts) — local fallback config.
+// Mirrors the published site.json; bundled images are referenced via their
+// static imports (`.src`) so hashed /_next/static/media paths never go stale.
+import type { SiteConfig } from "@/types/site";
 
-// ---- Image imports ----           // Hero/banner image
+// ---- Image imports ----
 import booth from "../../public/carole/booth.jpg";
-import cart from "../../public/carole/cart.png";
 import flower2 from "../../public/carole/flower2.png";
 import flower3 from "../../public/carole/cmFlower.jpg";
 import flower4 from "../../public/carole/flower4.png";
@@ -21,16 +23,11 @@ import flowerwall2 from "../../public/carole/flowerwall2.jpg";
 import flowerwall3 from "../../public/carole/flowerwall3.jpg";
 import fallDecor1 from "../../public/carole/fallDecor1.jpg";
 import fallDecor2 from "../../public/carole/fallDecor2.jpg";
-import logoMain from "../../public/carole/booth.jpg";
 import logoWhite from "../../public/carole/logo-main.jpg";
 import logo2 from "../../public/carole/logo2.png";
 import carole from "../../public/carole/carole2.jpg";
-
 import review1 from "../../public/carole/reveiw1.png";
 import review2 from "../../public/carole/review2.png";
-
-// ---- Product image imports (from Excel “Picture Discription in Folder”) ----
-// NOTE: I assumed these are .jpg files. If any are .png, just change the extension.
 import everdayBouquetInVase from "../../public/carole/CurrentProducts/Everyday Bouquet in Vase.jpg";
 import everydayOccasionsCenterpiece from "../../public/carole/CurrentProducts/Everyday Occasions Center piece.jpg";
 import brightenTheirDay from "../../public/carole/CurrentProducts/Brighten their day Bouquet.jpg";
@@ -44,611 +41,268 @@ import elegantAnniversaryBouquet from "../../public/carole/CurrentProducts/Elega
 import anniversaryWeddingVaseAndBouquet from "../../public/carole/CurrentProducts/Anniversary Wedding Vase Bouquet.jpg";
 import theAnniversaryBouquet from "../../public/carole/CurrentProducts/The Anniversary Bouquet.jpg";
 import mixedFlowerBouquetAnniversary from "../../public/carole/CurrentProducts/Mixed Flower Bouquet Anniversary.jpg";
-import administrativeSunshineAndTulipsBouquetInVase from "../../public/carole/CurrentProducts/Adminisstrative Asst. Week.jpg";
 import oneWithPail from "../../public/carole/CurrentProducts/Administrative Assitant Week.jpg";
-import assortedTulips from "../../public/carole/CurrentProducts/Assorted Tulips.jpg";
 import bouquetWithBrightColors from "../../public/carole/CurrentProducts/Extra Large Bouquet with Bright Colors.jpg";
-
 import nosegay1 from "../../public/carole/CurrentProducts/prom/Nosegay 1.jpg";
 import nosegay2 from "../../public/carole/CurrentProducts/prom/boun.png";
 import nosegay3 from "../../public/carole/CurrentProducts/prom/NosegayBoun.png";
-import nosegay4 from "../../public/carole/CurrentProducts/prom/Nosegay 4.png";
-
-import administrativeDay1 from "../../public/carole/CurrentProducts/administrative/Administrative day 1.jpg";  
-import administrative2 from "../../public/carole/CurrentProducts/administrative/Administrative 3.jpg"; 
+import administrativeDay1 from "../../public/carole/CurrentProducts/administrative/Administrative day 1.jpg";
+import administrative2 from "../../public/carole/CurrentProducts/administrative/Administrative 3.jpg";
 import administrative6 from "../../public/carole/CurrentProducts/administrative/Administrative 6.jpg";
-
 import CorpoTable from "../../public/carole/CurrentProducts/corporate/CorpoTable.jpg";
-import CorpoTable2 from "../../public/carole/CurrentProducts/corporate/CorpoTable2.jpg"; 
-import corporateOrchidBromeliad from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad.jpg"; 
-import corporateOrchidBromeliad2 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad2.jpg"; 
-import corporateOrchidBromeliad3 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad3.jpg"; 
-import corporateOrchidBromeliad4 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad4.jpg"; 
-import corporateOrchidBromeliad5 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad5.jpg"; 
-import corporateFlowerBed2 from "../../public/carole/CurrentProducts/corporate/corporateFlowerBed.jpg"; 
-import corporateFlowerBed from "../../public/carole/CurrentProducts/corporate/corporateFlowerBed2.jpg"; 
+import CorpoTable2 from "../../public/carole/CurrentProducts/corporate/CorpoTable2.jpg";
+import corporateOrchidBromeliad from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad.jpg";
+import corporateOrchidBromeliad2 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad2.jpg";
+import corporateOrchidBromeliad3 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad3.jpg";
+import corporateOrchidBromeliad4 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad4.jpg";
+import corporateOrchidBromeliad5 from "../../public/carole/CurrentProducts/corporate/corporateOrchidBromeliad5.jpg";
+import corporateFlowerBed2 from "../../public/carole/CurrentProducts/corporate/corporateFlowerBed.jpg";
+import corporateFlowerBed from "../../public/carole/CurrentProducts/corporate/corporateFlowerBed2.jpg";
 import corporateBouquet from "../../public/carole/CurrentProducts/corporate/corporateBouquet.jpg";
 
-const phoneHref = "tel:17732094805";
-const tiktokHref =
-  "https://www.tiktok.com/@carolemurray87_group7?is_from_webapp=1&sender_device=pc";
-const instagramHref = "https://www.instagram.com/cm_florals/";
-const facebookHref = "https://www.facebook.com/carole.murray.370/";
-const linkedinHref = "https://www.linkedin.com/in/carole-murray-61458b20a/";
-
-// ======================
-// PRODUCT LISTINGS (typed + image imports from Excel filenames)
-// ======================
-type SizeKey = "S" | "M" | "L";
-
-const SIZE_LABEL: Record<SizeKey, string> = {
-  S: "Standard",
-  M: "Deluxe",
-  L: "Premium",
-};
-
-function buildSizeProducts(args: {
-  categorySlug: string;
-  categoryBadge: string;
-  baseIndex: number;
-  name: string;
-  subtitle?: string;
-  prices: Record<SizeKey, number>; // cents
-  imageUrl: string; // importedImage.src
-  extraImages?: { url: string; alt: string }[];
-}): SiteProduct {
-  const {
-    categorySlug,
-    categoryBadge,
-    baseIndex,
-    name,
-    subtitle,
-    prices,
-    imageUrl,
-    extraImages,
-  } = args;
-
-  const mk = (): SiteProduct => ({
-    id: `cmf-${categorySlug}-${baseIndex}`,
-    name,
-    subtitle,
-    category: categoryBadge,
-    price: prices.S,
-    currency: "USD",
-    thumbnailUrl: imageUrl,
-    images: [{ url: imageUrl, alt: name }, ...(extraImages ?? [])],
-    summary: `${name}`,
-    description: `${name}. Crafted fresh for ${categoryBadge}.`,
-    features: ["Fresh seasonal blooms", "Gift note included"],
-    badges: [categoryBadge],
-    stock: "in_stock",
-    ctaLabel: "Buy Now",
-    maxQuantity: 99,
-    ...(prices.S === prices.M && prices.M === prices.L
-      ? {}
-      : {
-          options: [
-            {
-              label: "Size",
-              optionItems: [
-                { label: SIZE_LABEL.S, value: "S", order: 1, default: true, price: prices.S },
-                { label: SIZE_LABEL.M, value: "M", order: 2, price: prices.M },
-                { label: SIZE_LABEL.L, value: "L", order: 3, price: prices.L },
-              ],
-            },
-          ],
-        }),
-  });
-
-  return mk();
-}
-
-const PRODUCT_DATA = [
-   {
-    title: "Prom",
-    categorySlug: "prom",
-    items: [
-      {
-        img: nosegay1,
-        name: "Prom Nosegay Bouquet",
-        subtitle: "Handheld Prom Bouquet",
-        prices: { S: 4000, M: 4000, L: 4000 },
-      },
-      {
-        img: nosegay2,
-        name: "Boutonniere",
-        subtitle: "Prom Boutonniere",
-        prices: { S: 1500, M: 1500, L: 1500 },
-      },
-      {
-        img: nosegay3,
-        name: "Nosegay & Boutonniere",
-        subtitle: "Nosegay & Boutonniere Bundle",
-        prices: { S: 5000, M: 5000, L: 5000 },
-      },
-      {
-        img: nosegay4,
-        name: "Wrist Corsage",
-        subtitle: "Prom Wrist Corsage",
-        prices: { S: 2500, M: 2500, L: 2500 },
-      },
-    ],
-  },
-  {
-    title: "Corporate",
-    categorySlug: "corporate",
-    items: [
-      {
-        img: CorpoTable,
-        extraImgs: [CorpoTable2],
-        name: "Executive Table Display",
-        subtitle: "Premium centerpiece for corporate events & boardrooms",
-        prices: { S: 12000, M: 18000, L: 25000 },
-      },
-      {
-        img: corporateOrchidBromeliad,
-        extraImgs: [corporateOrchidBromeliad2, corporateOrchidBromeliad3, corporateOrchidBromeliad4, corporateOrchidBromeliad5],
-        name: "Orchid & Bromeliad Collection",
-        subtitle: "Elegant tropical arrangement for executive spaces",
-        prices: { S: 9000, M: 13000, L: 18000 },
-      },
-      {
-        img: corporateFlowerBed,
-        extraImgs: [corporateFlowerBed2],
-        name: "Corporate Garden Display",
-        subtitle: "Lush floor display for lobbies and atriums",
-        prices: { S: 15000, M: 22000, L: 30000 },
-      },
-      {
-        img: corporateBouquet,
-        name: "Corporate Bouquet",
-        subtitle: "Refined arrangement for desks and conference rooms",
-        prices: { S: 6500, M: 9000, L: 12000 },
-      },
-    ],
-  },
-  {
-    title: "Everyday Beauty's",
-    categorySlug: "everyday",
-    items: [
-      {
-        img: everdayBouquetInVase,
-        name: "Simple White Elegance",
-        subtitle: "Everday Bouquet in Vase",
-        prices: { S: 4000, M: 6000, L: 8000 },
-      },
-      {
-        img: everydayOccasionsCenterpiece,
-        name: "Carnical Array",
-        subtitle: "Everyday Occasions Centerpiece",
-        prices: { S: 6000, M: 8000, L: 10000 },
-      },
-      {
-        img: brightenTheirDay,
-        name: "A little Bit of Sunshine",
-        subtitle: "Brighten Their Day",
-        prices: { S: 3500, M: 5000, L: 6500 },
-      },
-      {
-        img: everydayOccasions,
-        name: "Gentalmans Choice",
-        subtitle: "Everyday Occasions",
-        prices: { S: 4500, M: 6000, L: 7500 },
-      },
-    ],
-  },
-  {
-    title: "Birthday Specials",
-    categorySlug: "birthday",
-    items: [
-      {
-        img: birthdayIndulgance,
-        name: "Birthday Indulgance",
-        subtitle: "Birthday indulgance",
-        prices: { S: 4500, M: 6000, L: 7500 },
-      },
-      {
-        img: birthdayBasket,
-        name: "Birthday Basket Full of Fun",
-        subtitle: "Birthday Basket",
-        prices: { S: 5000, M: 6500, L: 8000 },
-      },
-      {
-        img: happyBirthdayPinkAndPurples,
-        name: "Happy Birthday Pink and Purples",
-        subtitle: "Happy Birthday Pink and Purples",
-        prices: { S: 6000, M: 7500, L: 9000 },
-      },
-      {
-        img: luxuryBirthday,
-        name: "Luxury European Lilly Mix",
-        subtitle: "Luxury Birthday",
-        prices: { S: 7500, M: 10000, L: 12500 },
-      },
-    ],
-  },
-  {
-    title: "Anniversarys",
-    categorySlug: "anniversarys",
-    items: [
-      {
-        img: anniversaryBouquetWithBalloon,
-        name: "Charming Anniversary",
-        subtitle: "Anniversary Bouquet with Balloon",
-        prices: { S: 4000, M: 6000, L: 8000 },
-      },
-      {
-        img: elegantAnniversaryBouquet,
-        name: "Executive Anniversary",
-        subtitle: "Elegant Anniversary Bouquet",
-        prices: { S: 5000, M: 6500, L: 8000 },
-      },
-      {
-        img: anniversaryWeddingVaseAndBouquet,
-        name: "Anniversary/ Wedding Vase and Bouquet",
-        subtitle: "Anniversary/ Wedding Vase and Bouquet",
-        prices: { S: 7500, M: 10000, L: 12500 },
-      },
-      {
-        img: theAnniversaryBouquet,
-        name: "Classic Anniversary Bouquet",
-        subtitle: "The Anniversary Bouquet",
-        prices: { S: 7500, M: 10000, L: 12500 },
-      },
-      {
-        img: mixedFlowerBouquetAnniversary,
-        name: "Mixed Anniversary Hand Held",
-        subtitle: "Mixed Flower Bouquet Anniversary",
-        prices: { S: 4500, M: 6000, L: 7500 },
-      },
-    ],
-  },
-  {
-    title: "Administrative Assistant Week",
-    categorySlug: "administrativeassistantweek",
-    items: [
-      {
-        img: administrativeSunshineAndTulipsBouquetInVase,
-        name: "Administrative Sunshine and Tulips Bouquet in Vase",
-        subtitle: "Administrative Sunshine and Tulips Bouquet in Vase",
-        prices: { S: 4000, M: 6000, L: 7500 },
-      },
-      {
-        img: oneWithPail,
-        name: "Administratives Garden Pail",
-        subtitle: "One with Pail",
-        prices: { S: 3000, M: 4500, L: 6000 },
-      },
-      {
-        img: assortedTulips,
-        name: "Assorted Tulips",
-        subtitle: "Assorted Tulips",
-        prices: { S: 2500, M: 4000, L: 6000 },
-      },
-      {
-        img: administrativeDay1,
-        name: "Bold & Brilliant",
-        subtitle: "Gerbera & Rose Vase",
-        prices: { S: 4500, M: 6000, L: 7500 },
-      },
-      {
-        img: administrative2,
-        name: "Vivid Celebration",
-        subtitle: "Sunflower & Purple Daisy Vase",
-        prices: { S: 4500, M: 6000, L: 7500 },
-      },
-      {
-        img: administrative6,
-        name: "Spring Administrative Special",
-        subtitle: "Seasonal spring arrangement",
-        prices: { S: 3000, M: 4500, L: 6000 },
-      },
-      {
-        img: bouquetWithBrightColors,
-        name: "The Amazing Administrative Handheld",
-        subtitle: "Bouquet with Bright Colors",
-        prices: { S: 2500, M: 4000, L: 5500 },
-      },
-    ],
-  }
-] as const;
-
-const shopProducts: SiteProduct[] = PRODUCT_DATA.flatMap((cat) =>
-  cat.items.map((p, itemIdx) =>
-    buildSizeProducts({
-      categorySlug: cat.categorySlug,
-      categoryBadge: cat.title,
-      baseIndex: itemIdx + 1,
-      name: p.name,
-      subtitle: p.subtitle,
-      prices: { ...p.prices },
-      imageUrl: p.img.src,
-      extraImages: (p as { extraImgs?: readonly { src: string }[] }).extraImgs?.map(
-        (i) => ({ url: i.src, alt: p.name })
-      ),
-    })
-  )
-);
-
 export const mockSiteConfig: SiteConfig = {
-  theme: { preset: "lavender", radius: "xl" },
-  products: { showFilters: true, items: shopProducts },
-  meta: {
-    title: "CM Florals — Floral Design & Gifts",
-    description:
-      "CM Florals creates joyful floral design for weddings, holidays, celebrations and everyday gifting across Chicago. Founding Florist Carole Murray.",
-    favicon: logo2.src,
+  theme: {
+    preset: "custom",
+    radius: "xl",
+    colors: {
+      primary: "#ff27be",
+      accent: "#9a01c9",
+      bg: "#fafce9",
+      bg2: "#fdb3e9",
+      fg: "#2d2d2d",
+      muted: "#4a008f",
+      text1: "#2d2d2d",
+      text2: "white",
+    },
   },
-
-  // ── Header ───────────────────────────────────────────────────────────────────
   showHeader: true,
   header: {
     id: "hdr",
     type: "header",
-    logoText: "CM Florals",
+    logoText: "Copper Fox Collective",
     logoImage: logoWhite.src,
     links: [
-      { label: "Home", href: "#top" },
-      { label: "Shop", href: "#shop" },
-      { label: "Custom", href: "#custom-request" },
-      { label: "About", href: "#create" },
-      { label: "Previous Work", href: "#gallery" },
-      { label: "Testimonials", href: "#testimonials" },
-      { label: "Contact", href: "#contact" },
+      {
+        label: "Home",
+        href: "",
+      },
+      {
+        label: "Shop",
+        href: "/shop",
+      },
+      {
+        label: "Custom Request",
+        href: "/custom",
+      },
+      {
+        label: "Weddings & Events",
+        href: "/weddings-events",
+      },
+      {
+        label: "Floral Classes",
+        href: "/classes",
+      },
+      {
+        label: "Bloom Bar Party Rentals",
+        href: "/boombar",
+      },
+      {
+        label: "Contact",
+        href: "/contact",
+      },
     ],
-    cta: { label: "Order Now", href: "#shop" },
-    style: { sticky: true, blur: true, elevation: "sm", transparent: false },
-  },
-
-  "settings": {
-    "general": {
-      "businessDisplayName": "CM Florals",
-      "businessNotificationEmail": "shop@cmfloralsandgifts.com"
+    cta: {
+      label: "Order Now",
+      href: "/shop",
     },
-    "payments": {
-      "cartActive": true,
-      "paymentType": "clover",
-      "supportEmail": "shop@cmfloralsandgifts.com",
-      "supportPhone": {
-        "label": "Call us at 773-209-4805",
-        "href": "tel:17732094805"
-      },
-      "taxes": {
-        "enabled": true,
-        "ratePercent": 10,
-        "taxShipping": false,
-        "defaultProductTaxable": true
-      },
-      "delivery": {
-        "enabled": true,
-        "type": "flat",
-        "flatFeeCents": 1500,
-        "mode": "both",
-        "addressCapture": {
-          "enabled": true,
-          "required": true,
-          "method": "googleForm",
-          "googleFormEntryId": ""
-        }
-      },
-      "googleFormOptions": {
-        "addItemToGForm": true,
-        "itemsEntryId": "entry.918647669",
-        "totalEntryId": "entry.65280150"
-      },
-      "googleFormSubmitBeforePayment": false,
-      "externalPaymentUrl": "https://venmo.com/u/Carole-Murray-9",
-      "googleFormUrl": "https://docs.google.com/forms/d/e/1FAIpQLScPLQtqUSiP_CFn1frA3nArkkue_jTWeiE2ZVto6NHOheStrg/formResponse",
-      "promoCodes": [
-        { "promoId": "CoachSue", "type": "percentage", "value": 10 }
-      ],
-      "checkoutInputs": [
-        {
-          "id": "customer-name",
-          "label": "Name",
-          "type": "text",
-          "required": true,
-          "placeholder": "Enter your full name",
-          "description": "The name of the person purchasing the arrangement.",
-          "googleFormEntryId": "entry.1007473156"
-        },
-        {
-          "id": "customer-phone",
-          "label": "Phone",
-          "type": "text",
-          "required": true,
-          "placeholder": "Enter your phone number",
-          "description": "The phone number of the person purchasing the arrangement.",
-          "googleFormEntryId": "entry.1090739960"
-        },
-        {
-          "id": "pickup-date",
-          "label": "Pick up Date and Time",
-          "type": "text",
-          "required": true,
-          "googleFormEntryId": "entry.299847389"
-        },
-        {
-          "id": "special-instructions",
-          "label": "Special Instructions",
-          "type": "textarea",
-          "placeholder": "Any special requests or notes?",
-          "googleFormEntryId": "entry.809680059"
-        }
-      ]
-    }
+    style: {
+      sticky: true,
+      blur: true,
+      elevation: "sm",
+      transparent: false,
+    },
+    visible: true,
   },
   sections: [
-
-    // HERO
     {
+      id: "bannerCarousel-2ng09",
+      type: "bannerCarousel",
       visible: true,
-      id: "hero",
-      type: "hero",
-      eyebrow: "CM Florals • Floral Design • Gifts",
-      title: "Floral Design and Gifts for Chicago's Suburbs",
-      subtitle:
-        "Custom florals for celebrations, weddings, holidays, and everyday gifting. Crafted with warmth and color to fit your story. Founded by Carole Murray.",
-      primaryCta: { label: "Order Delivery Now", href: "#shop" },
-      secondaryCta: {
-        label: "Pick up at Ogilvie / Accenture Tower",
-        href: "#contact",
-      },
-      imageUrl: logoMain.src,
+      items: [
+        {
+          title: "Now Booking Classes through the End of the Year",
+          body: "",
+          backgroundUrl: "configs/cmflorals/assets/IMG_6088.jpeg",
+          overlay: true,
+          imageUrl: "configs/cmflorals/assets/1000011438.jpeg",
+          href: "/classes",
+        },
+      ],
+      intervalMs: 5000,
     },
-
-    // ✅ Product shop
     {
+      id: "hero-tq6x2",
+      type: "hero",
       visible: true,
-      id: "shop",
-      type: "productShop",
-      title: "Shop Our Florals",
-      subtitle: "Handcrafted florals — pickup at Ogilvie / Accenture Tower",
+      eyebrow: "Copper Fox Collective • Handcrafted Gifts • Floral Design • Classes & Events",
+      title: "St. Charles' Destination for Gifts & Florals",
+      subtitle: "Handcrafted gifts from local artists, stunning floral designs, floral design classes, bloom bar rentals, and florals for all of life's major events.\n522 W Main, St. Charles\nStore Front Hours of Operation St. Charles  Monday - Friday 11AM - 5PM  Sat. 9AM - 1PM\nOrder online anytime or call for Delivery and Curbside Pick up.",
+      primaryCta: {
+        label: "Shop Gifts",
+        href: "/shop",
+      },
+      secondaryCta: {
+        label: "Join our classes",
+        href: "/classes",
+      },
+      imageUrl: booth.src,
       bottomWaveType: "1-hill",
     },
-
-        // CUSTOM FLORAL DESIGN REQUEST
     {
-      visible: true,
-      backgroundUrl: booth.src,
-      id: "custom-request",
-      type: "sendAMessage",
-      title: "Custom Floral Design Request",
-      subtitle: "Tell us about your event and we'll get back to you with a quote.",
-      description: "Looking for something unique? Fill out the form below and Carole will personally follow up with a custom arrangement just for you.",
-      submission: {
-        type: "googleForm",
-        formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfx9ZrZx8kIp_RKOH3Vmboozl0yrcUKqCQAMww1Q7hLsVQdIA/formResponse",
-        fieldMap: {
-          name:           "entry.547818426",
-          email:          "entry.528578542",
-          phone:          "entry.323794102",
-          occasion:       "entry.118923852",
-          "event-date":   "entry.778203591",
-          budget:         "entry.1611030081",
-          details:        "entry.447020428",
-        },
-      },
-      submitLabel: "Send My Request",
-      successTitle: "Request received!",
-      successMessage: "Thank you! Carole will review your request and reach out within 1–2 business days.",
-      fields: [
-        { id: "name", label: "Your Name", type: "text", placeholder: "Full name", required: true },
-        { id: "email", label: "Email Address", type: "email", placeholder: "your@email.com", required: true },
-        { id: "phone", label: "Phone Number", type: "phone", placeholder: "(555) 555-5555" },
-        {
-          id: "occasion",
-          label: "Occasion / Event Type",
-          type: "select",
-          required: true,
-          options: ["Birthday", "Anniversary", "Wedding", "Corporate Event", "Prom", "Administrative Assistant Week", "Sympathy", "Just Because", "Other"],
-        },
-        { id: "event-date", label: "Event Date", type: "text", placeholder: "MM/DD/YYYY" },
-        { id: "budget", label: "Approximate Budget", type: "text", placeholder: "e.g. $75–$150" },
-        { id: "details", label: "Design Details & Special Requests", type: "textarea", placeholder: "Colors, flowers, style, size — anything that helps Carole craft the perfect arrangement.", required: true },
-      ],
+      id: "classList-d16a51",
+      type: "classList",
+      title: "Join Our Classes",
+      subtitle: "",
+      buyCtaFallback: "Book Now",
     },
-
-
-    // WHAT WE CREATE
     {
-      topWaveType: "1-hill",
       visible: true,
       id: "create",
       type: "features",
       title: "What we create",
       items: [
         {
+          title: "Handcrafted Gifts",
+          body: "Handcrafted gifts by local artists including Zipperworks, market bags, stained glass creations, handmade jewelry, and more. Copper Fox Collective is one of the only places in Illinois that carries Zipperworks art!",
+          imageUrl: "configs/cmflorals/assets/IMG_6062.jpeg",
+          link: "/shop",
+        },
+        {
+          title: "Bouquets, Plants & Accents",
+          body: "Handcrafted bouquets, arrangements for friends and loved ones, potted plants, seasonal stems, and textural greenery to brighten homes and workplaces. — same-day options available. ",
+          imageUrl: "configs/cmflorals/assets/IMG_6088.jpeg",
+          link: "/shop",
+        },
+        {
           title: "Celebration & Event Florals",
-          body:
-            "Wedding parties, holidays, and special events — designed with warmth and color to fit your story.",
+          body: "Wedding parties, holidays, and special events — designed with warmth and color to fit your story.",
           imageUrl: flowertable.src,
-        },
-        {
-          title: "Bouquets & Gifting",
-          body:
-            "Handcrafted bouquets and arrangements for friends and loved ones — same-day options available.",
-          imageUrl: flowerwall.src,
-        },
-        {
-          title: "Plants & Accents",
-          body:
-            "Potted plants, seasonal stems, and textural greenery to brighten homes and workplaces.",
-          imageUrl: cart.src,
+          link: "/weddings-events",
         },
       ],
+      bottomWaveType: "1-hill",
     },
-
     {
+      id: "about-1wy6t",
+      type: "about",
       visible: true,
-      id: "promo",
-      type: "video",
-      title: "Introducing CM Floral Design",
-      subtitle: "",
-      source: {
-        type: "url",
-        href: "https://youtu.be/w_Q4mTpHzog?si=lhWk_PGVBpehZIxs",
-      },
-      style: {
-        aspect: "16/9",
-        rounded: "xl",
-        shadow: "lg",
-        background: "default",
-      },
-      controls: true,
-      autoplay: false,
-      muted: false,
-      loop: false,
+      title: "We have Moved to St. Charles!! ",
+      body: "We're a gift shop and floral studio rooted in over 45 years of creative experience. Our shelves are filled with handcrafted gifts from local artists — Zipperworks art, market bags, stained glass, handmade jewelry, and more — alongside fresh, handcrafted floral designs that bring life's special moments to life.\n\nWhether you're shopping for a birthday, an anniversary, a thank-you, or just because, we help you find the perfect gift and pair it with a custom arrangement made just for the occasion.\n\nOur team also designs stunning florals for private and corporate events, including weddings, baby showers, bridal showers, retirement parties, bar and bat mitzvahs, anniversaries, birthdays, grand openings, and more. Every arrangement is thoughtfully designed to reflect your unique style and vision.\n\nWe offer engaging floral design and arts & crafts classes for individuals, groups, and organizations — a fun, inspiring way to learn a new skill, enjoy a creative outing, or host a memorable team-building experience.\n\nWe also feature Bloom Bar rentals and Bloom Bar parties, where guests create their own custom bouquets — the perfect interactive experience for weddings, showers, corporate events, birthdays, and celebrations of all kinds.\n\nAt the heart of our business is a commitment to exceptional service, quality gifts and flowers, and unforgettable experiences.",
+      imageUrl: "configs/cmflorals/assets/1046.jpg",
+      bullets: [],
+      align: "left",
+      topWaveType: "1-hill",
+      subtitle: "522 W Main, St. Charles, IL  Call us at 630-448-0108",
     },
-
     {
       visible: true,
       id: "gallery",
       type: "gallery",
       title: "Previous Work",
-      subtitle: "bouquets, gifts and event florals",
-      style: { columns: 4, rounded: "xl", gap: "md" },
+      subtitle: "gifts, bouquets and event florals",
+      style: {
+        columns: 4,
+        rounded: "xl",
+        gap: "md",
+      },
       backgroundClass: "bg-gradient-2",
       items: [
-        { imageUrl: booth.src, alt: "Booth display" },
-        { imageUrl: flowerwall3.src, alt: "Flower wall 3" },
-        { imageUrl: flowerwall2.src, alt: "Flower wall 2" },
-
-        { imageUrl: flower8.src, alt: "Arrangement 7" },
-
-        { imageUrl: flower2.src, alt: "Arrangement 1" },
-
-        { imageUrl: flower3.src, alt: "Arrangement 2" },
-        { imageUrl: flower4.src, alt: "Arrangement 3" },
-        { imageUrl: flower5.src, alt: "Arrangement 4" },
-        { imageUrl: flower6.src, alt: "Arrangement 5" },
-        { imageUrl: flower7.src, alt: "Arrangement 6" },
-
-        { imageUrl: flower11.src, alt: "Arrangement 11" },
-        { imageUrl: flower9.src, alt: "Arrangement 9" },
-        { imageUrl: logo2.src, alt: "Arrangement 0" },
-        { imageUrl: flower10.src, alt: "Arrangement 10" },
-        { imageUrl: fallDecor1.src, alt: "fall decor" },
-        { imageUrl: fallDecor2.src, alt: "fall decor alt" },
-        { imageUrl: flowerwall.src, alt: "Flower wall" },
-
-        { imageUrl: flowertable2.src, alt: "Table setup" },
+        {
+          imageUrl: booth.src,
+          alt: "Booth display",
+        },
+        {
+          imageUrl: flowerwall3.src,
+          alt: "Flower wall 3",
+        },
+        {
+          imageUrl: flowerwall2.src,
+          alt: "Flower wall 2",
+        },
+        {
+          imageUrl: flower8.src,
+          alt: "Arrangement 7",
+        },
+        {
+          imageUrl: flower2.src,
+          alt: "Arrangement 1",
+        },
+        {
+          imageUrl: flower3.src,
+          alt: "Arrangement 2",
+        },
+        {
+          imageUrl: flower4.src,
+          alt: "Arrangement 3",
+        },
+        {
+          imageUrl: flower5.src,
+          alt: "Arrangement 4",
+        },
+        {
+          imageUrl: flower6.src,
+          alt: "Arrangement 5",
+        },
+        {
+          imageUrl: flower7.src,
+          alt: "Arrangement 6",
+        },
+        {
+          imageUrl: flower11.src,
+          alt: "Arrangement 11",
+        },
+        {
+          imageUrl: flower9.src,
+          alt: "Arrangement 9",
+        },
+        {
+          imageUrl: logo2.src,
+          alt: "Arrangement 0",
+        },
+        {
+          imageUrl: flower10.src,
+          alt: "Arrangement 10",
+        },
+        {
+          imageUrl: fallDecor1.src,
+          alt: "fall decor",
+        },
+        {
+          imageUrl: fallDecor2.src,
+          alt: "fall decor alt",
+        },
+        {
+          imageUrl: flowerwall.src,
+          alt: "Flower wall",
+        },
+        {
+          imageUrl: flowertable2.src,
+          alt: "Table setup",
+        },
       ],
       bottomWaveType: "1-hill",
+      topWaveType: "1-hill",
     },
-
     {
       visible: true,
       id: "floating",
       type: "sectional",
-      title: "Bringing sunshine and smiles to Chicago",
-      body: "Floral design that brings joy to everyday life.",
+      title: "Bringing sunshine and smiles to Chicago and its suburbs",
+      body: "Handcrafted gifts and floral design that bring joy to everyday life for the locals.",
       backgroundUrl: booth.src,
       overlay: true,
       height: "md",
     },
-
-    // TESTIMONIALS
     {
       visible: true,
       id: "testimonials",
@@ -656,35 +310,41 @@ export const mockSiteConfig: SiteConfig = {
       title: "What Customers Experience",
       topWaveType: "1-hill",
       bottomWaveType: "1-hill",
-      subtitle:
-        "We strive to help our cusomters connect with loved ones through the art of gift giving.",
+      subtitle: "We strive to help our cusomters connect with loved ones through the art of gift giving.",
       items: [
         {
-          quote:
-            "Carole is true artist! Even in a pinch, she arranges the most beautiful combination of flowers and colors, making every bouquet lovely and truly unique. Her flowers are fresh and long-lasting. CM is our go-to!",
+          quote: "Carole is true artist! Even in a pinch, she arranges the most beautiful combination of flowers and colors, making every bouquet lovely and truly unique. Her flowers are fresh and long-lasting. CM is our go-to!",
           name: "Maggie Ghobrial",
           role: "Customer",
           avatarUrl: review1.src,
         },
-
         {
-          quote:
-            "Carole makes amazing bouquets! My girlfriend loves them ❤️❤️❤️❤️",
+          quote: "Carole makes amazing bouquets! My girlfriend loves them ❤️❤️❤️❤️",
           name: "Arnav Sinha",
           role: "Customer",
         },
         {
-          quote:
-            "The Love and care that Carole puts into her bouquets is apparent from their beauty, creativeness, and quality! You can expect exactly what she promises, gorgeous and creative mastery of the art of florals through decades of experience!",
+          quote: "The Love and care that Carole puts into her bouquets is apparent from their beauty, creativeness, and quality! You can expect exactly what she promises, gorgeous and creative mastery of the art of florals through decades of experience!",
           name: "Nick Stricker",
           role: "Customer & Business Partner",
           avatarUrl: review2.src,
         },
         {
-          quote:
-            "I know very little about flowers, but I said it's my wife's birthday, I said she likes hydrangeas, set my budget, and I received an absolutely stunning bouquet a few minutes later. My wife loves them! I'm so thankful that we UP commuters have such a gifted florist at OTC!",
+          quote: "I know very little about flowers, but I said it's my wife's birthday, I said she likes hydrangeas, set my budget, and I received an absolutely stunning bouquet a few minutes later. My wife loves them! I'm so thankful that we UP commuters have such a gifted florist at OTC!",
           name: "Jonathan Walker",
           role: "Customer",
+        },
+        {
+          quote: "What a joy to find this hidden gem! Carole the designer whipped up gorgeous centerpieces for me for a corporate event in just minutes! Thank you thank you",
+          name: "Vincent",
+          role: "Customer",
+          avatarUrl: "",
+        },
+        {
+          quote: "Was amazing experience with the owner very kind help me find the perfect flowers for a birthday every time I walk pass flowers all always blooming no matter the time of season and prices are very reasonable",
+          name: "Dajinae Leverston",
+          role: "Customer",
+          avatarUrl: "",
         },
       ],
       style: {
@@ -695,30 +355,33 @@ export const mockSiteConfig: SiteConfig = {
         background: "band",
       },
     },
-
-    // ABOUT FOUNDER
-    {
-      visible: true,
-      id: "about",
-      type: "about",
-      title: "About the Founder — Carole Murray",
-      body:
-        "Grew up in the Chicago suburbs, inspired by the natural prairie fields of Illinois. I have worked in the Chicago floral industry for 45 years — from neighborhood shops to destination assignments in Las Vegas and Hawaii. I love training beginners and getting them excited to enter the world of floral design. I look at life as an opportunity to make people smile.",
-      imageUrl: carole.src,
-      backgroundClass: "bg-gradient-1",
-    },
-
     {
       visible: true,
       id: "socials",
       type: "socials",
-      title: "Connect With Me",
-      subtitle: "Want to collaborate? Follow or message me.",
+      title: "Follow US",
+      subtitle: "Join Us to learn about upcoming events and classes.",
       items: [
-        { type: "instagram", href: instagramHref, label: "Instagram" },
-        { type: "tiktok", href: tiktokHref, label: "TikTok" },
-        { type: "facebook", href: facebookHref, label: "Facebook" },
-        { type: "linkedin", href: linkedinHref, label: "LinkedIn" },
+        {
+          type: "instagram",
+          href: "https://www.instagram.com/cm_florals/",
+          label: "Instagram",
+        },
+        {
+          type: "tiktok",
+          href: "https://www.tiktok.com/@carolemurray87_group7?is_from_webapp=1&sender_device=pc",
+          label: "TikTok",
+        },
+        {
+          type: "facebook",
+          href: "https://www.facebook.com/carole.murray.370/",
+          label: "Facebook",
+        },
+        {
+          type: "linkedin",
+          href: "https://www.linkedin.com/in/carole-murray-61458b20a/",
+          label: "LinkedIn",
+        },
       ],
       style: {
         background: "band",
@@ -727,62 +390,95 @@ export const mockSiteConfig: SiteConfig = {
         gap: "md",
         align: "center",
       },
+      bottomWaveType: "1-hill",
     },
-
+    {
+      visible: true,
+      id: "sectional-k5jzv",
+      type: "sectional",
+      title: "Bringing sunshine and smiles to Chicago and its suburbs",
+      body: "Handcrafted gifts and floral design that bring joy to everyday life for the locals.",
+      backgroundUrl: booth.src,
+      overlay: true,
+      height: "md",
+    },
+    {
+      visible: true,
+      id: "about",
+      type: "about",
+      title: "About the Founder — Carole Murray",
+      body: "Grew up in the Chicago suburbs, inspired by the natural prairie fields of Illinois. I have worked in the Chicago floral industry for 45 years — from neighborhood shops to destination assignments in Las Vegas and Hawaii. I love training beginners and getting them excited to enter the world of floral design. I look at life as an opportunity to make people smile.",
+      imageUrl: carole.src,
+      backgroundClass: "",
+      topWaveType: "1-hill",
+    },
     {
       visible: true,
       id: "book",
       type: "cta",
       title: "Ready to start?",
-      body: "Text or call to set up your event space.",
-      cta: { label: "Call Now", href: phoneHref },
+      body: "Find us at our 2 different locations and text or call to set up your event space.",
+      cta: {
+        label: "Contact Us",
+        href: "/contact",
+      },
     },
-
-    // CONTACT
-
     {
+      id: "partners-b3rkr",
+      type: "partners",
       visible: true,
-      id: "contact",
-      type: "contact",
-      title: "How to Find Us",
-      email: "shop@cmfloralsandgifts.com",
-      address: "Ogilvie / Accenture Tower, 500 W Madison St, Chicago, IL 60661",
-      phone: { label: "(773) 209-4805", href: phoneHref },
-      backgroundUrl: booth.src,
-      mapEmbedUrl:
-        "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus",
-      socials: [
-        { label: "LinkedIn", href: linkedinHref },
-        { label: "TikTok", href: tiktokHref },
-        { label: "Instagram", href: instagramHref },
-        { label: "Facebook", href: facebookHref },
+      title: "Partners",
+      subtitle: "",
+      items: [
+        {
+          name: "Errand Up",
+          description: "Our Deliver Driver Partner",
+          logoUrl: "configs/cmflorals/assets/errandup.png",
+          links: [
+            {
+              type: "website",
+              href: "https://www.errandup.com/",
+            },
+          ],
+        },
       ],
+      style: {
+        variant: "cards",
+        columns: 3,
+        rounded: "xl",
+        background: "default",
+      },
     },
-
     {
       visible: true,
       id: "pay",
       type: "cta",
       title: "Want to complete an order or make a payment?",
       body: "Visit our Venmo page to complete your transaction.",
-      cta: { label: "Pay Now", href: "https://venmo.com/u/Carole-Murray-9" },
+      cta: {
+        label: "Pay Now",
+        href: "https://venmo.com/u/Carole-Murray-9",
+      },
     },
-
-    // SHARE (QR)
     {
       visible: true,
       id: "share",
       type: "share",
       title: "Share this site",
       subtitle: "Scan on your phone or send to a friend.",
-      style: { variant: "band", align: "center", actions: true },
-      items: [{ label: "Website (this page)" }],
+      style: {
+        variant: "band",
+        align: "center",
+        actions: true,
+      },
+      items: [
+        {
+          label: "Website (this page)",
+        },
+      ],
       backgroundClass: "bg-gradient-2-top",
     },
-
   ],
-
-  // ── Footer ───────────────────────────────────────────────────────────────────
   showFooter: true,
   footer: {
     id: "ftr",
@@ -791,41 +487,3037 @@ export const mockSiteConfig: SiteConfig = {
       {
         title: "Explore",
         links: [
-          { label: "Home", href: "/" },
-          { label: "Shop", href: "#shop" },
-          { label: "Custom Request", href: "#custom-request" },
-          { label: "About", href: "#create" },
-          { label: "Founder", href: "#about" },
-          { label: "Previous Work", href: "#gallery" },
-          { label: "Testimonials", href: "#testimonials" },
-          { label: "Contact", href: "#contact" },
+          {
+            label: "Bloom Bar Party Rentals",
+            href: "/boombar",
+          },
+          {
+            label: "Shop",
+            href: "#shop",
+          },
+          {
+            label: "Custom Request",
+            href: "#custom-request",
+          },
+          {
+            label: "Weddings & Events",
+            href: "/weddings-events",
+          },
+          {
+            label: "About",
+            href: "/#about",
+          },
+          {
+            label: "Previous Work",
+            href: "#gallery",
+          },
+          {
+            label: "Testimonials",
+            href: "#testimonials",
+          },
+          {
+            label: "Contact",
+            href: "#contact",
+          },
+          {
+            label: "Shop",
+            href: "/shop",
+          },
+          {
+            label: "Bloom Bar Party Rentals",
+            href: "/boombar",
+          },
+          {
+            label: "Custom Request",
+            href: "/custom",
+          },
+          {
+            label: "Contact",
+            href: "/contact",
+          },
         ],
       },
       {
         title: "Info",
         links: [
-          { label: "CM Florals & Gifts", href: "/" },
+          {
+            label: "Bloom Bar Party Rentals",
+            href: "/boombar",
+          },
           {
             label: "500 W Madison St, Chicago, IL 60661",
             href: "https://maps.app.goo.gl/uHEar2C6fxQPoHUo6",
           },
-          { label: "(773) 209-4805", href: phoneHref },
-          { label: "Hours: Mon–Fri 9am–5pm", href: "#" },
+          {
+            label: "(773) 209-4805",
+            href: "tel:17732094805",
+          },
+          {
+            label: "Hours: Mon–Fri 9am–5pm",
+            href: "#",
+          },
         ],
       },
       {
         title: "Connect",
         links: [
           {
-            label: "shop@cmfloralsandgifts.com",
-            href: "mailto:shop@cmfloralsandgifts.com",
+            label: "shop@copperfoxcollective.com",
+            href: "mailto:shop@copperfoxcollective.com",
           },
-          { label: "Instagram", href: instagramHref },
-          { label: "TikTok", href: tiktokHref },
-          { label: "LinkedIn", href: linkedinHref },
+          {
+            label: "Instagram",
+            href: "https://www.instagram.com/cm_florals/",
+          },
+          {
+            label: "TikTok",
+            href: "https://www.tiktok.com/@carolemurray87_group7?is_from_webapp=1&sender_device=pc",
+          },
+          {
+            label: "LinkedIn",
+            href: "https://www.linkedin.com/in/carole-murray-61458b20a/",
+          },
         ],
       },
     ],
-    legal: "© 2025 CM Florals. All rights reserved.",
+    legal: "© 2026 Copper Fox Collective. All rights reserved.",
+    visible: true,
+  },
+  meta: {
+    title: "Copper Fox Collective — Gifts & Floral Design",
+    description: "Copper Fox Collective offers handcrafted gifts from local artists, plus joyful floral design for weddings, holidays, celebrations and everyday occasions in St. Charles and the Chicago suburbs. Founded by florist Carole Murray.",
+    favicon: logo2.src,
+  },
+  settings: {
+    general: {
+      businessDisplayName: "Copper Fox Collective",
+      businessNotificationEmail: "shop@copperfoxcollective.com",
+      siteDisabled: {
+        enabled: true,
+        message: "Copper Fox Collective is unavailable right now and is going through some changes. Follow our social media for the latest updates.",
+        logoImage: "configs/cmflorals/assets/og.jpg",
+        logoRounded: true,
+        logoSize: "lg",
+        socials: [
+          {
+            type: "instagram",
+            href: "https://www.instagram.com/cm_florals/",
+            label: "Instagram",
+          },
+          {
+            type: "tiktok",
+            href: "https://www.tiktok.com/@cmflorals",
+            label: "TikTok",
+          },
+          {
+            type: "facebook",
+            href: "https://www.facebook.com/profile.php?id=61578447401671",
+            label: "Facebook",
+          },
+        ],
+      },
+    },
+    payments: {
+      cartActive: true,
+      paymentType: "clover",
+      supportEmail: "shop@copperfoxcollective.com",
+      supportPhone: {
+        label: "Call us at 773-209-4805",
+        href: "tel:17732094805",
+      },
+      taxes: {
+        enabled: true,
+        ratePercent: 10,
+        taxShipping: false,
+        defaultProductTaxable: true,
+      },
+      delivery: {
+        enabled: true,
+        type: "flat",
+        flatFeeCents: 2000,
+        mode: "both",
+        addressCapture: {
+          enabled: true,
+          required: true,
+          method: "googleForm",
+          googleFormEntryId: "",
+        },
+        driverTipEnabled: true,
+      },
+      googleFormOptions: {
+        addItemToGForm: true,
+        itemsEntryId: "entry.918647669",
+        totalEntryId: "entry.65280150",
+      },
+      googleFormSubmitBeforePayment: false,
+      externalPaymentUrl: "https://venmo.com/u/Carole-Murray-9",
+      googleFormUrl: "https://docs.google.com/forms/d/e/1FAIpQLScPLQtqUSiP_CFn1frA3nArkkue_jTWeiE2ZVto6NHOheStrg/formResponse",
+      promoCodes: [
+        {
+          promoId: "CoachSue",
+          type: "percentage",
+          value: 10,
+        },
+        {
+          promoId: "ReuseGlass",
+          type: "amount",
+          value: 10,
+        },
+      ],
+      checkoutInputs: [
+        {
+          id: "customer-name",
+          label: "Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter your full name",
+          description: "The name of the person purchasing the arrangement.",
+          googleFormEntryId: "entry.1007473156",
+        },
+        {
+          id: "customer-phone",
+          label: "Phone",
+          type: "text",
+          required: true,
+          placeholder: "Enter your phone number",
+          description: "The phone number of the person purchasing the arrangement.",
+          googleFormEntryId: "entry.1090739960",
+        },
+        {
+          id: "pickup-date",
+          label: "Pick up Date and Time",
+          type: "text",
+          required: true,
+          googleFormEntryId: "entry.299847389",
+        },
+        {
+          id: "special-instructions",
+          label: "Special Instructions",
+          type: "textarea",
+          placeholder: "Any special requests or notes?",
+          googleFormEntryId: "entry.809680059",
+        },
+      ],
+    },
+  },
+  products: {
+    showFilters: true,
+    items: [
+      {
+        id: "product-0b6a4fd7",
+        name: "",
+        category: "Homecoming",
+        subtitle: "",
+        price: 0,
+        currency: "USD",
+        thumbnailUrl: "",
+        summary: "",
+        featured: false,
+        hideFromShop: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [],
+      },
+      {
+        id: "product-1a6f3883",
+        name: "Nosegay Bouquet",
+        category: "Homecoming",
+        subtitle: "Taylor made to the color of your dress.",
+        price: 4000,
+        currency: "USD",
+        thumbnailUrl: "configs/cmflorals/assets/nosegay 1.jpg",
+        summary: "",
+        featured: false,
+        hideFromShop: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                price: 4000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "product-134f158e",
+        name: "Graduation Bouquets",
+        category: "Graduation ",
+        subtitle: "",
+        price: 7500,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/PnKvERQ.jpeg",
+        summary: "Graduation Bouquets in your schools colors upon request ",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [
+          {
+            label: "Standard",
+            optionItems: [
+              {
+                label: "Cogratulations",
+                price: 2500,
+              },
+            ],
+          },
+          {
+            label: "Your Simply Amazing",
+            optionItems: [
+              {
+                label: "Deluxe",
+                price: 4000,
+              },
+            ],
+          },
+          {
+            label: "You came, you saw, you conquered",
+            optionItems: [
+              {
+                label: "Premium",
+                price: 7500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "product-ae8b14a8",
+        name: "Fairy Gardens",
+        category: "Gifts",
+        subtitle: "",
+        price: 4500,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/aLmELOa.jpeg",
+        summary: "Our Handmade Fairy Gardens are the perfect way to dress up a window sill, desk top, or any shelf.",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "basic",
+                price: 2000,
+                default: true,
+              },
+              {
+                label: "deluxe",
+                price: 3000,
+                default: true,
+              },
+              {
+                label: "premium",
+                price: 4500,
+              },
+            ],
+          },
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                price: 2000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "product-6814be35",
+        name: "Flower/ Plant Pick",
+        category: "Add On's",
+        subtitle: "",
+        price: 300,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/ETXt6DA.png",
+        summary: "Had a special saying to your arrangement for you any occasion",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [],
+      },
+      {
+        id: "product-50f051e8",
+        name: "Balloons",
+        category: "Add On's",
+        subtitle: "",
+        price: 500,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/0mkCmIN.jpeg",
+        summary: "Add some personalized balloons to make your arrangement even more elegant",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [
+          {
+            label: "Balloon Add On",
+            optionItems: [
+              {
+                label: "4\" Balloon",
+                price: 300,
+              },
+              {
+                label: "10\" Balloon",
+                price: 700,
+              },
+            ],
+          },
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                price: 500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "product-e54fe94b",
+        name: "Glass Vase Add On",
+        category: "Add On's",
+        subtitle: "",
+        price: 1500,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/7IJxvos.png",
+        summary: "Add an Elegant Vase to any of our arrangements for the perfect gift.  ",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                price: 1500,
+              },
+              {
+                label: "Deluxe",
+                price: 2000,
+              },
+              {
+                label: "Premium",
+                price: 2500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "product-a42af1f2",
+        name: "Elegant Spring Spray",
+        category: "Mothers Day",
+        subtitle: "",
+        price: 30000,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/NjZPNCL.jpeg",
+        summary: "A statement not to be ignored.  Beautiful mix of Flowers for your Loved one. ",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [],
+      },
+      {
+        id: "product-dae6773a",
+        name: "A Planter full of Fun",
+        category: "Mothers Day",
+        subtitle: "Mothers Day",
+        price: 2500,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/TQAilmg.jpeg",
+        summary: "A Planter base with different chosen spring flowers just for Mom.  Perfect for her counter top or table on Mothers day.",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [],
+      },
+      {
+        id: "cmf-prom-1",
+        name: "Homecoming Nosegay Bouquet",
+        subtitle: "Handheld Prom Bouquet",
+        category: "",
+        price: 4000,
+        currency: "USD",
+        thumbnailUrl: nosegay1.src,
+        images: [
+          {
+            url: nosegay1.src,
+            alt: "Prom Nosegay Bouquet",
+          },
+        ],
+        summary: "Prom Nosegay Bouquet",
+        description: "Prom Nosegay Bouquet. Crafted fresh for Prom.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Prom"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+      },
+      {
+        id: "cmf-prom-2",
+        name: "Boutonniere",
+        subtitle: "Prom Boutonniere",
+        category: "Homecoming",
+        price: 1500,
+        currency: "USD",
+        thumbnailUrl: nosegay2.src,
+        images: [
+          {
+            url: nosegay2.src,
+            alt: "Boutonniere",
+          },
+        ],
+        summary: "Boutonniere",
+        description: "Boutonniere. Crafted fresh for Prom.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Prom"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+      },
+      {
+        id: "cmf-prom-3",
+        name: "Wrist Corsage",
+        subtitle: "Nosegay & Boutonniere Bundle",
+        category: "Homecoming",
+        price: 3500,
+        currency: "USD",
+        thumbnailUrl: nosegay3.src,
+        images: [
+          {
+            url: nosegay3.src,
+            alt: "Nosegay & Boutonniere",
+          },
+        ],
+        summary: "Nosegay & Boutonniere",
+        description: "Nosegay & Boutonniere. Crafted fresh for Prom.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Prom"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+      },
+      {
+        id: "cmf-corporate-1",
+        name: "Executive Table Display",
+        subtitle: "Premium centerpiece for corporate events & boardrooms",
+        category: "Corporate",
+        price: 25000,
+        currency: "USD",
+        thumbnailUrl: CorpoTable.src,
+        images: [
+          {
+            url: CorpoTable.src,
+            alt: "Executive Table Display",
+          },
+          {
+            url: CorpoTable2.src,
+            alt: "Executive Table Display",
+          },
+        ],
+        summary: "Executive Table Display",
+        description: "Executive Table Display. Crafted fresh for Corporate.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Corporate"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 12000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 18000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 25000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-corporate-2",
+        name: "Orchid & Bromeliad Collection",
+        subtitle: "Elegant tropical arrangement for executive spaces",
+        category: "Corporate",
+        price: 30000,
+        currency: "USD",
+        thumbnailUrl: corporateOrchidBromeliad.src,
+        images: [
+          {
+            url: corporateOrchidBromeliad.src,
+            alt: "Orchid & Bromeliad Collection",
+          },
+          {
+            url: corporateOrchidBromeliad2.src,
+            alt: "Orchid & Bromeliad Collection",
+          },
+          {
+            url: corporateOrchidBromeliad3.src,
+            alt: "Orchid & Bromeliad Collection",
+          },
+          {
+            url: corporateOrchidBromeliad4.src,
+            alt: "Orchid & Bromeliad Collection",
+          },
+          {
+            url: corporateOrchidBromeliad5.src,
+            alt: "Orchid & Bromeliad Collection",
+          },
+        ],
+        summary: "Orchid & Bromeliad Collection",
+        description: "Orchid & Bromeliad Collection. Crafted fresh for Corporate.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Corporate"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 15000,
+              },
+              {
+                label: "Deluxe - with glass",
+                value: "M",
+                order: 2,
+                price: 25000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 30000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-corporate-3",
+        name: "Corporate Garden Display",
+        subtitle: "Lush floor display for lobbies and atriums",
+        category: "Corporate",
+        price: 30000,
+        currency: "USD",
+        thumbnailUrl: corporateFlowerBed.src,
+        images: [
+          {
+            url: corporateFlowerBed.src,
+            alt: "Corporate Garden Display",
+          },
+          {
+            url: corporateFlowerBed2.src,
+            alt: "Corporate Garden Display",
+          },
+        ],
+        summary: "Corporate Garden Display",
+        description: "Corporate Garden Display. Crafted fresh for Corporate.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Corporate"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 15000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 22000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 30000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-corporate-4",
+        name: "Corporate Bouquet",
+        subtitle: "Refined arrangement for desks and conference rooms",
+        category: "Corporate",
+        price: 12000,
+        currency: "USD",
+        thumbnailUrl: corporateBouquet.src,
+        images: [
+          {
+            url: corporateBouquet.src,
+            alt: "Corporate Bouquet",
+          },
+        ],
+        summary: "Corporate Bouquet",
+        description: "Corporate Bouquet. Crafted fresh for Corporate.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Corporate"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 6500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 9000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 12000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-everyday-1",
+        name: "Simple White Elegance",
+        subtitle: "Everday Bouquet in Vase",
+        category: "Everyday Beauty's",
+        price: 8000,
+        currency: "USD",
+        thumbnailUrl: everdayBouquetInVase.src,
+        images: [
+          {
+            url: everdayBouquetInVase.src,
+            alt: "Simple White Elegance",
+          },
+        ],
+        summary: "Simple White Elegance",
+        description: "Simple White Elegance. Crafted fresh for Everyday Beauty's.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Everyday Beauty's"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: false,
+                price: 4000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 8000,
+                default: true,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-everyday-2",
+        name: "Carnival Array",
+        subtitle: "Everyday Occasions Centerpiece",
+        category: "Everyday Beauty's",
+        price: 6000,
+        currency: "USD",
+        thumbnailUrl: everydayOccasionsCenterpiece.src,
+        images: [
+          {
+            url: everydayOccasionsCenterpiece.src,
+            alt: "Carnical Array",
+          },
+        ],
+        summary: "Carnical Array",
+        description: "Carnical Array. Crafted fresh for Everyday Beauty's.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Everyday Beauty's"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 6000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 8000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 10000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-everyday-3",
+        name: "A little Bit of Sunshine",
+        subtitle: "Brighten Their Day",
+        category: "Everyday Beauty's",
+        price: 6500,
+        currency: "USD",
+        thumbnailUrl: brightenTheirDay.src,
+        images: [
+          {
+            url: brightenTheirDay.src,
+            alt: "A little Bit of Sunshine",
+          },
+        ],
+        summary: "A little Bit of Sunshine",
+        description: "A little Bit of Sunshine. Crafted fresh for Everyday Beauty's.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Everyday Beauty's"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 3500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 5000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 6500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-everyday-4",
+        name: "Gentlemans Choice",
+        subtitle: "Everyday Occasions",
+        category: "Everyday Beauty's",
+        price: 7500,
+        currency: "USD",
+        thumbnailUrl: everydayOccasions.src,
+        images: [
+          {
+            url: everydayOccasions.src,
+            alt: "Gentalmans Choice",
+          },
+        ],
+        summary: "Gentalmans Choice",
+        description: "Gentalmans Choice. Crafted fresh for Everyday Beauty's.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Everyday Beauty's"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 4500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 7500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-birthday-1",
+        name: "Birthday Indulgance",
+        subtitle: "Birthday indulgance",
+        category: "Birthday Specials",
+        price: 7500,
+        currency: "USD",
+        thumbnailUrl: birthdayIndulgance.src,
+        images: [
+          {
+            url: birthdayIndulgance.src,
+            alt: "Birthday Indulgance",
+          },
+        ],
+        summary: "Birthday Indulgance",
+        description: "Birthday Indulgance. Crafted fresh for Birthday Specials.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Birthday Specials"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 4500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 7500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-birthday-2",
+        name: "Birthday Basket Full of Fun",
+        subtitle: "Birthday Basket",
+        category: "Birthday Specials",
+        price: 8000,
+        currency: "USD",
+        thumbnailUrl: birthdayBasket.src,
+        images: [
+          {
+            url: birthdayBasket.src,
+            alt: "Birthday Basket Full of Fun",
+          },
+        ],
+        summary: "Birthday Basket Full of Fun",
+        description: "Birthday Basket Full of Fun. Crafted fresh for Birthday Specials.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Birthday Specials"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 5000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6500,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 8000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-birthday-3",
+        name: "Happy Birthday Pink and Purples",
+        subtitle: "Happy Birthday Pink and Purples",
+        category: "Birthday Specials",
+        price: 9000,
+        currency: "USD",
+        thumbnailUrl: happyBirthdayPinkAndPurples.src,
+        images: [
+          {
+            url: happyBirthdayPinkAndPurples.src,
+            alt: "Happy Birthday Pink and Purples",
+          },
+        ],
+        summary: "Happy Birthday Pink and Purples",
+        description: "Happy Birthday Pink and Purples. Crafted fresh for Birthday Specials.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Birthday Specials"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 6000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 7500,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 9000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-birthday-4",
+        name: "Luxury European Lilly Mix",
+        subtitle: "Luxury Birthday",
+        category: "Birthday Specials",
+        price: 12500,
+        currency: "USD",
+        thumbnailUrl: luxuryBirthday.src,
+        images: [
+          {
+            url: luxuryBirthday.src,
+            alt: "Luxury European Lilly Mix",
+          },
+        ],
+        summary: "Luxury European Lilly Mix",
+        description: "Luxury European Lilly Mix. Crafted fresh for Birthday Specials.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Birthday Specials"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 7500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 10000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 12500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-anniversarys-1",
+        name: "Charming Anniversary",
+        subtitle: "Anniversary Bouquet with Balloon",
+        category: "Anniversarys",
+        price: 8000,
+        currency: "USD",
+        thumbnailUrl: anniversaryBouquetWithBalloon.src,
+        images: [
+          {
+            url: anniversaryBouquetWithBalloon.src,
+            alt: "Charming Anniversary",
+          },
+        ],
+        summary: "Charming Anniversary",
+        description: "Charming Anniversary. Crafted fresh for Anniversarys.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Anniversarys"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 4000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 8000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-anniversarys-2",
+        name: "Executive Anniversary",
+        subtitle: "Elegant Anniversary Bouquet",
+        category: "Anniversarys",
+        price: 8000,
+        currency: "USD",
+        thumbnailUrl: elegantAnniversaryBouquet.src,
+        images: [
+          {
+            url: elegantAnniversaryBouquet.src,
+            alt: "Executive Anniversary",
+          },
+        ],
+        summary: "Executive Anniversary",
+        description: "Executive Anniversary. Crafted fresh for Anniversarys.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Anniversarys"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 5000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6500,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 8000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-anniversarys-3",
+        name: "Anniversary/ Wedding Vase and Bouquet",
+        subtitle: "Anniversary/ Wedding Vase and Bouquet",
+        category: "Anniversarys",
+        price: 12500,
+        currency: "USD",
+        thumbnailUrl: anniversaryWeddingVaseAndBouquet.src,
+        images: [
+          {
+            url: anniversaryWeddingVaseAndBouquet.src,
+            alt: "Anniversary/ Wedding Vase and Bouquet",
+          },
+        ],
+        summary: "Anniversary/ Wedding Vase and Bouquet",
+        description: "Anniversary/ Wedding Vase and Bouquet. Crafted fresh for Anniversarys.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Anniversarys"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 7500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 10000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 12500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-anniversarys-4",
+        name: "Classic Anniversary Bouquet",
+        subtitle: "The Anniversary Bouquet",
+        category: "Anniversarys",
+        price: 12500,
+        currency: "USD",
+        thumbnailUrl: theAnniversaryBouquet.src,
+        images: [
+          {
+            url: theAnniversaryBouquet.src,
+            alt: "Classic Anniversary Bouquet",
+          },
+        ],
+        summary: "Classic Anniversary Bouquet",
+        description: "Classic Anniversary Bouquet. Crafted fresh for Anniversarys.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Anniversarys"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 7500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 10000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 12500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-anniversarys-5",
+        name: "Mixed Hand Held",
+        subtitle: "Mixed Flower Bouquet Anniversary",
+        category: "Mothers Day",
+        price: 7500,
+        currency: "USD",
+        thumbnailUrl: mixedFlowerBouquetAnniversary.src,
+        images: [
+          {
+            url: mixedFlowerBouquetAnniversary.src,
+            alt: "Mixed Anniversary Hand Held",
+          },
+        ],
+        summary: "Mixed Anniversary Hand Held",
+        description: "Mixed Anniversary Hand Held. Crafted fresh for Anniversarys.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Anniversarys"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 4500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 7500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-administrativeassistantweek-2",
+        name: "Garden Surprise ",
+        subtitle: "Vase included",
+        category: "Mothers Day",
+        price: 6000,
+        currency: "USD",
+        thumbnailUrl: oneWithPail.src,
+        images: [
+          {
+            url: oneWithPail.src,
+            alt: "Administratives Garden Pail",
+          },
+        ],
+        summary: "Administratives Garden Pail",
+        description: "Administratives Garden Pail. Crafted fresh for Administrative Assistant Week.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Administrative Assistant Week"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 3000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 4500,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 6000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-administrativeassistantweek-4",
+        name: "Bold & Brilliant",
+        subtitle: "Gerbera & Rose Vase",
+        category: "Mothers Day",
+        price: 7500,
+        currency: "USD",
+        thumbnailUrl: administrativeDay1.src,
+        images: [
+          {
+            url: administrativeDay1.src,
+            alt: "Bold & Brilliant",
+          },
+        ],
+        summary: "Bold & Brilliant",
+        description: "Bold & Brilliant. Crafted fresh for Administrative Assistant Week.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Administrative Assistant Week"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 4500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 7500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-administrativeassistantweek-5",
+        name: "Vivid Celebration",
+        subtitle: "Sunflower & Purple Daisy Vase",
+        category: "Mothers Day",
+        price: 7500,
+        currency: "USD",
+        thumbnailUrl: administrative2.src,
+        images: [
+          {
+            url: administrative2.src,
+            alt: "Vivid Celebration",
+          },
+        ],
+        summary: "Vivid Celebration",
+        description: "Vivid Celebration. Crafted fresh for Administrative Assistant Week.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Administrative Assistant Week"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 4500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 6000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 7500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-administrativeassistantweek-6",
+        name: "Spring  Special",
+        subtitle: "Seasonal spring arrangement",
+        category: "Mothers Day",
+        price: 6000,
+        currency: "USD",
+        thumbnailUrl: administrative6.src,
+        images: [
+          {
+            url: administrative6.src,
+            alt: "Spring Administrative Special",
+          },
+        ],
+        summary: "Spring Administrative Special",
+        description: "Spring Administrative Special. Crafted fresh for Administrative Assistant Week.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Administrative Assistant Week"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 3000,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 4500,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 6000,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "cmf-administrativeassistantweek-7",
+        name: "The Amazing Mothers Day Handheld",
+        subtitle: "Bouquet with Bright Colors",
+        category: "Mothers Day",
+        price: 5500,
+        currency: "USD",
+        thumbnailUrl: bouquetWithBrightColors.src,
+        images: [
+          {
+            url: bouquetWithBrightColors.src,
+            alt: "The Amazing Administrative Handheld",
+          },
+        ],
+        summary: "The Amazing Administrative Handheld",
+        description: "The Amazing Administrative Handheld. Crafted fresh for Administrative Assistant Week.",
+        features: ["Fresh seasonal blooms", "Gift note included"],
+        badges: ["Administrative Assistant Week"],
+        stock: "in_stock",
+        ctaLabel: "Buy Now",
+        maxQuantity: 99,
+        options: [
+          {
+            label: "Size",
+            optionItems: [
+              {
+                label: "Standard",
+                value: "S",
+                order: 1,
+                default: true,
+                price: 2500,
+              },
+              {
+                label: "Deluxe",
+                value: "M",
+                order: 2,
+                price: 4000,
+              },
+              {
+                label: "Premium",
+                value: "L",
+                order: 3,
+                price: 5500,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "product-8f6f2983",
+        name: " Roses",
+        category: "Mothers Day",
+        subtitle: "",
+        price: 4000,
+        currency: "USD",
+        thumbnailUrl: "https://i.imgur.com/9MG4Tmx.jpeg",
+        summary: "",
+        featured: false,
+        stock: "in_stock",
+        ctaLabel: "",
+        options: [
+          {
+            label: "Dozen",
+            optionItems: [
+              {
+                label: "Deluxe",
+                price: 7500,
+              },
+            ],
+          },
+          {
+            label: "Dozen and a Half",
+            optionItems: [
+              {
+                label: "Premium",
+                price: 12500,
+              },
+            ],
+          },
+          {
+            label: "2 Dozen",
+            optionItems: [
+              {
+                label: "Executive",
+                price: 17500,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    categoryOrder: [
+      "Gifts",
+      "Everyday Beauty's",
+      "Homecoming",
+      "Anniversarys",
+      "Birthday Specials",
+      "Corporate",
+      "Graduation ",
+      "Mothers Day",
+      "Add On's",
+    ],
+  },
+  pages: [
+    {
+      slug: "weddings-events",
+      title: "Weddings & Events",
+      sections: [
+        {
+          id: "hero-6g7g0",
+          type: "hero",
+          visible: true,
+          eyebrow: "weddings - showers - retreats - celebrations",
+          title: "Weddings & Events",
+          subtitle: "Elegant, custom-designed floral arrangements for weddings, corporate events, baby showers, bridal showers, birthdays, anniversaries, engagement parties, galas, fundraisers, holiday celebrations, memorials, and other special occasions. Every arrangement is thoughtfully crafted to complement your unique style, vision, and event atmosphere.",
+          imageUrl: "configs/cmflorals/assets/flowertable.jpg",
+          primaryCta: {
+            label: "Learn more",
+            href: "/weddings-events#features-lkj4c",
+          },
+          secondaryCta: {
+            label: "Get Started",
+            href: "/weddings-events#sendAMessage-0y7b4",
+          },
+        },
+        {
+          id: "features-lkj4c",
+          type: "features",
+          visible: true,
+          title: "What we do",
+          items: [
+            {
+              title: " Wedding Floral Design",
+              body: "\nElegant and customized floral arrangements for weddings of all sizes, tailored to match your unique style and vision.",
+              icon: "",
+              link: "",
+              imageUrl: "configs/cmflorals/assets/image000001.jpeg",
+              imageSize: "md",
+              meta: [],
+            },
+            {
+              title: "Bridal Showers",
+              body: "Beautiful, thoughtful floral decor and bouquets designed to celebrate your bridal shower with grace and charm.",
+              icon: "",
+              link: "",
+              imageUrl: "configs/cmflorals/assets/flower11.jpg",
+              imageSize: "md",
+              meta: [],
+            },
+            {
+              title: "Corporate Events",
+              body: "Professional floral designs to enhance your corporate events, meetings, and celebrations, making a lasting impression.",
+              icon: "",
+              link: "",
+              imageUrl: "configs/cmflorals/assets/flowertable2.jpg",
+              imageSize: "md",
+              meta: [],
+            },
+          ],
+          bottomWaveType: "1-hill",
+        },
+        {
+          id: "sendAMessage-0y7b4",
+          type: "sendAMessage",
+          visible: true,
+          title: "Tell Us About Your Event",
+          subtitle: "Tell us about your event and we'll get back to you with a quote.",
+          description: "Looking for something unique? Fill out the form below and Carole will personally follow up with a custom arrangement just for you.",
+          submitLabel: "Send Message",
+          successTitle: "We'll be in touch!",
+          successMessage: "Your message has been received. We'll get back to you shortly.",
+          fields: [
+            {
+              id: "",
+              label: "Name",
+              type: "text",
+              placeholder: "Your name",
+              required: true,
+            },
+            {
+              id: "email",
+              label: "Email Address",
+              type: "email",
+              placeholder: "your@email.com",
+              required: true,
+            },
+            {
+              id: "field-t42hp",
+              label: "Phone Number",
+              type: "phone",
+            },
+            {
+              id: "occasion",
+              label: "Occasion / Event Type",
+              type: "select",
+              placeholder: "",
+              required: true,
+              options: [
+                "Birthday",
+                "Anniversary",
+                "Wedding",
+                "Corporate Event",
+                "Prom",
+                "Administrative Assistant Week",
+                "Sympathy",
+                "Just Because",
+                "Other",
+              ],
+            },
+            {
+              id: "event-date",
+              label: "Event Date",
+              type: "text",
+              placeholder: "MM/DD/YYYY",
+            },
+            {
+              id: "budget",
+              label: "Approximate Budget",
+              type: "text",
+              placeholder: "e.g. $500–$5000",
+              required: false,
+            },
+            {
+              id: "details",
+              label: "Design Details & Special Requests",
+              type: "text",
+              required: true,
+              placeholder: "Colors, flowers, style, size, brand, event specifics.",
+            },
+          ],
+          submission: {
+            type: "googleForm",
+            formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfx9ZrZx8kIp_RKOH3Vmboozl0yrcUKqCQAMww1Q7hLsVQdIA/formResponse",
+            fieldMap: {
+              details: "entry.447020428",
+              budget: "entry.1611030081",
+              "event-date": "entry.778203591",
+              occasion: "entry.118923852",
+              "field-t42hp": "entry.323794102",
+              email: "entry.528578542",
+              "": "entry.547818426",
+            },
+          },
+          backgroundUrl: booth.src,
+        },
+        {
+          id: "contact-kyvuk",
+          type: "contact",
+          visible: true,
+          title: "Need more help? Reach out!",
+          email: "shop@copperfoxcollective.com",
+          phone: {
+            label: "(773) 209-4805",
+            href: "tel:17732094805",
+          },
+          address: "522 W Main Street, St Charles",
+          mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1248.341623987564!2d-88.32102827599576!3d41.912779036498094!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880f02ac0d8c2a2f%3A0x3d40395c2511f326!2s522%20W%20Main%20St%2C%20St.%20Charles%2C%20IL%2060174!5e0!3m2!1sen!2sus!4v1781877514647!5m2!1sen!2sus",
+          backgroundUrl: booth.src,
+          socials: [
+            {
+              label: "LinkedIn",
+              href: "https://www.linkedin.com/in/carole-murray-61458b20a/",
+            },
+            {
+              label: "TikTok",
+              href: "https://www.tiktok.com/@cmflorals",
+            },
+            {
+              label: "Instagram",
+              href: "https://www.instagram.com/cmflorals/",
+            },
+            {
+              label: "Facebook",
+              href: "https://www.facebook.com/carole.murray.370/",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "classes",
+      title: "Floral Classes",
+      sections: [
+        {
+          id: "sectional-xa076",
+          type: "sectional",
+          visible: true,
+          title: "Floral Design Classes",
+          body: "🌸 **Floral Design Class — Create, Sip & Take Home!** 🌸\n\nJoin us for a fun and creative evening where you’ll learn the art of floral design **from start to finish**! No previous floral experience is needed — just bring your creativity and enjoy a relaxing night surrounded by beautiful blooms.\n\nYou’ll be guided step-by-step as you create your very own **beautiful floral arrangement**, learning tips and techniques along the way. At the end of the evening, you’ll have a gorgeous design to **take home and enjoy!** 💐\n\n✨ **Everything is included!**\n• All flowers and floral supplies\n• Step-by-step instruction\n• Your finished arrangement to take home\n• Small snacks and refreshments\n\n👯 **Come Your Way!**\nGather your friends, make it a family night, plan a girls’ night out, or simply sign up on your own and meet some fellow flower lovers!\n\n🍷 **BYOB** — Bring your favorite beverage and make the evening your own.\n\nWhether you’re looking for a fun night out, a creative experience, or simply want to learn something new, this floral design class is the perfect way to **unwind, create, and take home something beautiful!**\n\n🌷 **Come ready to have fun, get creative, and make something beautiful!**\n\nChoose your glass container",
+          backgroundUrl: "configs/cmflorals/assets/IMG_6088.jpeg",
+          overlay: true,
+          align: "center",
+          height: "full",
+          topWaveType: "2-cave",
+          subtitleAlign: "left",
+        },
+        {
+          id: "classList-62a48b",
+          type: "classList",
+          title: "Choose a Class",
+          subtitle: "",
+          buyCtaFallback: "Book Now",
+          topWaveType: "1-hill",
+        },
+        {
+          id: "cta-xl8ib",
+          type: "cta",
+          visible: true,
+          title: "Get Involved",
+          body: "To join our waitlist contact us and let us know if your interested in learning how we design our floral pieces, and we will happily add you!",
+          cta: {
+            label: "Get in Touch",
+            href: "/#contact",
+          },
+        },
+      ],
+    },
+    {
+      slug: "shop",
+      title: "Shop",
+      sections: [
+        {
+          id: "productShop-v4guo",
+          type: "productShop",
+          visible: true,
+          title: "",
+          subtitle: "",
+        },
+        {
+          visible: true,
+          id: "cta-u98cx",
+          type: "cta",
+          title: "Need Something else?",
+          body: "Find us at our 2 different locations and text or call to set up your event space.",
+          cta: {
+            label: "Contact Us",
+            href: "/contact",
+          },
+        },
+      ],
+    },
+    {
+      slug: "boombar",
+      title: "Bloom Bar Party Rentals",
+      sections: [
+        {
+          id: "cta-ul9p3",
+          type: "cta",
+          visible: true,
+          title: "Choose a Bloom Bar Rental or Private Event! ",
+          body: "Perfect for bridal showers, baby showers, birthdays, weddings, corporate events, grand openings, and more, our Bloom Bars add the perfect mix of creativity, color, and fun to any celebration. We also offer **private floral design classes** for groups! Whether you're planning a girls' night, team outing, birthday celebration, or special event, we'll guide your group through creating a gorgeous arrangement in a fun, relaxed atmosphere.\n\n\n",
+          cta: {
+            label: "Get Started",
+            href: "/custom",
+          },
+        },
+        {
+          id: "features-bwdq8",
+          type: "features",
+          visible: true,
+          title: "",
+          items: [
+            {
+              title: "DIY Bloom Bar Rental ",
+              body: "Rent a bloom bar for your next event! Bloom bar includes - flower display stand, flower buckets, decorative wrapping, and bloom bar sign. Flowers can be included at an additional cost. Delivery is included, set up can also be arranged at an additional cost. Inquire about your event! ",
+              icon: "",
+              link: "/custom",
+              imageUrl: "configs/cmflorals/assets/image000000.jpeg",
+              imageSize: "md",
+              meta: [],
+            },
+            {
+              title: "Private Bloom Bar Event - Florist Lead",
+              body: "Perfect for birthday parties, bachelorette groups, wedding bouquet creations! Lead by our Florist and Owner Carole Murray, this private bloom bar event can take place at the shop or your event site. Bloom bar includes - flower display stand, flower buckets, decorative wrapping, bouquet to take home, and bloom bar sign (depending on event site). BYOB and outside snacks are allowed! Inquire on our custom form today! ",
+              icon: "",
+              link: "/custom",
+              imageUrl: "configs/cmflorals/assets/bloom.jpg",
+              imageSize: "md",
+              meta: [],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "custom",
+      title: "Custom Request",
+      sections: [
+        {
+          visible: true,
+          backgroundUrl: booth.src,
+          id: "sendAMessage-2kii7",
+          type: "sendAMessage",
+          title: "Custom Floral Design Request",
+          subtitle: "Tell us about your event and we'll get back to you with a quote.",
+          description: "Looking for something unique? Fill out the form below and Carole will personally follow up with a custom arrangement just for you.",
+          submission: {
+            type: "googleForm",
+            formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSfx9ZrZx8kIp_RKOH3Vmboozl0yrcUKqCQAMww1Q7hLsVQdIA/formResponse",
+            fieldMap: {
+              name: "entry.547818426",
+              email: "entry.528578542",
+              phone: "entry.323794102",
+              occasion: "entry.118923852",
+              "event-date": "entry.778203591",
+              budget: "entry.1611030081",
+              details: "entry.447020428",
+            },
+          },
+          submitLabel: "Send My Request",
+          successTitle: "Request received!",
+          successMessage: "Thank you! Carole will review your request and reach out within 1–2 business days.",
+          fields: [
+            {
+              id: "name",
+              label: "Your Name",
+              type: "text",
+              placeholder: "Full name",
+              required: true,
+            },
+            {
+              id: "email",
+              label: "Email Address",
+              type: "email",
+              placeholder: "your@email.com",
+              required: true,
+            },
+            {
+              id: "phone",
+              label: "Phone Number",
+              type: "phone",
+              placeholder: "(555) 555-5555",
+            },
+            {
+              id: "occasion",
+              label: "Occasion / Event Type",
+              type: "select",
+              required: true,
+              options: [
+                "Birthday",
+                "Anniversary",
+                "Wedding",
+                "Corporate Event",
+                "Prom",
+                "Administrative Assistant Week",
+                "Sympathy",
+                "Bloom Bar Event",
+                "Other",
+              ],
+            },
+            {
+              id: "event-date",
+              label: "Event Date",
+              type: "text",
+              placeholder: "MM/DD/YYYY",
+            },
+            {
+              id: "budget",
+              label: "Approximate Budget",
+              type: "text",
+              placeholder: "e.g. $75–$150",
+            },
+            {
+              id: "details",
+              label: "Design Details & Special Requests",
+              type: "textarea",
+              placeholder: "Colors, flowers, style, size — anything that helps Carole craft the perfect arrangement.",
+              required: true,
+            },
+          ],
+        },
+        {
+          id: "gallery-fjqq1",
+          type: "gallery",
+          visible: true,
+          subtitle: "",
+          style: {
+            columns: 3,
+            rounded: "xl",
+            gap: "md",
+          },
+          items: [
+            {
+              imageUrl: "configs/cmflorals/gallery/flower7.png",
+              alt: "flower7.png",
+            },
+            {
+              imageUrl: "configs/cmflorals/gallery/flower5.png",
+              alt: "flower5.png",
+            },
+            {
+              imageUrl: "configs/cmflorals/gallery/flower2.png",
+              alt: "flower2.png",
+            },
+          ],
+          topWaveType: "1-hill",
+        },
+        {
+          visible: true,
+          id: "testimonials-hlwb9",
+          type: "testimonials",
+          title: "What Customers Experience",
+          topWaveType: "1-hill",
+          bottomWaveType: "1-hill",
+          subtitle: "We strive to help our cusomters connect with loved ones through the art of gift giving.",
+          items: [
+            {
+              quote: "Carole is true artist! Even in a pinch, she arranges the most beautiful combination of flowers and colors, making every bouquet lovely and truly unique. Her flowers are fresh and long-lasting. CM is our go-to!",
+              name: "Maggie Ghobrial",
+              role: "Customer",
+              avatarUrl: review1.src,
+            },
+            {
+              quote: "Carole makes amazing bouquets! My girlfriend loves them ❤️❤️❤️❤️",
+              name: "Arnav Sinha",
+              role: "Customer",
+            },
+            {
+              quote: "The Love and care that Carole puts into her bouquets is apparent from their beauty, creativeness, and quality! You can expect exactly what she promises, gorgeous and creative mastery of the art of florals through decades of experience!",
+              name: "Nick Stricker",
+              role: "Customer & Business Partner",
+              avatarUrl: review2.src,
+            },
+            {
+              quote: "I know very little about flowers, but I said it's my wife's birthday, I said she likes hydrangeas, set my budget, and I received an absolutely stunning bouquet a few minutes later. My wife loves them! I'm so thankful that we UP commuters have such a gifted florist at OTC!",
+              name: "Jonathan Walker",
+              role: "Customer",
+            },
+          ],
+          style: {
+            variant: "carousel",
+            columns: 2,
+            showQuoteIcon: true,
+            rounded: "xl",
+            background: "band",
+          },
+        },
+        {
+          visible: true,
+          id: "socials-bo8hr",
+          type: "socials",
+          title: "Follow US",
+          subtitle: "Join Us to learn about upcoming events and classes.",
+          items: [
+            {
+              type: "instagram",
+              href: "https://www.instagram.com/cm_florals/",
+              label: "Instagram",
+            },
+            {
+              type: "tiktok",
+              href: "https://www.tiktok.com/@carolemurray87_group7?is_from_webapp=1&sender_device=pc",
+              label: "TikTok",
+            },
+            {
+              type: "facebook",
+              href: "https://www.facebook.com/carole.murray.370/",
+              label: "Facebook",
+            },
+            {
+              type: "linkedin",
+              href: "https://www.linkedin.com/in/carole-murray-61458b20a/",
+              label: "LinkedIn",
+            },
+          ],
+          style: {
+            background: "band",
+            rounded: "xl",
+            size: "lg",
+            gap: "md",
+            align: "center",
+          },
+          bottomWaveType: "1-hill",
+        },
+      ],
+    },
+    {
+      slug: "contact",
+      title: "Contact",
+      sections: [
+        {
+          visible: true,
+          id: "contact-w3ula",
+          type: "contact",
+          title: "How to Find Us",
+          email: "shop@copperfoxcollective.com",
+          address: "522 W Main Street, St Charles",
+          phone: {
+            label: "630-488-0108",
+            href: "tel:17732094805",
+          },
+          backgroundUrl: booth.src,
+          mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1248.341623987564!2d-88.32102827599576!3d41.912779036498094!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880f02ac0d8c2a2f%3A0x3d40395c2511f326!2s522%20W%20Main%20St%2C%20St.%20Charles%2C%20IL%2060174!5e0!3m2!1sen!2sus!4v1781877514647!5m2!1sen!2sus",
+          socials: [
+            {
+              label: "LinkedIn",
+              href: "https://www.linkedin.com/in/carole-murray-61458b20a/",
+            },
+            {
+              label: "TikTok",
+              href: "https://www.tiktok.com/@carolemurray87_group7?is_from_webapp=1&sender_device=pc",
+            },
+            {
+              label: "Instagram",
+              href: "https://www.instagram.com/cm_florals/",
+            },
+            {
+              label: "Facebook",
+              href: "https://www.facebook.com/carole.murray.370/",
+            },
+          ],
+        },
+        {
+          id: "contact-t8wwz",
+          type: "contact",
+          visible: true,
+          title: "Chicago Location - the train station",
+          email: "shop@copperfoxcollective.com",
+          address: "Ogilvie / Accenture Tower, 500 W Madison St, Chicago, IL 60661",
+          mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.4544466085986!2d-87.64308727391516!3d41.8830827712412!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2cc71c0b855f%3A0xb098c28fb3a60491!2sOgilvie%20Transportation%20Center!5e0!3m2!1sen!2sus!4v1757250851078!5m2!1sen!2sus",
+          backgroundUrl: booth.src,
+          socials: [],
+          phone: {
+            label: "(773) 209-4805",
+            href: "tel:17732094805",
+          },
+        },
+        {
+          visible: true,
+          id: "socials-7xh6k",
+          type: "socials",
+          title: "Follow US",
+          subtitle: "Join Us to learn about upcoming events and classes.",
+          items: [
+            {
+              type: "instagram",
+              href: "https://www.instagram.com/cm_florals/",
+              label: "Instagram",
+            },
+            {
+              type: "tiktok",
+              href: "https://www.tiktok.com/@carolemurray87_group7?is_from_webapp=1&sender_device=pc",
+              label: "TikTok",
+            },
+            {
+              type: "facebook",
+              href: "https://www.facebook.com/carole.murray.370/",
+              label: "Facebook",
+            },
+            {
+              type: "linkedin",
+              href: "https://www.linkedin.com/in/carole-murray-61458b20a/",
+              label: "LinkedIn",
+            },
+          ],
+          style: {
+            background: "band",
+            rounded: "xl",
+            size: "lg",
+            gap: "md",
+            align: "center",
+          },
+          topWaveType: "1-hill",
+        },
+        {
+          visible: true,
+          id: "cta-kemnj",
+          type: "cta",
+          title: "Ready to start?",
+          body: "Text or call to set up your event space.",
+          cta: {
+            label: "Call Now",
+            href: "tel:17732094805",
+          },
+        },
+      ],
+    },
+  ],
+  classes: {
+    classItems: [
+      {
+        id: "class-053b504f",
+        name: "Fresh Arrangement Private  JS",
+        category: "",
+        subtitle: "",
+        description: "",
+        price: 4500,
+        currency: "USD",
+        thumbnailUrl: "configs/cmflorals/assets/1000011438.jpeg",
+        images: [
+          {
+            url: "configs/cmflorals/assets/1000011438.jpeg",
+            alt: "",
+          },
+        ],
+        ctaLabel: "",
+        options: [
+          {
+            label: "Choose your Vase Size",
+            optionItems: [
+              {
+                label: "Standard 4 x 4",
+                price: 4500,
+              },
+              {
+                label: "Deluxe 5 x 5",
+                price: 6000,
+              },
+              {
+                label: "Premium 6 x 6",
+                price: 7500,
+              },
+            ],
+          },
+        ],
+        classTimeIds: ["time-fa21fea1"],
+        badges: [],
+        times: [
+          {
+            id: "time-fa21fea1",
+            date: "2026-09-16",
+            startTime: "19:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+        ],
+      },
+      {
+        id: "class-7cd2025d",
+        name: "Floral Design Class Private CDH",
+        category: "Fun, Fall Arrangement",
+        subtitle: "JS Private Party",
+        description: "🍁 Fall Floral Arrangement Workshop\nCreate a stunning, vibrant fall centerpiece you’ll proudly take home at the end of the night. In this hands‑on class, participants will learn how to blend bold seasonal colors, rich textures, and autumn‑inspired elements to design a custom Fresh floral arrangement perfect for any home.\n\nWe’ll explore color pairing, balance, and shape while working with high‑quality fresh blooms, foliage, and accents like berries, grasses, and mini pumpkins. Each guest will receive personalized guidance as they build their arrangement step by step, gaining confidence in floral design techniques they can use year after year.",
+        price: 4500,
+        currency: "USD",
+        thumbnailUrl: "configs/cmflorals/assets/1000011438.jpeg",
+        ctaLabel: "",
+        options: [
+          {
+            label: "Choose your glass container",
+            optionItems: [
+              {
+                label: "4x4 container",
+                price: 4500,
+                value: "s",
+                default: true,
+              },
+              {
+                label: "5x5 container",
+                price: 6000,
+                value: "m",
+                default: true,
+              },
+              {
+                label: "6x6 container",
+                price: 7500,
+                value: "l",
+                default: true,
+              },
+            ],
+          },
+        ],
+        classTimeIds: ["time-6e4e00e8"],
+        badges: [],
+        images: [
+          {
+            url: "configs/cmflorals/assets/Class Group.jpg",
+            alt: "4 x 4 Glass Vase  $45",
+          },
+          {
+            url: "configs/cmflorals/assets/class pictures 2.jpg",
+            alt: "5 x 5 Glass Vase $60",
+          },
+          {
+            url: "configs/cmflorals/assets/class pictures 1.jpg",
+            alt: "6 x 6 Glass Vase $75",
+          },
+        ],
+        times: [
+          {
+            id: "time-6e4e00e8",
+            date: "2026-09-12",
+            startTime: "18:00",
+            location: "522 W Main Street, St Charles",
+          },
+        ],
+      },
+      {
+        id: "class-7d07e0c9",
+        name: "Fall Floral Arrangment",
+        category: "",
+        subtitle: "Mom's Night out",
+        description: "🍁 Fall Floral Arrangement Workshop\nCreate a stunning, vibrant fall centerpiece you’ll proudly take home at the end of the night. In this hands‑on class, participants will learn how to blend bold seasonal colors, rich textures, and autumn‑inspired elements to design a custom Fresh floral arrangement perfect for any home.\n\nWe’ll explore color pairing, balance, and shape while working with high‑quality fresh blooms, foliage, and accents like berries, grasses, and mini pumpkins. Each guest will receive personalized guidance as they build their arrangement step by step, gaining confidence in floral design techniques they can use year after year.",
+        price: 4500,
+        currency: "USD",
+        thumbnailUrl: "configs/cmflorals/assets/1000011440.jpeg",
+        images: [],
+        ctaLabel: "",
+        options: [],
+        classTimeIds: [
+          "time-306eb738",
+          "time-b5ca7a52",
+          "time-379ae91d",
+          "time-3d6f6dad",
+          "time-405a8463",
+          "time-4737e0b3",
+          "time-23e60ba5",
+          "time-b4c986df",
+          "time-25a91e71",
+          "time-e3981d86",
+          "time-1986dbce",
+          "time-3e63338f",
+          "time-34814a11",
+          "time-dd69ebe5",
+          "time-a9f9d2cf",
+          "time-33ff9f4b",
+          "time-2bb0bcd1",
+          "time-d47e9d63",
+          "time-93868382",
+        ],
+        badges: [],
+        times: [
+          {
+            id: "time-306eb738",
+            date: "2026-10-28",
+            startTime: "19:00",
+            endTime: "",
+            label: "Halloween Faux Decoration Class",
+            location: "522 W Main Street, St Charles",
+            capacity: 10,
+          },
+          {
+            id: "time-b5ca7a52",
+            date: "2026-10-21",
+            startTime: "19:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "Fall Arrangment Class",
+          },
+          {
+            id: "time-379ae91d",
+            date: "2026-09-23",
+            startTime: "19:00",
+            endTime: "21:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-3d6f6dad",
+            date: "2026-09-16",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-405a8463",
+            date: "2026-09-23",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-4737e0b3",
+            date: "2026-09-30",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-23e60ba5",
+            date: "2026-10-07",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-b4c986df",
+            date: "2026-10-14",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-25a91e71",
+            date: "2026-10-21",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-e3981d86",
+            date: "2026-10-28",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-1986dbce",
+            date: "2026-11-04",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-3e63338f",
+            date: "2026-11-11",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-34814a11",
+            date: "2026-11-18",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-dd69ebe5",
+            date: "2026-11-25",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-a9f9d2cf",
+            date: "2026-12-02",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-33ff9f4b",
+            date: "2026-12-09",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-2bb0bcd1",
+            date: "2026-12-16",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-d47e9d63",
+            date: "2026-12-23",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-93868382",
+            date: "2026-12-30",
+            startTime: "12:00",
+            capacity: 10,
+            location: "522 W Main Street, St Charles",
+          },
+        ],
+      },
+      {
+        id: "class-66adc221",
+        name: "A Little Bit of Fall",
+        category: "",
+        subtitle: "Arrangement Class",
+        description: "Class Description: Faux Floral Decoration (Year‑Round Keepsake Design)\nThis class teaches participants how to design and assemble a long‑lasting faux floral arrangement that can be displayed year after year. Students learn essential floral design principles, explore high‑quality artificial materials, and practice hands‑on techniques to create a custom piece that reflects their personal style.",
+        price: 4000,
+        currency: "USD",
+        thumbnailUrl: "configs/cmflorals/assets/1000011437.jpeg",
+        images: [
+          {
+            url: "configs/cmflorals/assets/1000011437.jpeg",
+            alt: "",
+          },
+        ],
+        ctaLabel: "",
+        options: [],
+        classTimeIds: [
+          "time-bde054ec",
+          "time-d581a901",
+          "time-85fcee4b",
+          "time-9240c3dc",
+          "time-1c70fe14",
+          "time-e02f8364",
+          "time-48274250",
+          "time-5caa0c92",
+          "time-23f144b4",
+          "time-79279680",
+        ],
+        badges: [],
+        times: [
+          {
+            id: "time-bde054ec",
+            date: "2026-09-24",
+            startTime: "18:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "A Little Bit of Fall Arrangement Class",
+          },
+          {
+            id: "time-d581a901",
+            date: "2026-09-19",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-85fcee4b",
+            date: "2026-09-26",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-9240c3dc",
+            date: "2026-10-03",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-1c70fe14",
+            date: "2026-10-10",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-e02f8364",
+            date: "2026-10-17",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-48274250",
+            date: "2026-10-24",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-5caa0c92",
+            date: "2026-10-31",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-23f144b4",
+            date: "2026-11-07",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+          {
+            id: "time-79279680",
+            date: "2026-11-14",
+            startTime: "12:00",
+            location: "522 W Main Street, St Charles",
+          },
+        ],
+      },
+      {
+        id: "class-6dce2611",
+        name: "Homecoming Bouquets Class",
+        category: "",
+        subtitle: " Make your own Bouquet to take to homecoming",
+        description: "### 💐 Homecoming Bouquet Workshop\n\nGet together with your friends and make your **very own homecoming bouquet** in this fun, hands-on floral workshop designed especially for high school students!\n\nAn experienced instructor will guide you step-by-step through choosing your flowers, arranging colors and textures, and creating a beautiful bouquet that matches your personal style. Whether you want something classic and elegant, colorful and fun, or completely unique, you’ll have the freedom to make it your own.\n\n**What to Expect:**\n\n* 🌸 Learn the basics of bouquet design from an instructor\n* 💐 Choose from a variety of fresh flowers and greenery\n* 🎀 Create a personalized bouquet for your homecoming dance\n* 👯 Spend time crafting and having fun with your friends\n* 📸 Take home a beautiful bouquet you made yourself!\n\nNo previous floral experience is needed—just bring your creativity and your friends! This is the perfect way to kick off homecoming season with a fun activity, great music, and a little flower-making magic.\n",
+        price: 4000,
+        currency: "USD",
+        thumbnailUrl: "configs/cmflorals/assets/nosegay 1.jpg",
+        images: [
+          {
+            url: "configs/cmflorals/assets/nosegay 1.jpg",
+            alt: "",
+          },
+        ],
+        ctaLabel: "",
+        options: [
+          {
+            label: "Standard Bouquet",
+            optionItems: [
+              {
+                label: "Standard",
+                price: 4000,
+              },
+              {
+                label: "Large",
+                price: 5500,
+              },
+              {
+                label: "Standard Plus Matching Boutonniere",
+                price: 6000,
+              },
+            ],
+          },
+        ],
+        classTimeIds: [
+          "time-63b8d49d",
+          "time-1b66c53a",
+          "time-b5ca7a52",
+          "time-61fe1d29",
+          "time-b6c20c84",
+          "time-a0bbb282",
+        ],
+        badges: [],
+        times: [
+          {
+            id: "time-63b8d49d",
+            date: "2026-10-15",
+            startTime: "19:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "Nosegay Bouquet",
+            capacity: 10,
+          },
+          {
+            id: "time-1b66c53a",
+            date: "2026-09-17",
+            startTime: "19:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "Home Coming Make your Own Bouquet",
+          },
+          {
+            id: "time-b5ca7a52",
+            date: "2026-10-21",
+            startTime: "19:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "Fall Arrangment Class",
+          },
+          {
+            id: "time-61fe1d29",
+            date: "2026-09-30",
+            startTime: "19:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "Make your own Home Coming Bouquet",
+          },
+          {
+            id: "time-b6c20c84",
+            date: "2026-10-08",
+            startTime: "19:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "Homecoming Arrangement Class",
+          },
+          {
+            id: "time-a0bbb282",
+            date: "2026-10-14",
+            startTime: "19:00",
+            endTime: "",
+            location: "522 W Main Street, St Charles",
+            label: "Homecoming Make your own Bouquet",
+          },
+        ],
+      },
+    ],
+    classTimes: [
+      {
+        id: "time-f1aafbad",
+        date: "2026-10-08",
+        startTime: "11:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "",
+      },
+      {
+        id: "time-d1df0100",
+        date: "2026-10-10",
+        startTime: "11:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "",
+      },
+      {
+        id: "time-bd23e317",
+        date: "2026-09-30",
+        startTime: "11:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "",
+      },
+      {
+        id: "time-ea97db34",
+        date: "2026-10-07",
+        startTime: "11:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "",
+      },
+      {
+        id: "time-f218a121",
+        date: "2026-09-14",
+        startTime: "18:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "",
+      },
+      {
+        id: "time-1b66c53a",
+        date: "2026-09-17",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Home Coming Make your Own Bouquet",
+      },
+      {
+        id: "time-6de5623b",
+        date: "2026-09-16",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Private Party JS",
+      },
+      {
+        id: "time-bde054ec",
+        date: "2026-09-24",
+        startTime: "18:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "A Little Bit of Fall Arrangement Class",
+      },
+      {
+        id: "time-15a596e0",
+        date: "2026-09-23",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Back to School Mom's Night Out",
+      },
+      {
+        id: "time-61fe1d29",
+        date: "2026-09-30",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Make your own Home Coming Bouquet",
+      },
+      {
+        id: "time-b5ca7a52",
+        date: "2026-10-21",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Fall Arrangment Class",
+      },
+      {
+        id: "time-b6c20c84",
+        date: "2026-10-08",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Homecoming Arrangement Class",
+      },
+      {
+        id: "time-a0bbb282",
+        date: "2026-10-14",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Homecoming Make your own Bouquet",
+      },
+      {
+        id: "time-7fb3974c",
+        date: "2026-11-21",
+        startTime: "18:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Thanksgiving Faux Center Piece Class",
+      },
+      {
+        id: "time-da2e4845",
+        date: "2026-11-23",
+        startTime: "18:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Thanksgiving Fresh Center Piece Class",
+      },
+      {
+        id: "time-63b8d49d",
+        date: "2026-10-15",
+        startTime: "19:00",
+        endTime: "",
+        location: "522 W Main Street, St Charles",
+        label: "Nosegay Bouquet",
+        capacity: 10,
+      },
+      {
+        id: "time-306eb738",
+        date: "2026-10-28",
+        startTime: "19:00",
+        endTime: "",
+        label: "Halloween Faux Decoration Class",
+        location: "522 W Main Street, St Charles",
+        capacity: 10,
+      },
+      {
+        id: "time-6e4e00e8",
+        date: "2026-09-12",
+        startTime: "18:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-379ae91d",
+        date: "2026-09-23",
+        startTime: "19:00",
+        endTime: "21:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-fa21fea1",
+        date: "2026-09-16",
+        startTime: "19:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-3d6f6dad",
+        date: "2026-09-16",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-405a8463",
+        date: "2026-09-23",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-4737e0b3",
+        date: "2026-09-30",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-23e60ba5",
+        date: "2026-10-07",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-b4c986df",
+        date: "2026-10-14",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-25a91e71",
+        date: "2026-10-21",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-e3981d86",
+        date: "2026-10-28",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-1986dbce",
+        date: "2026-11-04",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-3e63338f",
+        date: "2026-11-11",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-34814a11",
+        date: "2026-11-18",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-dd69ebe5",
+        date: "2026-11-25",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-a9f9d2cf",
+        date: "2026-12-02",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-33ff9f4b",
+        date: "2026-12-09",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-2bb0bcd1",
+        date: "2026-12-16",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-d47e9d63",
+        date: "2026-12-23",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-93868382",
+        date: "2026-12-30",
+        startTime: "12:00",
+        capacity: 10,
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-d581a901",
+        date: "2026-09-19",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-85fcee4b",
+        date: "2026-09-26",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-9240c3dc",
+        date: "2026-10-03",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-1c70fe14",
+        date: "2026-10-10",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-e02f8364",
+        date: "2026-10-17",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-48274250",
+        date: "2026-10-24",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-5caa0c92",
+        date: "2026-10-31",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-23f144b4",
+        date: "2026-11-07",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+      {
+        id: "time-79279680",
+        date: "2026-11-14",
+        startTime: "12:00",
+        location: "522 W Main Street, St Charles",
+      },
+    ],
+    locations: ["522 W Main Street, St Charles"],
   },
 };

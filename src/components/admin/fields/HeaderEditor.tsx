@@ -9,8 +9,8 @@ import { useSite } from '@/context/SiteContext';
 export type EditorProps<T> = {
   section: T;
   onChange: (next: T) => void;
-  openMediaPicker: (prefix: string) => Promise<string | null>; // not used here
-  siteId: string; // not used here
+  openMediaPicker: (prefix: string) => Promise<string | null>;
+  siteId: string;
 };
 
 type NavLink = { label: string; href: string };
@@ -131,6 +131,8 @@ function LinkTargetFields({
 export function EditHeader({
   section,
   onChange,
+  openMediaPicker,
+  siteId,
 }: EditorProps<HeaderSection>) {
   const { config } = useSite(); // 👈 get sections without changing props
   // Dedupe by id: a config can end up with duplicate section ids (bad data),
@@ -244,8 +246,41 @@ export function EditHeader({
           className="input w-full"
           value={section.logoText ?? ''}
           onChange={(e) => setLogoText(e.target.value)}
-          placeholder="e.g., CM Florals"
+          placeholder="e.g., Copper Fox Collective"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">Logo Image</label>
+        <div className="flex gap-2">
+          <input
+            className="input flex-1"
+            value={section.logoImage ?? ''}
+            onChange={(e) => onChange({ ...section, logoImage: e.target.value })}
+            placeholder={`configs/${siteId}/assets/… or https://…`}
+          />
+          <button
+            type="button"
+            className="btn btn-inverted flex-shrink-0"
+            onClick={async () => {
+              const picked = await openMediaPicker(`configs/${siteId}/assets/`);
+              if (picked) onChange({ ...section, logoImage: picked });
+            }}
+          >
+            Pick…
+          </button>
+          {section.logoImage ? (
+            <button
+              type="button"
+              className="btn btn-ghost flex-shrink-0"
+              onClick={() => onChange({ ...section, logoImage: '' })}
+              title="Remove logo image"
+            >
+              <FontAwesomeIcon icon={faTrash} className="text-sm" />
+            </button>
+          ) : null}
+        </div>
+        <div className="text-xs text-muted mt-1">Shown as a small circle beside the logo text. Square images work best.</div>
       </div>
 
       {/* Links */}

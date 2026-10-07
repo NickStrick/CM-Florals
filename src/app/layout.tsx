@@ -17,21 +17,25 @@ import AdminBar from "@/components/admin/AdminBar";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.cmfloralsandgifts.com";
 const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "";
 
 // import { mockSiteConfig } from "@/mocks/siteConfig";
 import { mockSiteConfig } from "@/mocks/caroleConfig";
 import SeoLocalBusinessSchema from "@/components/SeoLocalBusinessSchema";
+import { BUSINESS, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS, SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  metadataBase: siteUrl,
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "CM Florals & Gifts | Chicago Florist",
-    template: "%s | CM Florals & Gifts",
+    default: DEFAULT_TITLE,
+    template: `%s | ${BUSINESS.name} — St. Charles, IL`,
   },
-  description:
-    "CM Florals & Gifts in Chicago, IL. Custom arrangements, weddings, events, and thoughtful gifts.",
+  description: DEFAULT_DESCRIPTION,
+  keywords: KEYWORDS,
+  applicationName: BUSINESS.name,
+  authors: [{ name: BUSINESS.name }],
+  creator: BUSINESS.name,
+  category: "shopping",
   alternates: {
     canonical: "/",
   },
@@ -49,21 +53,24 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: siteUrl,
-    siteName: "CM Florals & Gifts",
-    title: "CM Florals & Gifts | Chicago Florist",
-    description:
-      "Custom arrangements, weddings, events, and thoughtful gifts in Chicago, IL.",
+    url: SITE_URL,
+    siteName: BUSINESS.name,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
     locale: "en_US",
-      images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "CM Florals & Gifts" }],
-
+    images: [{ url: BUSINESS.ogImage, width: 1200, height: 630, alt: `${BUSINESS.name} — gifts & florals in St. Charles, IL` }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CM Florals & Gifts | Chicago Florist",
-    description:
-      "Custom arrangements, weddings, events, and thoughtful gifts in Chicago, IL.",
-    images: ["/og.jpg"],
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [BUSINESS.ogImage],
+  },
+  other: {
+    "geo.region": "US-IL",
+    "geo.placename": "St. Charles",
+    "geo.position": `${BUSINESS.geo.latitude};${BUSINESS.geo.longitude}`,
+    ICBM: `${BUSINESS.geo.latitude}, ${BUSINESS.geo.longitude}`,
   },
 };
 
