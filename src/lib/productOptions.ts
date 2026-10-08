@@ -1,4 +1,10 @@
-import type { ProductOptions } from '@/types/site';
+import type { ProductOptions, SiteProduct } from '@/types/site';
+
+/** A product needs an image to be listed in the shop (thumbnail, or a gallery image on older data). */
+export function hasProductImage(p: Pick<SiteProduct, 'thumbnailUrl' | 'images'>): boolean {
+  if ((p.thumbnailUrl ?? '').trim()) return true;
+  return (p.images ?? []).some((im) => (im?.url ?? '').trim());
+}
 
 export type NormOptionItem = {
   label: string;

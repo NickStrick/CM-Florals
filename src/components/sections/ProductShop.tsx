@@ -8,7 +8,7 @@ import type { ProductShopSection, SiteProduct } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import ProductDetailModal from './ProductDetailModal';
-import { normalizeOptionGroups, normalizeSelection } from '@/lib/productOptions';
+import { hasProductImage, normalizeOptionGroups, normalizeSelection } from '@/lib/productOptions';
 import { SeperatorWave } from '@/components/SeperatorWave';
 
 const PAGE_SIZE = 12;
@@ -192,7 +192,8 @@ export default function ProductShop({ id, title, subtitle, topWaveType, bottomWa
   const { config } = useSite();
   const shopConfig = config?.products;
   const allProducts = useMemo(
-    () => (shopConfig?.items ?? []).filter((p) => !p.hideFromShop),
+    // Products without an image are unfinished — keep them out of the shop.
+    () => (shopConfig?.items ?? []).filter((p) => !p.hideFromShop && hasProductImage(p)),
     [shopConfig?.items]
   );
   const showFilters = shopConfig?.showFilters !== false;

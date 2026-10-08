@@ -9,6 +9,7 @@ import { resolveAssetUrl } from '@/lib/assetUrl';
 import MediaPicker from './MediaPicker';
 import { OptionsEditor } from './fields/OptionsEditor';
 import CurrencyInput from './fields/CurrencyInput';
+import { hasProductImage } from '@/lib/productOptions';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -126,6 +127,7 @@ function ProductEditForm({
   siteId: string;
 }) {
   const thumb = resolveAssetUrl(product.thumbnailUrl);
+  const missingImage = !hasProductImage(product);
 
   return (
     <div
@@ -190,7 +192,7 @@ function ProductEditForm({
 
       {/* Thumbnail */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Thumbnail</label>
+        <label className="block text-sm font-medium">Thumbnail *</label>
         {thumb && (
           <div className="h-24 w-24 overflow-hidden rounded-lg border border-gray-200 bg-black/10">
             <img src={thumb} alt="Thumbnail preview" className="h-full w-full object-cover" />
@@ -198,10 +200,11 @@ function ProductEditForm({
         )}
         <div className="flex gap-2">
           <input
-            className="input flex-1"
+            className={['input flex-1', missingImage ? 'border-red-500' : ''].join(' ')}
             value={product.thumbnailUrl ?? ''}
             onChange={(e) => onChange({ thumbnailUrl: e.target.value })}
             placeholder={`configs/${siteId}/assets/… or https://…`}
+            aria-invalid={missingImage}
           />
           <button
             type="button"
@@ -214,6 +217,11 @@ function ProductEditForm({
             Pick…
           </button>
         </div>
+        {missingImage && (
+          <div className="text-xs text-red-500">
+            An image is required — products without one won’t appear in the shop.
+          </div>
+        )}
       </div>
 
       {/* Summary */}
@@ -283,7 +291,13 @@ function ProductEditForm({
         <button type="button" className="btn btn-ghost text-red-500 text-sm" onClick={onRemove}>
           <Trash2 className="w-4 h-4 mr-1 inline" /> Remove
         </button>
-        <button type="button" className="btn btn-primary text-sm" onClick={onDone}>
+        <button
+          type="button"
+          className="btn btn-primary text-sm"
+          onClick={onDone}
+          disabled={missingImage}
+          title={missingImage ? 'Add an image first' : undefined}
+        >
           Done
         </button>
       </div>
@@ -309,7 +323,9 @@ function ProductCard({
         {thumb ? (
           <img src={thumb} alt={product.name} className="h-full w-full object-cover" />
         ) : (
-          <div className="h-full w-full" />
+          <div className="h-full w-full flex items-center justify-center text-[10px] text-red-500 text-center leading-tight">
+            No image
+          </div>
         )}
       </div>
       <div className="flex-1 min-w-0">
@@ -317,6 +333,9 @@ function ProductCard({
           <span className="font-semibold text-sm truncate">{product.name || <em className="opacity-40">Unnamed</em>}</span>
           {product.featured && (
             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 flex-shrink-0" />
+          )}
+          {!hasProductImage(product) && (
+            <span className="text-[10px] font-semibold uppercase text-red-500">Hidden — needs image</span>
           )}
         </div>
         {product.category && (
@@ -529,6 +548,8 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
         if (editingId === localId) setEditingId(null);
         return;
       }
+      // Image is required: leave the form open (with its error) until one is set.
+      if (!hasProductImage(product)) return;
       if (editingId === localId) setEditingId(null);
     },
     [commitProducts, editingId, localProducts]
@@ -550,6 +571,16 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
   // ── Save / Restore ────────────────────────────────────────────────────────
   const onSave = useCallback(async () => {
     if (!draft) return;
+    const missing = localProducts.filter((p) => !hasProductImage(p));
+    if (missing.length) {
+      const names = missing.map((p) => p.name?.trim() || 'Unnamed product');
+      setError(
+        `Add an image to ${missing.length === 1 ? names[0] : `${missing.length} products (${names.join(', ')})`} before saving.`
+      );
+      setActiveTab('all');
+      setEditingId(missing[0]._localId);
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -572,7 +603,7 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
     } finally {
       setSaving(false);
     }
-  }, [draft, onClose, setConfig, siteId]);
+  }, [draft, localProducts, onClose, setConfig, siteId]);
 
   const onRestore = useCallback(() => {
     if (!originalRef.current) return;
