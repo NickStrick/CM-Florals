@@ -4,19 +4,19 @@
 
 /* src/app/globals.css  (append to yours) */
 :root {
- --primary: rgb(255, 39, 190);    /* vibrant lavender/purple */
-  --accent:  #9a01c9;    /* metallic gold */
-  --bg:      #fafce9;    /* soft lavender-tinted white */
-  --bg-2:    #fdb3e9;    /* gentle lavender wash */
+ --primary: #B35534;    /* vibrant lavender/purple */
+  --accent:  #6f4460;    /* metallic gold */
+  --bg:      #F8EEE4;    /* soft lavender-tinted white */
+  --bg-2:    #bd8fb1;    /* gentle lavender wash */
   --fg:      #2d2d2d;    /* dark gray for text */
-  --muted:   #9b67cc;    /* muted warm gray */
+  --muted:   #36222F;    /* muted warm gray */
 
-  --band-1:  #9b5de5;    /* lavender band */
-  --band-2:  #d4af37;    /* gold band */
+  --band-1:  #36222F;    /* lavender band */
+  --band-2:  #36222F;    /* gold band */
 
   --text-1: #2d2d2d;     /* primary text */
   --text-2: white;       /* inverted text */
-  --text-accent: #d4af37;/* gold as text accent */
+  --text-accent: #36222F;/* gold as text accent */
   --cart-drawer-width: 400px;
 
   /* Admin Colors  */
