@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { quoteCheckoutRequest } from '@/lib/checkoutConfig';
+import type { CheckoutRequest } from '@/lib/checkoutPricing';
 
 type TokenRequest = {
-  amountCents: number;
+  checkout?: CheckoutRequest; // cart choices — priced server-side (see quoteCheckoutRequest)
+  // Old request shape from checkout pages loaded before this deploy (monitor mode only):
+  amountCents?: number;
   currency?: string;
-  transactionType?: string; // e.g. "ccsale"
 };
 
 function formatAmount(cents: number) {
@@ -18,8 +21,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  if (!body || !Number.isFinite(body.amountCents) || body.amountCents <= 0) {
-    return NextResponse.json({ error: 'amountCents must be a positive number.' }, { status: 400 });
+  if (!body?.checkout && body?.amountCents == null) {
+    return NextResponse.json({ error: 'Missing required field: checkout.' }, { status: 400 });
   }
 
   const merchantId = process.env.CONVERGE_MERCHANT_ID?.trim();
@@ -27,7 +30,8 @@ export async function POST(req: NextRequest) {
   const userId = process.env.CONVERGE_USER_ID?.trim();
   const pin = process.env.CONVERGE_PIN?.trim();
   const baseUrl = (process.env.CONVERGE_API_BASE_URL ?? 'https://api.convergepay.com').trim();
-  const transactionType = body.transactionType ?? 'ccsale';
+  // Fixed server-side: a client-chosen type could request a credit/return instead of a sale.
+  const transactionType = 'ccsale';
 
   if (!accountId || !userId || !pin) {
     return NextResponse.json(
@@ -35,6 +39,12 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  const { quote, error } = await quoteCheckoutRequest(body.checkout, {
+    amountCents: body.amountCents,
+    currency: body.currency,
+  });
+  if (error) return error;
 
   const params = new URLSearchParams();
   // Converge docs refer to this as "ssl_account_id" (formerly "ssl_merchant_id").
@@ -44,7 +54,7 @@ export async function POST(req: NextRequest) {
   params.set('ssl_user_id', userId);
   params.set('ssl_pin', pin);
   params.set('ssl_transaction_type', transactionType);
-  params.set('ssl_amount', formatAmount(body.amountCents));
+  params.set('ssl_amount', formatAmount(quote.amountCents));
 
   const res = await fetch(`${baseUrl.replace(/\/$/, '')}/hosted-payments/transaction_token`, {
     method: 'POST',
@@ -65,5 +75,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Converge token endpoint returned empty response.' }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true, token });
+  return NextResponse.json({ ok: true, token, amountCents: quote.amountCents });
 }

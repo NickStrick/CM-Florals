@@ -6,7 +6,6 @@ import "./globals.css";
 
 import { SiteProvider } from "@/context/SiteContext";
 import { CartProvider } from "@/context/CartContext";
-import type { SiteConfig } from "@/types/site";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import GlobalHashLinkHandler from "@/components/GlobalHashLinkHandler";
 import PaymentsOverlay from "@/components/payments/PaymentsOverlay";
@@ -19,8 +18,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "";
 
-// import { mockSiteConfig } from "@/mocks/siteConfig";
-import { mockSiteConfig } from "@/mocks/caroleConfig";
+import { getSiteConfig } from "@/lib/siteConfigLoader";
 import SeoLocalBusinessSchema from "@/components/SeoLocalBusinessSchema";
 import { BUSINESS, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS, SITE_URL } from "@/lib/seo";
 
@@ -73,38 +71,6 @@ export const metadata: Metadata = {
     ICBM: `${BUSINESS.geo.latitude}, ${BUSINESS.geo.longitude}`,
   },
 };
-
-
-async function getSiteConfig(): Promise<SiteConfig> {
-  const useMock = process.env.NEXT_PUBLIC_USE_MOCK === "1" || process.env.NEXT_PUBLIC_USE_MOCK === "2";
-  if (useMock) return mockSiteConfig;
-
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-  const site = process.env.NEXT_PUBLIC_SITE_ID ?? "carole";
-  const prefer = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? "published") as "published" | "published";
-  const fallback = prefer === "published" ? "published" : "published";
-
-  async function fetchJSON(url: string) {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.warn(`[config] ${url} -> ${res.status}`, text?.slice(0, 200));
-      return null;
-    }
-    return (await res.json()) as SiteConfig;
-  }
-
-  // try preferred variant for this site id
-  const primary = await fetchJSON(`${base}/api/config?variant=${prefer}&site=${encodeURIComponent(site)}`);
-  if (primary) return primary;
-
-  // then the other variant
-  const secondary = await fetchJSON(`${base}/api/config?variant=${fallback}&site=${encodeURIComponent(site)}`);
-  if (secondary) return secondary;
-
-  console.warn("[config] Falling back to mockSiteConfig");
-  return mockSiteConfig;
-}
 
 
 export default async function RootLayout({

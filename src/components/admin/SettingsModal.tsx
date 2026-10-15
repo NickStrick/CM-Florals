@@ -7,6 +7,7 @@ import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import SocialLinksEditor from './fields/SocialLinksEditor';
 import MediaPicker from './MediaPicker';
+import type { CardProvider, ProviderAvailability } from '@/lib/paymentProviders';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { isAdminAiUiEnabled } from '@/lib/adminAi';
 import { getSiteDisabledSettings, SITE_DISABLED_DEFAULT_MESSAGE, SITE_DISABLED_DEFAULT_TITLE } from '@/lib/siteConfigSections';
@@ -143,6 +144,26 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       const nextGeneral = { ...(prev.settings?.general ?? {}), ...patch };
       return { ...prev, settings: { ...(prev.settings ?? {}), general: nextGeneral } };
     });
+  }, []);
+
+  // ── Payment providers configured in this environment (env vars present) ──
+  const [providers, setProviders] = useState<ProviderAvailability | null>(null);
+  const [providersFailed, setProvidersFailed] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/payments/providers')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: ProviderAvailability | null) => {
+        if (cancelled) return;
+        if (data) setProviders(data);
+        else setProvidersFailed(true);
+      })
+      .catch(() => {
+        if (!cancelled) setProvidersFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ── Media picker (same promise pattern as ClassesModal) ──
@@ -646,15 +667,39 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             <div className="grid md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium">Payment Type</label>
-                <select
-                  className="select w-full"
-                  value={payments.paymentType ?? 'converge'}
-                  onChange={(e) => updatePayments('paymentType', e.target.value as PaymentsSettings['paymentType'])}
-                >
-                  <option value="converge">converge</option>
-                  <option value="clover">clover</option>
-                  <option value="externalLink">externalLink</option>
-                </select>
+                {(() => {
+                  const current = payments.paymentType ?? 'converge';
+                  const labels: Record<CardProvider, string> = { square: 'Square', clover: 'Clover', converge: 'Converge' };
+                  // Card processors only show when their env vars exist; the saved choice always stays visible.
+                  // If the check can't be loaded, fall back to listing everything (previous behavior).
+                  const cardOptions = (Object.keys(labels) as CardProvider[]).filter(
+                    (p) => providersFailed || providers?.[p]?.available || p === current
+                  );
+                  const currentStatus = current !== 'externalLink' ? providers?.[current] : undefined;
+                  return (
+                    <>
+                      <select
+                        className="select w-full"
+                        value={current}
+                        onChange={(e) => updatePayments('paymentType', e.target.value as PaymentsSettings['paymentType'])}
+                      >
+                        {cardOptions.map((p) => (
+                          <option key={p} value={p}>
+                            {labels[p]}
+                            {providers && !providers[p]?.available ? ' (not configured)' : ''}
+                          </option>
+                        ))}
+                        <option value="externalLink">External Link</option>
+                      </select>
+                      {currentStatus && !currentStatus.available && (
+                        <div className="text-xs text-red-400 mt-1">
+                          {labels[current as CardProvider]} isn’t configured in this environment — checkout won’t work.
+                          Missing: {currentStatus.missing.join(', ')}.
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               <div>

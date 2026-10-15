@@ -3,11 +3,13 @@
 
 import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import PaymentForm from './PaymentForm';
+import SquarePaymentForm from './SquarePaymentForm';
 import DriverTipStep from './DriverTipStep';
 import { X, Plus, Trash2, CheckCircle, Check, ArrowBigLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { CheckoutInput, GoogleFormOptions, PromoCode } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
+import { computeCheckoutTotals, type CheckoutRequest } from '@/lib/checkoutPricing';
 
 function formatPrice(cents: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
@@ -32,7 +34,7 @@ export default function PaymentPage({
   checkoutInputs?: CheckoutInput[];
   googleFormUrl?: string;
   googleFormOptions?: GoogleFormOptions;
-  paymentType?: 'converge' | 'clover' | 'externalLink';
+  paymentType?: 'converge' | 'clover' | 'square' | 'externalLink';
   externalPaymentUrl?: string;
   supportEmail?: string;
   supportPhone?: { label: string; href: string };
@@ -81,22 +83,29 @@ export default function PaymentPage({
   const supportPhone = supportPhoneProp ?? settingsPayments?.supportPhone;
   const taxes = taxesProp ?? settingsPayments?.taxes;
   const delivery = deliveryProp ?? settingsPayments?.delivery;
-  const { items, totalCents, currency, isCheckoutOpen, closeCheckout, addItem, removeItem } = useCart();
+  const { items, totalCents, currency, isCheckoutOpen, closeCheckout, addItem, removeItem, clear: clearCart } = useCart();
   const [convergeToken, setConvergeToken] = useState('');
   const [convergeTokenStatus, setConvergeTokenStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [convergeTokenError, setConvergeTokenError] = useState<string | null>(null);
   const cloverToken = process.env.NEXT_PUBLIC_CLOVER_TOKEN ?? '';
   const convergeScriptUrl = process.env.NEXT_PUBLIC_CONVERGE_IFRAME_URL ?? '';
   const cloverScriptUrl = process.env.NEXT_PUBLIC_CLOVER_IFRAME_URL ?? '';
   const paymentToken = paymentType === 'clover' ? cloverToken : convergeToken;
   const paymentScriptUrl = paymentType === 'clover' ? cloverScriptUrl : convergeScriptUrl;
+  // Square checks its own config inside SquarePaymentForm.
   const missingPaymentConfig =
-    paymentType !== 'externalLink' && (!paymentScriptUrl || (paymentType === 'clover' && !paymentToken));
+    paymentType !== 'externalLink' &&
+    paymentType !== 'square' &&
+    (!paymentScriptUrl || (paymentType === 'clover' && !paymentToken));
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [purchaseComplete, setPurchaseComplete] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(true);
   const [googleFormSubmitted, setGoogleFormSubmitted] = useState(false);
   const [orderSaved, setOrderSaved] = useState(false);
+  // Refs (not state) so back-to-back calls in one handler see the latest values.
+  const orderSavedRef = useRef(false);
+  const providerPaymentIdRef = useRef('');
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -116,11 +125,6 @@ export default function PaymentPage({
   const [stepIndex, setStepIndex] = useState(0);
   const [tipInput, setTipInput] = useState('');
 
-  const taxableSubtotalCents = items.reduce((sum, item) => {
-    const taxable = typeof item.taxable === 'boolean' ? item.taxable : taxes?.defaultProductTaxable === true;
-    return taxable ? sum + item.price * item.quantity : sum;
-  }, 0);
-  const taxRate = Math.max(0, Number(taxes?.ratePercent ?? 0));
   const deliveryMode = delivery?.mode ?? 'both';
   const [fulfillment, setFulfillment] = useState<'pickup' | 'delivery'>(
     deliveryMode === 'delivery' ? 'delivery' : 'pickup'
@@ -162,23 +166,32 @@ export default function PaymentPage({
     const value = (customValues[f.id] ?? '').trim();
     return value.length === 0;
   });
-  const deliveryFeeCents =
-    delivery?.enabled &&
-    deliveryMode !== 'pickup' &&
-    fulfillment === 'delivery' &&
-    delivery?.type === 'flat'
-      ? Math.max(0, Number(delivery.flatFeeCents ?? 0))
-      : 0;
-  const tipCents = showTipStep ? Math.max(0, Math.round((parseFloat(tipInput) || 0) * 100)) : 0;
-  const taxBaseCents = taxableSubtotalCents + (taxes?.taxShipping ? deliveryFeeCents : 0);
-  const taxCents = taxes?.enabled ? Math.round(taxBaseCents * (taxRate / 100)) : 0;
   const promoCodes = settingsPayments?.promoCodes ?? [];
-  const discountCents = appliedPromo
-    ? appliedPromo.type === 'percentage'
-      ? Math.round(totalCents * (appliedPromo.value / 100))
-      : Math.min(Math.round(appliedPromo.value * 100), totalCents)
-    : 0;
-  const totalWithFeesCents = totalCents + taxCents + deliveryFeeCents + tipCents - discountCents;
+  const requestedTipCents = Math.max(0, Math.round((parseFloat(tipInput) || 0) * 100));
+  // Same function the payment routes use to price the charge server-side.
+  const { taxCents, deliveryFeeCents, tipCents, discountCents, totalCents: totalWithFeesCents } = computeCheckoutTotals(
+    items.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity, unitPrice: i.price, taxable: i.taxable })),
+    { ...settingsPayments, taxes, delivery },
+    { fulfillment, tipCents: requestedTipCents, promoCode: appliedPromo?.promoId },
+  );
+
+  // What the payment routes receive: the customer's choices + the total they were shown.
+  // The server re-prices from the site config and refuses if its total differs.
+  const checkoutRequest: CheckoutRequest = {
+    lines: items.map((i) => ({
+      id: i.id,
+      quantity: i.quantity,
+      options: i.options,
+      classItemId: i.classItemId,
+      classTimeId: i.classTimeId,
+    })),
+    fulfillment,
+    tipCents,
+    promoCode: appliedPromo?.promoId,
+    expectedTotalCents: totalWithFeesCents,
+    currency,
+  };
+  const checkoutRequestKey = JSON.stringify(checkoutRequest);
 
   useEffect(() => {
     if (paymentType !== 'converge') return;
@@ -202,14 +215,20 @@ export default function PaymentPage({
     let cancelled = false;
     (async () => {
       setConvergeTokenStatus('loading');
+      setConvergeTokenError(null);
       try {
         const res = await fetch('/api/payments/converge/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountCents: totalWithFeesCents, currency }),
+          body: JSON.stringify({ checkout: JSON.parse(checkoutRequestKey) as CheckoutRequest }),
         });
         if (!res.ok) {
-          if (!cancelled) setConvergeTokenStatus('error');
+          const data = (await res.json().catch(() => null)) as { error?: string; code?: string } | null;
+          if (!cancelled) {
+            // Pricing problems are customer-facing; config problems keep the generic setup message.
+            setConvergeTokenError(data?.code === 'PRICING' ? data.error ?? null : null);
+            setConvergeTokenStatus('error');
+          }
           return;
         }
         const data = (await res.json()) as { token?: string };
@@ -227,7 +246,7 @@ export default function PaymentPage({
     return () => {
       cancelled = true;
     };
-  }, [currency, isCheckoutOpen, paymentType, token, totalWithFeesCents]);
+  }, [checkoutRequestKey, isCheckoutOpen, paymentType, token]);
 
   const submitDeliveryAddress = async () => {
     if (!needsDeliveryAddress) return;
@@ -251,11 +270,8 @@ export default function PaymentPage({
 
   const submitCloverPayment = async (sourceToken: string) => {
     const payload = {
-      amount: totalWithFeesCents,
-      currency,
       source: sourceToken,
-      items,
-      customer: customValues,
+      checkout: checkoutRequest,
     };
 
     const res = await fetch('/api/payments/clover', {
@@ -276,6 +292,55 @@ export default function PaymentPage({
     }
 
     setPurchaseComplete(true);
+  };
+
+  const submitSquarePayment = async (sourceId: string) => {
+    const res = await fetch('/api/payments/square', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sourceId,
+        checkout: checkoutRequest,
+        orderId: orderIdRef.current,
+        buyerEmail: (customValues.email ?? '').trim() || undefined,
+      }),
+    });
+    const data = (await res.json().catch(() => null)) as { paymentId?: string; error?: string } | null;
+    if (!res.ok || !data?.paymentId) {
+      throw new Error(data?.error || 'Square payment failed.');
+    }
+    providerPaymentIdRef.current = data.paymentId;
+
+    // The card is charged — record the order even if a side effect (Google Form, address upload) fails.
+    try {
+      await submitCheckoutSideEffects();
+    } catch (e) {
+      console.error('[square] post-payment side effects failed', e);
+    }
+    await saveOrderToS3(); // no-op if the Google Form step already saved it
+    setPurchaseComplete(true);
+  };
+
+  // Called when the customer closes the "Purchase complete" screen. Everything that
+  // belongs to one order is reset so a second purchase in the same visit is saved,
+  // sent to the Google Form, and gets its own order id. (This component stays mounted
+  // between purchases, so without this the "already saved" flags would stick.)
+  // Customer details (email, name, address) are kept so they don't have to retype them.
+  const finishPurchase = () => {
+    setPurchaseComplete(false);
+    setOrderSaved(false);
+    orderSavedRef.current = false;
+    setGoogleFormSubmitted(false);
+    providerPaymentIdRef.current = '';
+    orderIdRef.current =
+      typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    setAppliedPromo(null);
+    setPromoInput('');
+    setPromoError(null);
+    setTipInput('');
+    setStepIndex(0);
+    clearCart(); // the paid-for items shouldn't still be sitting in the cart
+    closeCheckout();
   };
 
   const submitToGoogleForm = async () => {
@@ -324,7 +389,7 @@ export default function PaymentPage({
   };
 
   const saveOrderToS3 = async () => {
-    if (orderSaved) return;
+    if (orderSaved || orderSavedRef.current) return;
     const customerEmail =
       (customValues.email as string) ||
       (customValues.customerEmail as string) ||
@@ -381,6 +446,7 @@ export default function PaymentPage({
       payment: {
         type: paymentType,
         externalPaymentUrl: externalPaymentUrl ?? '',
+        providerPaymentId: providerPaymentIdRef.current || undefined,
       },
     };
 
@@ -391,6 +457,7 @@ export default function PaymentPage({
         body: JSON.stringify(payload),
       });
       if (res.ok) {
+        orderSavedRef.current = true;
         setOrderSaved(true);
       }
     } catch {
@@ -426,10 +493,7 @@ export default function PaymentPage({
         <div className="fixed inset-0 z-[7000] flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="relative w-full max-w-md mx-4 rounded-3xl bg-white p-8 shadow-2xl text-center">
             <button
-              onClick={() => {
-                setPurchaseComplete(false);
-                closeCheckout();
-              }}
+              onClick={finishPurchase}
               className="absolute top-4 right-4 text-gray-400 hover:text-black"
               aria-label="Close purchase complete"
             >
@@ -461,10 +525,7 @@ export default function PaymentPage({
               )}
             </div>
             <button
-              onClick={() => {
-                setPurchaseComplete(false);
-                closeCheckout();
-              }}
+              onClick={finishPurchase}
               className="mt-6 w-full rounded-[999px] bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700"
             >
               Close
@@ -732,7 +793,12 @@ export default function PaymentPage({
                 Loading payment form...
               </div>
             )}
-            {paymentType === 'converge' && convergeTokenStatus === 'error' && (
+            {paymentType === 'converge' && convergeTokenStatus === 'error' && convergeTokenError && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                {convergeTokenError}
+              </div>
+            )}
+            {paymentType === 'converge' && convergeTokenStatus === 'error' && !convergeTokenError && (
               <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
                 Could not initialize Converge checkout. Check `CONVERGE_ACCOUNT_ID` (or `CONVERGE_MERCHANT_ID`), `CONVERGE_USER_ID`, `CONVERGE_PIN`, and `NEXT_PUBLIC_CONVERGE_IFRAME_URL`.
               </div>
@@ -744,7 +810,13 @@ export default function PaymentPage({
                   : 'CONVERGE_ACCOUNT_ID (or CONVERGE_MERCHANT_ID) / CONVERGE_USER_ID / CONVERGE_PIN (server) and NEXT_PUBLIC_CONVERGE_IFRAME_URL'} env vars.
               </div>
             )}
-            {paymentType === 'externalLink' ? (
+            {paymentType === 'square' ? (
+              <SquarePaymentForm
+                amountLabel={formatPrice(totalWithFeesCents, currency)}
+                onToken={submitSquarePayment}
+                disabled={missingRequired || missingDeliveryAddress || items.length === 0}
+              />
+            ) : paymentType === 'externalLink' ? (
               <button
                 type="button"
                 onClick={async () => {

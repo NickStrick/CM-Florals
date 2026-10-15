@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { quoteCheckoutRequest } from '@/lib/checkoutConfig';
+import type { CheckoutRequest } from '@/lib/checkoutPricing';
 
 type CloverChargeRequest = {
-  amount: number;
-  currency: string;
-  source: string;
+  source: string;             // Clover card token
+  checkout?: CheckoutRequest; // cart choices — priced server-side (see quoteCheckoutRequest)
+  // Old request shape from checkout pages loaded before this deploy (monitor mode only):
+  amount?: number;
+  currency?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -15,15 +19,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  if (!body?.amount || !body?.currency || !body?.source) {
-    return NextResponse.json(
-      { error: 'Missing required fields: amount, currency, source.' },
-      { status: 400 },
-    );
-  }
-
-  if (!Number.isFinite(body.amount) || body.amount <= 0) {
-    return NextResponse.json({ error: 'Amount must be a positive number.' }, { status: 400 });
+  if (!body?.source || (!body?.checkout && body?.amount == null)) {
+    return NextResponse.json({ error: 'Missing required fields: source, checkout.' }, { status: 400 });
   }
 
   const privateToken = process.env.CLOVER_PRIVATE_TOKEN;
@@ -35,6 +32,9 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+
+  const { quote, error } = await quoteCheckoutRequest(body.checkout, { amountCents: body.amount, currency: body.currency });
+  if (error) return error;
 
   const clientIp =
     req.headers.get('x-forwarded-for') ??
@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
       'x-forwarded-for': clientIp,
     },
     body: JSON.stringify({
-      amount: Math.round(body.amount),
-      currency: body.currency.toLowerCase(),
+      amount: quote.amountCents,
+      currency: quote.currency.toLowerCase(),
       source: body.source,
     }),
   });
@@ -72,5 +72,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message, details: data }, { status: cloverRes.status });
   }
 
-  return NextResponse.json({ ok: true, charge: data });
+  return NextResponse.json({ ok: true, charge: data, amountCents: quote.amountCents });
 }

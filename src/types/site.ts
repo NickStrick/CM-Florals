@@ -749,7 +749,7 @@ export type PaymentsSettings = {
   promoCodes?: PromoCode[];
   googleFormUrl?: string;
   googleFormSubmitBeforePayment?: boolean;
-  paymentType?: 'converge' | 'clover' | 'externalLink';
+  paymentType?: 'converge' | 'clover' | 'square' | 'externalLink';
   externalPaymentUrl?: string;
   googleFormOptions?: GoogleFormOptions;
   supportEmail?: string;
