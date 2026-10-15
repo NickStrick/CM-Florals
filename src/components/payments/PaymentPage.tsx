@@ -485,6 +485,12 @@ export default function PaymentPage({
     }
   };
 
+  // The order confirmation email (Lambda → Resend) only goes out when the order was saved
+  // with everything buildCustomerEmail needs, so mirror those conditions here.
+  const confirmationEmail = ((customValues.email as string) || (customValues.customerEmail as string) || '').trim();
+  const confirmationEmailSent =
+    orderSaved && !!confirmationEmail && !!businessNotificationEmail && !!businessDisplayName;
+
   if (!isCheckoutOpen) return null;
   console.log('PaymentPage config:', { paymentType, paymentToken, paymentScriptUrl });
   return (
@@ -506,6 +512,11 @@ export default function PaymentPage({
             <p className="mt-2 text-sm text-gray-600">
               Thanks for your order! If you need help with your purchase, reach us below.
             </p>
+            {confirmationEmailSent && (
+              <p className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                The details for your order have been sent to <strong>{confirmationEmail}</strong>.
+              </p>
+            )}
             <div className="mt-5 space-y-2 text-sm">
               {supportEmail && (
                 <div>
