@@ -34,6 +34,7 @@ export default function SendAMessage(props: SendAMessageSection) {
     subtitle,
     description,
     fields,
+    steps,
     submitLabel = 'Send Message',
     successTitle = "We'll be in touch!",
     successMessage = "Your message has been received. We'll get back to you shortly.",
@@ -54,6 +55,15 @@ export default function SendAMessage(props: SendAMessageSection) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Multi-step: with 2+ steps only the current step's fields show, with Back / Next.
+  const stepCount = Math.max(1, steps?.length ?? 0);
+  const isMultiStep = stepCount > 1;
+  const stepOf = (f: SendAMessageField) => Math.min(Math.max(f.step ?? 0, 0), stepCount - 1);
+  const [stepIndex, setStepIndex] = useState(0);
+  const isLastStep = stepIndex >= stepCount - 1;
+  const visibleFields = isMultiStep ? fields.filter((f) => stepOf(f) === stepIndex) : fields;
+  const stepTitle = steps?.[stepIndex]?.title;
+
   function scrollToSection() {
     sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -65,8 +75,23 @@ export default function SendAMessage(props: SendAMessageSection) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Not on the last step yet: check this step's fields, then advance.
+    if (!isLastStep) {
+      const stepErrs = validate(visibleFields, values);
+      if (Object.keys(stepErrs).length) { setErrors(stepErrs); return; }
+      setStepIndex((i) => i + 1);
+      return;
+    }
+
     const errs = validate(fields, values);
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      // Jump back to the first step that still has a problem
+      const firstBad = fields.find((f) => errs[f.id]);
+      if (isMultiStep && firstBad) setStepIndex(stepOf(firstBad));
+      return;
+    }
 
     setStatus('loading');
     setServerError(null);
@@ -176,7 +201,7 @@ export default function SendAMessage(props: SendAMessageSection) {
               <p className="text-muted">{successMessage}</p>
               <button
                 className="btn btn-inverted mt-2 justify-center"
-                onClick={() => { setStatus('idle'); setValues({}); }}
+                onClick={() => { setStatus('idle'); setValues({}); setStepIndex(0); }}
               >
                 Send another message
               </button>
@@ -189,7 +214,22 @@ export default function SendAMessage(props: SendAMessageSection) {
               noValidate
               className="card card-lg !max-w-[90vw] card-outline rounded-2xl p-6 md:p-8 space-y-5"
             >
-              {fields.map((field) => (
+              {isMultiStep && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm font-semibold text-[var(--text-1)]">
+                    <span>{stepTitle || `Step ${stepIndex + 1}`}</span>
+                    <span className="text-muted font-normal">Step {stepIndex + 1} of {stepCount}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-[var(--bg-2)] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[var(--primary)] transition-all"
+                      style={{ width: `${((stepIndex + 1) / stepCount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {visibleFields.map((field) => (
                 <div key={field.id}>
                   <label
                     htmlFor={field.id}
@@ -241,13 +281,25 @@ export default function SendAMessage(props: SendAMessageSection) {
                 <p className="text-red-500 text-sm">{serverError}</p>
               )}
 
-              <button
-                type="submit"
-                className="btn btn-primary w-full py-3 text-base font-semibold justify-center mt-2 btn-gradient"
-                disabled={status === 'loading'}
-              >
-                {status === 'loading' ? 'Sending…' : submitLabel}
-              </button>
+              <div className="flex gap-3 mt-2">
+                {isMultiStep && stepIndex > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-inverted flex-1 py-3 text-base font-semibold justify-center"
+                    onClick={() => { setErrors({}); setStepIndex((i) => i - 1); }}
+                    disabled={status === 'loading'}
+                  >
+                    Back
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="btn btn-primary flex-1 w-full py-3 text-base font-semibold justify-center btn-gradient"
+                  disabled={status === 'loading'}
+                >
+                  {status === 'loading' ? 'Sending…' : isLastStep ? submitLabel : 'Next'}
+                </button>
+              </div>
             </form>
           </AnimatedSection>
         )}

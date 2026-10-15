@@ -826,6 +826,11 @@ export type SendAMessageField = {
   placeholder?: string;
   required?: boolean;
   options?: string[]; // for 'select' type
+  step?: number; // 0-based index into SendAMessageSection.steps (default 0)
+};
+
+export type SendAMessageStep = {
+  title?: string;
 };
 
 export type SendAMessageSubmission =
@@ -844,6 +849,8 @@ export type SendAMessageSection = SectionBase & {
   subtitle?: string;
   description?: string;
   fields: SendAMessageField[];
+  /** Multi-step form when 2+ steps; each field picks its step via `field.step`. */
+  steps?: SendAMessageStep[];
   submitLabel?: string;
   successTitle?: string;
   successMessage?: string;

@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback } from 'react';
+import { Fragment, useCallback, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import type { SendAMessageSection, SendAMessageField, SendAMessageFieldType } from '@/types/site';
+import { faPlus, faTrash, faChevronUp, faChevronDown, faGripVertical } from '@fortawesome/free-solid-svg-icons';
+import type { SendAMessageSection, SendAMessageField, SendAMessageFieldType, SendAMessageStep } from '@/types/site';
 import type { EditorProps } from './types';
 
 function deepClone<T>(obj: T): T {
@@ -75,27 +75,88 @@ export default function EditSendAMessage({
     });
   }
 
+  // ── Steps helpers ───────────────────────────────────────────────────────────
+  // A form always has at least one step; with only one it renders as a single page.
+
+  const steps: SendAMessageStep[] = section.steps?.length ? section.steps : [{}];
+  const stepCount = steps.length;
+  const stepOf = (f: SendAMessageField) => Math.min(Math.max(f.step ?? 0, 0), stepCount - 1);
+
+  function addStep() {
+    onChange({ ...section, steps: [...steps, { title: '' }] });
+  }
+
+  function updateStep(s: number, patch: Partial<SendAMessageStep>) {
+    onChange({ ...section, steps: steps.map((st, i) => (i === s ? { ...st, ...patch } : st)) });
+  }
+
+  // Removing a step moves its fields into the previous step (or the next one, for step 1).
+  function removeStep(s: number) {
+    if (stepCount <= 1) return;
+    const nextFields = fields.map((f) => {
+      const fs = stepOf(f);
+      if (fs === s) return { ...f, step: Math.max(s - 1, 0) };
+      if (fs > s) return { ...f, step: fs - 1 };
+      return f;
+    });
+    onChange({ ...section, steps: steps.filter((_, i) => i !== s), fields: nextFields });
+  }
+
   // ── Fields list helpers ─────────────────────────────────────────────────────
 
-  const addField = useCallback(() => {
-    onChange({ ...section, fields: [...fields, newField()] });
-  }, [fields, onChange, section]);
+  const addField = (step: number) => {
+    onChange({ ...section, fields: [...fields, { ...newField(), step }] });
+  };
 
   const removeField = useCallback(
     (idx: number) => onChange({ ...section, fields: fields.filter((_, i) => i !== idx) }),
     [fields, onChange, section]
   );
 
-  const moveField = useCallback(
-    (from: number, to: number) => {
-      if (to < 0 || to >= fields.length) return;
-      const next = deepClone(fields);
-      const [item] = next.splice(from, 1);
-      next.splice(to, 0, item);
-      onChange({ ...section, fields: next });
-    },
-    [fields, onChange, section]
-  );
+  // Move field `from` into `toStep`, placed before field `before` (or at the end of the step when null).
+  const moveField = (from: number, toStep: number, before: number | null) => {
+    const next = deepClone(fields);
+    const item = { ...next[from], step: toStep };
+    next.splice(from, 1);
+    let at: number;
+    if (before === null) {
+      const lastInStep = next.reduce((acc, f, i) => (stepOf(f) === toStep ? i : acc), -1);
+      at = lastInStep === -1 ? next.length : lastInStep + 1;
+    } else {
+      at = before > from ? before - 1 : before;
+    }
+    next.splice(at, 0, item);
+    onChange({ ...section, fields: next });
+  };
+
+  // ── Drag & drop (drag a field by its grip onto another field or a step box) ──
+
+  const dragFromRef = useRef<number | null>(null);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ step: number; before: number | null } | null>(null);
+
+  const clearDrag = () => {
+    dragFromRef.current = null;
+    setDraggingIdx(null);
+    setDropTarget(null);
+  };
+
+  const aimAt = (e: React.DragEvent, step: number, before: number | null) => {
+    if (dragFromRef.current === null) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    if (dropTarget?.step !== step || dropTarget?.before !== before) setDropTarget({ step, before });
+  };
+
+  const dropAt = (e: React.DragEvent, step: number, before: number | null) => {
+    if (dragFromRef.current === null) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const from = dragFromRef.current;
+    clearDrag();
+    if (before !== from) moveField(from, step, before);
+  };
 
   const updateField = useCallback(
     (idx: number, patch: Partial<SendAMessageField>) => {
@@ -238,25 +299,92 @@ export default function EditSendAMessage({
       <div className="space-y-3">
         <div className="flex items-center justify-between border-b pb-1">
           <div className="text-sm font-semibold">Form Fields ({fields.length})</div>
-          <button className="btn btn-ghost text-sm" onClick={addField}>
-            <FontAwesomeIcon icon={faPlus} className="mr-1 text-xs" />Add Field
+          <button className="btn btn-ghost text-sm" onClick={addStep}>
+            <FontAwesomeIcon icon={faPlus} className="mr-1 text-xs" />Add Step
           </button>
         </div>
+        <p className="text-xs text-muted">
+          Drag a field by its <FontAwesomeIcon icon={faGripVertical} className="text-xs" /> handle to reorder it or move it to another step.
+          With one step the form shows as a single page.
+        </p>
 
-        {fields.length === 0 && (
-          <div className="text-sm text-muted">No fields yet. Click "Add Field" to get started.</div>
-        )}
+        {steps.map((step, s) => {
+          // Global indexes of this step's fields, in display order
+          const stepFieldIdxs = fields.map((_, i) => i).filter((i) => stepOf(fields[i]) === s);
+          const isStepTarget = dropTarget?.step === s;
+          return (
+          <div
+            key={s}
+            className={[
+              'rounded-xl border p-3 space-y-3',
+              isStepTarget ? 'ring-2 ring-[var(--admin-primary)]' : '',
+            ].join(' ')}
+            onDragOver={(e) => aimAt(e, s, null)}
+            onDrop={(e) => dropAt(e, s, null)}
+          >
+            {/* Step header */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold flex-shrink-0">Step {s + 1}</span>
+              <input
+                className="input flex-1"
+                value={step.title ?? ''}
+                onChange={(e) => updateStep(s, { title: e.target.value })}
+                placeholder="Step title (optional), e.g. Contact info"
+              />
+              <button className="btn btn-ghost text-sm" onClick={() => addField(s)}>
+                <FontAwesomeIcon icon={faPlus} className="mr-1 text-xs" />Add Field
+              </button>
+              {stepCount > 1 && (
+                <button
+                  className="btn btn-ghost text-red-500"
+                  onClick={() => removeStep(s)}
+                  title="Remove step (its fields move to the previous step)"
+                >
+                  <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                </button>
+              )}
+            </div>
 
-        {fields.map((field, idx) => (
-          <div key={idx} className="card admin-card card-solid p-4 space-y-3">
-            {/* Row header */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{field.label || <em className="opacity-40">Untitled field</em>}</span>
+            {stepFieldIdxs.length === 0 && (
+              <div className="text-sm text-muted rounded-lg border border-dashed p-4 text-center">
+                No fields in this step. Click &quot;Add Field&quot; or drag one here.
+              </div>
+            )}
+
+        {stepFieldIdxs.map((idx, pos) => {
+          const field = fields[idx];
+          const isFieldTarget = dropTarget?.before === idx && draggingIdx !== idx;
+          return (
+          <Fragment key={idx}>
+          {isFieldTarget && <div className="h-1 rounded bg-[var(--admin-primary)]" aria-hidden="true" />}
+          <div
+            className={['card admin-card card-solid p-4 space-y-3', draggingIdx === idx ? 'opacity-40' : ''].join(' ')}
+            onDragOver={(e) => aimAt(e, s, idx)}
+            onDrop={(e) => dropAt(e, s, idx)}
+          >
+            {/* Row header (drag handle) */}
+            <div
+              className="flex items-center justify-between"
+              draggable
+              onDragStart={(e) => {
+                dragFromRef.current = idx;
+                setDraggingIdx(idx);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(idx));
+              }}
+              onDragEnd={clearDrag}
+            >
+              <span className="text-sm font-medium flex items-center gap-2">
+                <span className="cursor-grab active:cursor-grabbing text-muted" title="Drag to reorder or move to another step">
+                  <FontAwesomeIcon icon={faGripVertical} className="text-xs" />
+                </span>
+                {field.label || <em className="opacity-40">Untitled field</em>}
+              </span>
               <div className="flex gap-1">
-                <button className="btn btn-ghost" onClick={() => moveField(idx, idx - 1)} disabled={idx === 0} title="Move up">
+                <button className="btn btn-ghost" onClick={() => moveField(idx, s, stepFieldIdxs[pos - 1])} disabled={pos === 0} title="Move up">
                   <FontAwesomeIcon icon={faChevronUp} className="text-xs" />
                 </button>
-                <button className="btn btn-ghost" onClick={() => moveField(idx, idx + 1)} disabled={idx === fields.length - 1} title="Move down">
+                <button className="btn btn-ghost" onClick={() => moveField(stepFieldIdxs[pos + 1], s, idx)} disabled={pos === stepFieldIdxs.length - 1} title="Move down">
                   <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
                 </button>
                 <button className="btn btn-ghost text-red-500" onClick={() => removeField(idx)} title="Remove">
@@ -318,7 +446,12 @@ export default function EditSendAMessage({
               </div>
             )}
           </div>
-        ))}
+          </Fragment>
+          );
+        })}
+          </div>
+          );
+        })}
       </div>
 
     </div>
