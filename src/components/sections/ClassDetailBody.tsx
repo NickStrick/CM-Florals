@@ -207,7 +207,11 @@ export default function ClassDetailBody({ classItem, buyCtaFallback = 'Book Now'
         {classItem.description && (
           <p className="text-sm opacity-90 whitespace-pre-wrap">{classItem.description}</p>
         )}
+      </div>
 
+      {/* Options + time picker / booking — under the details on md, its own column on xl
+          (options sit here so they stay easy to find next to long descriptions) */}
+      <div className="space-y-4 text-[var(--text-1)] md:col-start-2 xl:col-start-3 xl:row-start-1">
         {/* Options */}
         {optionGroups.length > 0 && (
           <div className="space-y-4">
@@ -244,10 +248,7 @@ export default function ClassDetailBody({ classItem, buyCtaFallback = 'Book Now'
             })}
           </div>
         )}
-      </div>
 
-      {/* Time picker / booking — under the details on md, its own column on xl */}
-      <div className="space-y-4 text-[var(--text-1)] md:col-start-2 xl:col-start-3 xl:row-start-1">
         {!cartActive ? (
           <p className="text-sm text-muted">Booking isn&apos;t available on this site yet.</p>
         ) : (
