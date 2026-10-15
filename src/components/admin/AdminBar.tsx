@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSite } from '@/context/SiteContext';
 import MediaPicker from './MediaPicker';
 import { getSiteId } from '@/lib/siteId';
@@ -13,7 +13,7 @@ import ProductsModal from './ProductsModal';
 import ClassesModal from './ClassesModal';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { isAdminAiUiEnabled } from '@/lib/adminAi';
-import { flushAdminSaves, useAdminHasUnsaved } from '@/lib/adminAutoSave';
+import { exitAdminMode, flushAdminSaves, onAdminSaved, useAdminHasUnsaved } from '@/lib/adminAutoSave';
 import type { SiteConfig } from '@/types/site';
 
 type PickerKind = 'generic' | 'video-files' | 'video-posters';
@@ -37,6 +37,10 @@ export default function AdminBar() {
   const [showClasses, setShowClasses] = useState(false);
   const hasUnsaved = useAdminHasUnsaved();
   const [savingAll, setSavingAll] = useState(false);
+  const [showSavedPrompt, setShowSavedPrompt] = useState(false);
+
+  // After any successful save, ask whether to keep editing or exit admin mode.
+  useEffect(() => onAdminSaved(() => setShowSavedPrompt(true)), []);
 
   const siteId = getSiteId();
   const bucket = process.env.NEXT_PUBLIC_S3_DEFAULT_BUCKET;
@@ -80,6 +84,24 @@ export default function AdminBar() {
               {savingAll ? 'Saving…' : 'Save Changes'}
             </button>
             <span className="admin-save-banner-text font-bold text-lg">⚠ You have unsaved changes</span>
+          </div>
+        </div>
+      )}
+
+      {/* Saved prompt: keep editing, or exit admin mode */}
+      {showSavedPrompt && (
+        <div className="fixed inset-0 z-[14000] bg-black/50 flex items-center justify-center p-4">
+          <div className="card admin-card card-solid p-6 w-full max-w-md text-center">
+            <div className="font-semibold text-lg">✓ Changes saved</div>
+            <div className="text-sm text-muted mt-2">Would you like to keep editing, or exit Admin Mode?</div>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button className="btn btn-inverted" onClick={() => setShowSavedPrompt(false)}>
+                Keep Editing
+              </button>
+              <button className="btn btn-primary" onClick={exitAdminMode}>
+                Exit Admin Mode
+              </button>
+            </div>
           </div>
         </div>
       )}

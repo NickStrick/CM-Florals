@@ -588,7 +588,6 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
       const saved = await saveAdminConfig(siteId, draft, originalRef.current ?? draft);
       setConfig(saved);
       originalRef.current = deepClone(saved);
-      onClose();
       return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save.');
@@ -596,7 +595,7 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
     } finally {
       setSaving(false);
     }
-  }, [draft, localProducts, onClose, setConfig, siteId]);
+  }, [draft, localProducts, setConfig, siteId]);
 
   // Auto-save when the admin bar is hidden (ctrl + alt + a)
   useAdminAutoSave(isDirty, onSave);

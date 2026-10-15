@@ -315,7 +315,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       const saved = await saveAdminConfig(siteId, draft, originalRef.current ?? draft);
       setConfig(saved);
       originalRef.current = deepClone(saved);
-      onClose();
       return true;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to save.';
@@ -324,7 +323,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     } finally {
       setSaving(false);
     }
-  }, [draft, onClose, setConfig, siteId]);
+  }, [draft, setConfig, siteId]);
 
   // Auto-save when the admin bar is hidden (ctrl + alt + a)
   useAdminAutoSave(isDirty, onSave);

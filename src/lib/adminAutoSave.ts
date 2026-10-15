@@ -31,7 +31,28 @@ export async function saveAdminConfig(siteId: string, draft: SiteConfig, origina
 
   const saved: SiteConfig = await res.json();
   lastSaved = saved;
+  if (!quietSaves) savedListeners.forEach((l) => l());
   return saved;
+}
+
+// -----------------------------
+// "Saved" prompt: AdminBar listens for successful saves and asks whether to keep
+// editing or exit admin mode. Saves made while hiding the admin UI stay quiet.
+// -----------------------------
+const savedListeners = new Set<() => void>();
+let quietSaves = false;
+
+export function onAdminSaved(listener: () => void): () => void {
+  savedListeners.add(listener);
+  return () => {
+    savedListeners.delete(listener);
+  };
+}
+
+/** Ask AdminGate to hide the admin UI (same as ctrl + alt + a). */
+export const ADMIN_EXIT_EVENT = 'cm-admin-exit';
+export function exitAdminMode() {
+  window.dispatchEvent(new Event(ADMIN_EXIT_EVENT));
 }
 
 // -----------------------------
@@ -71,12 +92,20 @@ export function useAdminHasUnsaved(): boolean {
   );
 }
 
-/** Run every pending save (one at a time, since each PUTs the whole config). Resolves true if all succeeded. */
-export async function flushAdminSaves(): Promise<boolean> {
+/**
+ * Run every pending save (one at a time, since each PUTs the whole config). Resolves true if all succeeded.
+ * `quiet` skips the "Saved" prompt (used when hiding the admin UI).
+ */
+export async function flushAdminSaves({ quiet = false } = {}): Promise<boolean> {
   let ok = true;
-  for (const save of Array.from(savers)) {
-    const saved = await save().catch(() => false);
-    ok = ok && saved;
+  quietSaves = quiet;
+  try {
+    for (const save of Array.from(savers)) {
+      const saved = await save().catch(() => false);
+      ok = ok && saved;
+    }
+  } finally {
+    quietSaves = false;
   }
   return ok;
 }

@@ -709,10 +709,14 @@ export default function ConfigModal({
 
     try {
       const saved = await saveAdminConfig(siteId, normalizeSiteConfig(draft), originalRef.current ?? draft);
+      // Stay open (AdminBar asks "keep editing?"), so sync the draft here instead of
+      // letting the config-sync effect reset it and jump back to the header.
+      const next = normalizeSiteConfig(saved);
+      ignoreConfigSyncRef.current = true;
       setConfig(saved);
-      originalRef.current = deepClone(saved);
+      originalRef.current = deepClone(next);
+      setDraft(deepClone(next));
       clearStoredDraft(siteId);
-      onClose();
       return true;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to save.';
@@ -721,7 +725,7 @@ export default function ConfigModal({
     } finally {
       setSaving(false);
     }
-  }, [draft, onClose, setConfig, siteId]);
+  }, [draft, setConfig, siteId]);
 
   // Auto-save when the admin bar is hidden (ctrl + alt + a)
   useAdminAutoSave(isDirty, onSave);
