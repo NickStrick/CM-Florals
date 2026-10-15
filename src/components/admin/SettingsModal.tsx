@@ -10,6 +10,7 @@ import MediaPicker from './MediaPicker';
 import type { CardProvider, ProviderAvailability } from '@/lib/paymentProviders';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { isAdminAiUiEnabled } from '@/lib/adminAi';
+import { saveAdminConfig, useAdminAutoSave } from '@/lib/adminAutoSave';
 import { getSiteDisabledSettings, SITE_DISABLED_DEFAULT_MESSAGE, SITE_DISABLED_DEFAULT_TITLE } from '@/lib/siteConfigSections';
 
 // -----------------------------
@@ -305,40 +306,28 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
   const canSave = useMemo(() => !!draft, [draft]);
 
-  const onSave = useCallback(async () => {
-    if (!draft) return;
+  const onSave = useCallback(async (): Promise<boolean> => {
+    if (!draft) return false;
     setSaving(true);
     setError(null);
 
     try {
-      const variant = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? 'draft') as 'draft' | 'published';
-      const url = `/api/admin/config/${encodeURIComponent(siteId)}?variant=${variant}`;
-
-      const res = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-local-admin': '1',
-        },
-        body: JSON.stringify(draft),
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `Save failed with HTTP ${res.status}`);
-      }
-
-      const saved: SiteConfig = await res.json();
+      const saved = await saveAdminConfig(siteId, draft, originalRef.current ?? draft);
       setConfig(saved);
       originalRef.current = deepClone(saved);
       onClose();
+      return true;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to save.';
       setError(msg);
+      return false;
     } finally {
       setSaving(false);
     }
   }, [draft, onClose, setConfig, siteId]);
+
+  // Auto-save when the admin bar is hidden (ctrl + alt + a)
+  useAdminAutoSave(isDirty, onSave);
 
   const onRestore = useCallback(() => {
     if (!originalRef.current) return;
@@ -416,7 +405,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             <button className="btn btn-ghost" onClick={onClose}>
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={onSave} disabled={!canSave || saving || !isDirty}>
+            <button className={`btn btn-primary${isDirty ? ' btn-save-dirty' : ''}`} onClick={onSave} disabled={!canSave || saving || !isDirty}>
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>

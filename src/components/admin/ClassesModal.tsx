@@ -10,6 +10,7 @@ import MediaPicker from './MediaPicker';
 import ClassTimesPickerModal from './ClassTimesPickerModal';
 import { OptionsEditor } from './fields/OptionsEditor';
 import CurrencyInput from './fields/CurrencyInput';
+import { saveAdminConfig, useAdminAutoSave } from '@/lib/adminAutoSave';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -857,31 +858,26 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
   }, [draft]);
 
   // ── Save / Restore ────────────────────────────────────────────────────────
-  const onSave = useCallback(async () => {
-    if (!draft) return;
+  const onSave = useCallback(async (): Promise<boolean> => {
+    if (!draft) return false;
     setSaving(true);
     setError(null);
     try {
-      const variant = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? 'draft') as 'draft' | 'published';
-      const res = await fetch(
-        `/api/admin/config/${encodeURIComponent(siteId)}?variant=${variant}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'x-local-admin': '1' },
-          body: JSON.stringify(draft),
-        }
-      );
-      if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
-      const saved: SiteConfig = await res.json();
+      const saved = await saveAdminConfig(siteId, draft, originalRef.current ?? draft);
       setConfig(saved);
       originalRef.current = deepClone(saved);
       onClose();
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save.');
+      return false;
     } finally {
       setSaving(false);
     }
   }, [draft, onClose, setConfig, siteId]);
+
+  // Auto-save when the admin bar is hidden (ctrl + alt + a)
+  useAdminAutoSave(isDirty, onSave);
 
   const onRestore = useCallback(() => {
     if (!originalRef.current) return;
@@ -922,8 +918,8 @@ export default function ClassesModal({ onClose }: ClassesModalProps) {
               {error && <div className="text-red-500 text-sm mr-2">{error}</div>}
               {isDirty && <button className="btn btn-ghost" onClick={onRestore}>Restore</button>}
               <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-              <button className="btn btn-primary" onClick={onSave} disabled={!draft || saving}>
-                {saving ? 'Saving…' : 'Save'}
+              <button className={`btn btn-primary${isDirty ? ' btn-save-dirty' : ''}`} onClick={onSave} disabled={!draft || saving}>
+                {saving ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>

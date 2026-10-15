@@ -1169,3 +1169,19 @@ margin-bottom: -1px;
   padding: 15px 20px;
   border-radius: var(--round-xl);
 }
+/* Unsaved admin edits: pulse the Save Changes button so it can't be missed */
+.admin-card .btn-save-dirty{
+  outline: 3px solid #facc15;
+  outline-offset: 2px;
+  font-weight: 700;
+  font-size: 1.125rem;
+  padding: .8rem 1.4rem;
+  animation: save-dirty-pulse 1.4s ease-in-out infinite;
+}
+.admin-card .btn-save-dirty:disabled{
+  animation: none;
+}
+@keyframes save-dirty-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, .75); }
+  50%      { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
+}

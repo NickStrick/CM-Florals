@@ -5,6 +5,7 @@ import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import { THEME_PRESETS, type SiteStyle, type ThemePreset, type ThemeColors, type SiteConfig, type FontPair } from '@/types/site';
 import { FONT_PAIRS, FONT_PAIR_KEYS } from '@/lib/fontPairs';
+import { saveAdminConfig, useAdminAutoSave } from '@/lib/adminAutoSave';
 
 type ColorField = {
   key: keyof Pick<SiteStyle, 'primary' | 'accent' | 'bg' | 'bg2' | 'fg' | 'muted' | 'text1' | 'text2'>;
@@ -96,38 +97,28 @@ export default function AdminThemePanel() {
     originalThemeRef.current = config.theme;
   }
 
-  async function saveTheme() {
-    if (!config) return;
+  async function saveTheme(): Promise<boolean> {
+    if (!config) return false;
     setSaving(true);
     setError(null);
     try {
-      const variant = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? 'draft') as 'draft' | 'published';
-      const url = `/api/admin/config/${encodeURIComponent(siteId)}?variant=${variant}`;
-
-      const res = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-local-admin': '1',
-        },
-        body: JSON.stringify(config),
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `Save failed with HTTP ${res.status}`);
-      }
-
-      const saved = (await res.json()) as SiteConfig;
+      // Only the theme is this panel's edit; the rest of live config may be another panel's preview.
+      const original = { ...config, theme: originalThemeRef.current ?? config.theme };
+      const saved = await saveAdminConfig(siteId, config, original);
       setConfig(saved);
       originalThemeRef.current = saved.theme;
+      return true;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to save.';
       setError(msg);
+      return false;
     } finally {
       setSaving(false);
     }
   }
+
+  // Auto-save when the admin bar is hidden (ctrl + alt + a)
+  useAdminAutoSave(themeDirty, saveTheme);
 
   return (
     <div className="fixed bottom-2 min-h-[69px] right-0 z-[10000] flex justify-center">
@@ -195,8 +186,8 @@ export default function AdminThemePanel() {
         <div className="">
           <div className="flex items-center gap-2">
             {error && <div className="text-sm text-red-600 bg-white/90 px-3 py-2 rounded-lg border">{error}</div>}
-            <button className="btn btn-primary" onClick={saveTheme} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
+            <button className="btn btn-primary btn-save-dirty" onClick={saveTheme} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>

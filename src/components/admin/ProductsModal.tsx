@@ -10,6 +10,7 @@ import MediaPicker from './MediaPicker';
 import { OptionsEditor } from './fields/OptionsEditor';
 import CurrencyInput from './fields/CurrencyInput';
 import { hasProductImage } from '@/lib/productOptions';
+import { saveAdminConfig, useAdminAutoSave } from '@/lib/adminAutoSave';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -569,8 +570,8 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
   }, [draft]);
 
   // ── Save / Restore ────────────────────────────────────────────────────────
-  const onSave = useCallback(async () => {
-    if (!draft) return;
+  const onSave = useCallback(async (): Promise<boolean> => {
+    if (!draft) return false;
     const missing = localProducts.filter((p) => !hasProductImage(p));
     if (missing.length) {
       const names = missing.map((p) => p.name?.trim() || 'Unnamed product');
@@ -579,31 +580,26 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
       );
       setActiveTab('all');
       setEditingId(missing[0]._localId);
-      return;
+      return false;
     }
     setSaving(true);
     setError(null);
     try {
-      const variant = (process.env.NEXT_PUBLIC_CONFIG_VARIANT ?? 'draft') as 'draft' | 'published';
-      const res = await fetch(
-        `/api/admin/config/${encodeURIComponent(siteId)}?variant=${variant}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'x-local-admin': '1' },
-          body: JSON.stringify(draft),
-        }
-      );
-      if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
-      const saved: SiteConfig = await res.json();
+      const saved = await saveAdminConfig(siteId, draft, originalRef.current ?? draft);
       setConfig(saved);
       originalRef.current = deepClone(saved);
       onClose();
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save.');
+      return false;
     } finally {
       setSaving(false);
     }
   }, [draft, localProducts, onClose, setConfig, siteId]);
+
+  // Auto-save when the admin bar is hidden (ctrl + alt + a)
+  useAdminAutoSave(isDirty, onSave);
 
   const onRestore = useCallback(() => {
     if (!originalRef.current) return;
@@ -641,8 +637,8 @@ export default function ProductsModal({ onClose }: ProductsModalProps) {
                 <button className="btn btn-ghost" onClick={onRestore}>Restore</button>
               )}
               <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-              <button className="btn btn-primary" onClick={onSave} disabled={!draft || saving}>
-                {saving ? 'Saving…' : 'Save'}
+              <button className={`btn btn-primary${isDirty ? ' btn-save-dirty' : ''}`} onClick={onSave} disabled={!draft || saving}>
+                {saving ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>
