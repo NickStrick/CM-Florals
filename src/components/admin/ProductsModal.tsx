@@ -44,7 +44,17 @@ function blankProduct(category = ''): LocalProduct {
     hideFromShop: false,
     stock: 'in_stock',
     ctaLabel: '',
-    options: [],
+    // New products start with the standard florist sizes; set each size's price in the Options editor.
+    options: [
+      {
+        label: 'Size',
+        optionItems: [
+          { label: 'Basic', price: 0, default: true },
+          { label: 'Deluxe', price: 0 },
+          { label: 'Premium', price: 0 },
+        ],
+      },
+    ],
   };
 }
 
