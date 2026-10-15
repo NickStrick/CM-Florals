@@ -1,23 +1,17 @@
 'use client';
 
 import { useCallback } from 'react';
-import type { SocialItem } from '@/types/site';
+import type { GlobalSocialLink, SocialItem } from '@/types/site';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faChevronDown, faTrash, faPlus, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+import { useSite } from '@/context/SiteContext';
+import { SOCIAL_LINKS_HELP, SOCIAL_PLATFORMS, getUsableGlobalSocialLinks } from '@/lib/socialLinks';
 
-const ALL_TYPES: SocialItem['type'][] = [
-  'instagram',
-  'facebook',
-  'linkedin',
-  'x',
-  'youtube',
-  'tiktok',
-  'email',
-  'website',
-];
+const ALL_TYPES = SOCIAL_PLATFORMS;
+const CUSTOM = '__custom';
 
 // optional light normalization for email type
-const normalizeHref = (t: SocialItem['type'], href: string) => {
+export const normalizeHref = (t: SocialItem['type'], href: string) => {
   if (t === 'email') {
     // if plain email, prepend mailto:
     if (href && !href.startsWith('mailto:') && !href.includes('://')) {
@@ -28,17 +22,31 @@ const normalizeHref = (t: SocialItem['type'], href: string) => {
 };
 
 // Shared list editor for social links — used by the Socials section editor
-// and Settings → General → Site Availability.
+// and Settings → General → Site Availability. Each row either points at a
+// Settings → General → Social Media link (globalId) or is a custom link.
 export default function SocialLinksEditor({
   items,
   onChange,
+  globalLinks: globalLinksProp,
 }: {
   items: SocialItem[];
   onChange: (items: SocialItem[]) => void;
+  /** Settings links to offer; defaults to the live site config's (SettingsModal passes its draft's). */
+  globalLinks?: GlobalSocialLink[];
 }) {
+  const { config } = useSite();
+  const globalLinks = globalLinksProp ?? getUsableGlobalSocialLinks(config);
+
   const addItem = useCallback(() => {
-    onChange([...items, { type: 'instagram', href: '', label: '' }]);
-  }, [onChange, items]);
+    // Default new rows to the first Settings link when there is one
+    const first = globalLinks[0];
+    onChange([
+      ...items,
+      first
+        ? { type: first.type, href: first.href, label: '', globalId: first.id }
+        : { type: 'instagram', href: '', label: '' },
+    ]);
+  }, [onChange, items, globalLinks]);
 
   const removeItem = useCallback(
     (idx: number) => {
@@ -69,7 +77,12 @@ export default function SocialLinksEditor({
     <div className="space-y-3">
       {/* Items header */}
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium">Links ({items.length})</div>
+        <div className="text-sm font-medium flex items-center gap-2">
+          Links ({items.length})
+          <span className="cursor-help text-muted" title={SOCIAL_LINKS_HELP} aria-label={SOCIAL_LINKS_HELP}>
+            <FontAwesomeIcon icon={faCircleQuestion} className="text-sm" />
+          </span>
+        </div>
         <button className="btn btn-ghost" onClick={addItem}>
           <FontAwesomeIcon icon={faPlus} className="text-xs" />
           Add link
@@ -86,28 +99,63 @@ export default function SocialLinksEditor({
               ? 'https://example.com'
               : `https://...`;
 
+          const linked = it.globalId ? globalLinks.find((l) => l.id === it.globalId) : undefined;
+
         return (
           <div key={`social-${i}`} className="card admin-card card-solid p-3 space-y-3">
-            <div className="grid md:grid-cols-[1fr_2fr_1fr_auto_auto_auto] gap-2">
+            <div className="grid md:grid-cols-[1fr_1fr_2fr_1fr_auto_auto_auto] gap-2">
               <select
                 className="select"
-                value={it.type}
-                onChange={(e) => updateItem(i, { type: e.target.value as SocialItem['type'] })}
-                title="Platform"
+                value={it.globalId ?? CUSTOM}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === CUSTOM) {
+                    updateItem(i, { globalId: undefined });
+                    return;
+                  }
+                  const link = globalLinks.find((l) => l.id === v);
+                  if (link) updateItem(i, { globalId: link.id, type: link.type, href: link.href });
+                }}
+                title="Pick a link from Settings → General → Social Media, or Custom"
               >
-                {ALL_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {globalLinks.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name || 'Untitled link'}
                   </option>
                 ))}
+                {it.globalId && !linked && (
+                  <option value={it.globalId}>Missing link — pick another</option>
+                )}
+                <option value={CUSTOM}>Custom</option>
               </select>
 
-              <input
-                className="input"
-                placeholder={hrefPlaceholder}
-                value={it.href}
-                onChange={(e) => updateItem(i, { href: normalizeHref(it.type, e.target.value) })}
-              />
+              {it.globalId ? (
+                <div className="md:col-span-2 text-sm text-muted self-center truncate" title={linked?.href}>
+                  {linked ? linked.href : 'Not set in Settings — this link is hidden on the site.'}
+                </div>
+              ) : (
+                <>
+                  <select
+                    className="select"
+                    value={it.type}
+                    onChange={(e) => updateItem(i, { type: e.target.value as SocialItem['type'] })}
+                    title="Platform"
+                  >
+                    {ALL_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+
+                  <input
+                    className="input"
+                    placeholder={hrefPlaceholder}
+                    value={it.href}
+                    onChange={(e) => updateItem(i, { href: normalizeHref(it.type, e.target.value) })}
+                  />
+                </>
+              )}
 
               <input
                 className="input"

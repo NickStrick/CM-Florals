@@ -8,6 +8,9 @@ import { faEnvelope, faMapMarkerAlt, faPhone, faGlobe, faLink } from '@fortaweso
 import { faLinkedin, faInstagram, faFacebook, faYoutube, faTiktok } from '@fortawesome/free-brands-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { resolveAssetUrl } from '@/lib/assetUrl';
+import { useSite } from '@/context/SiteContext';
+import { findGlobalSocialLink, getGlobalSocialLinks } from '@/lib/socialLinks';
+import { SOCIAL_ICONS as PLATFORM_ICONS } from './Socials';
 
 // ---- typed social keys + icon map ----
 type SocialType = 'linkedin' | 'instagram' | 'facebook' | 'youtube' | 'tiktok' | 'website' | 'linktree';
@@ -38,6 +41,16 @@ export function Contact({
   backgroundUrl,
 }: ContactSection) {
   const resolvedBackgroundUrl = resolveAssetUrl(backgroundUrl);
+
+  // Links picked from Settings → General → Social Media use the current Settings
+  // name/URL/icon; ones whose Settings link was cleared are hidden.
+  const { config } = useSite();
+  const globalLinks = getGlobalSocialLinks(config);
+  const resolvedSocials = (socials ?? []).flatMap((s) => {
+    if (!s.globalId) return [s];
+    const link = findGlobalSocialLink(s.globalId, globalLinks);
+    return link ? [{ ...s, label: link.name, href: link.href, customIcon: PLATFORM_ICONS[link.type] }] : [];
+  });
 
   return (
     <section
@@ -75,7 +88,7 @@ export function Contact({
               </li>
             )}
 
-            {socials?.map((s, i) => {
+            {resolvedSocials.map((s, i) => {
               const key = toSocialType(s.label);
               const icon = s.customIcon ? s.customIcon : key ? SOCIAL_ICONS[key] : faLink;
               console.log('Rendering social link:', s.label, 'with icon:', icon);

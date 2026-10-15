@@ -16,6 +16,8 @@ import { faEnvelope, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import type { SocialsSection, SocialItem } from '@/types/site';
 
 import {SeperatorWave} from '@/components/SeperatorWave';
+import { useSite } from '@/context/SiteContext';
+import { getGlobalSocialLinks, resolveSocialItems } from '@/lib/socialLinks';
 
 export const SOCIAL_ICONS: Record<SocialItem['type'], IconDefinition> = {
   instagram: faInstagram,
@@ -49,6 +51,9 @@ export default function Socials({
   topWaveType,
   bottomWaveType
 }: SocialsSection) {
+  // Links picked from Settings → General → Social Media use the current Settings URL
+  const { config } = useSite();
+  const resolvedItems = resolveSocialItems(items ?? [], getGlobalSocialLinks(config));
   const rounded =
     style?.rounded === '2xl' ? '!rounded-full' : style?.rounded === 'lg' ? '!rounded-full' : '!rounded-full';
   const iconSizeCls = sizeMap[style?.size ?? 'lg'];
@@ -85,7 +90,7 @@ export default function Socials({
             },
           }}
         >
-          {items.map((s, i) => (
+          {resolvedItems.map((s, i) => (
             <motion.li
               key={`${s.type}-${i}`}
               variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}

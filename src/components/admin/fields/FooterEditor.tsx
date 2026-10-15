@@ -5,7 +5,8 @@ import type { FooterSection } from '@/types/site';
 import type { EditorProps } from './types';
 import { useSite } from '@/context/SiteContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faChevronDown, faTrash, faPlus, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+import { SOCIAL_LINKS_HELP, getUsableGlobalSocialLinks } from '@/lib/socialLinks';
 
 // tiny immutable helper (kept consistent with other editors)
 function deepClone<T>(obj: T): T {
@@ -35,6 +36,8 @@ export default function EditFooter({
     return (config?.sections ?? []).filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
   }, [config?.sections]);
   const allPages = useMemo(() => config?.pages ?? [], [config?.pages]);
+  // Settings → General → Social Media links offered by the "Social" link mode
+  const globalLinks = getUsableGlobalSocialLinks(config);
 
   const setField = useCallback(
     <K extends keyof FooterSection>(key: K, value: FooterSection[K]) => {
@@ -205,14 +208,25 @@ export default function EditFooter({
               {/* Links */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs opacity-70">Links</div>
+                  <div className="text-xs opacity-70 flex items-center gap-2">
+                    Links
+                    <span
+                      className="cursor-help"
+                      title={`Choose "Social" to use a universal link. ${SOCIAL_LINKS_HELP}`}
+                      aria-label={SOCIAL_LINKS_HELP}
+                    >
+                      <FontAwesomeIcon icon={faCircleQuestion} className="text-sm" />
+                    </span>
+                  </div>
                   <button className="btn btn-ghost" onClick={() => addLink(ci)}>
                     <FontAwesomeIcon icon={faPlus} className="text-xs" />Add link
                   </button>
                 </div>
 
                 {links.map((lnk, li) => {
-                  const { kind, sectionId } = hrefKind(lnk.href);
+                  const { kind: hrefMode, sectionId } = hrefKind(lnk.href);
+                  const kind = lnk.globalId ? 'social' : hrefMode;
+                  const linkedSocial = lnk.globalId ? globalLinks.find((l) => l.id === lnk.globalId) : undefined;
 
                   return (
                     <div
@@ -222,7 +236,12 @@ export default function EditFooter({
                       {/* Label */}
                       <input
                         className="input"
-                        placeholder="Label"
+                        placeholder={
+                          kind === 'social' && linkedSocial
+                            ? `${linkedSocial.name || 'Untitled link'} (from Settings)`
+                            : 'Label'
+                        }
+                        title={kind === 'social' ? 'Leave empty to always show the Settings link name' : undefined}
                         value={lnk.label}
                         onChange={(e) => updateLink(ci, li, { label: e.target.value })}
                       />
@@ -232,25 +251,50 @@ export default function EditFooter({
                         className="select w-36"
                         value={kind}
                         onChange={(e) => {
-                          const nextKind = e.target.value as 'internal' | 'external' | 'sub-page';
+                          const nextKind = e.target.value as 'internal' | 'external' | 'sub-page' | 'social';
                           if (nextKind === 'internal') {
                             const first = allSections[0]?.id ?? '';
-                            updateLink(ci, li, { href: first ? `/#${first}` : '' });
+                            updateLink(ci, li, { href: first ? `/#${first}` : '', globalId: undefined });
                           } else if (nextKind === 'sub-page') {
                             const first = allPages[0]?.slug ?? '';
-                            updateLink(ci, li, { href: first ? `/${first.replace(/^\/+/, '')}` : '' });
+                            updateLink(ci, li, { href: first ? `/${first.replace(/^\/+/, '')}` : '', globalId: undefined });
+                          } else if (nextKind === 'social') {
+                            const first = globalLinks[0];
+                            if (first) {
+                              updateLink(ci, li, { globalId: first.id, href: first.href });
+                            }
                           } else {
-                            updateLink(ci, li, { href: '' });
+                            updateLink(ci, li, { href: '', globalId: undefined });
                           }
                         }}
                       >
                         <option value="internal">Internal</option>
                         <option value="sub-page">Sub-page</option>
                         <option value="external">External</option>
+                        <option value="social" disabled={globalLinks.length === 0 && kind !== 'social'}>
+                          Social{globalLinks.length === 0 ? ' (add in Settings)' : ''}
+                        </option>
                       </select>
 
                       {/* Target */}
-                      {kind === 'internal' ? (
+                      {kind === 'social' ? (
+                        <select
+                          className="select"
+                          value={lnk.globalId}
+                          onChange={(e) => {
+                            const link = globalLinks.find((l) => l.id === e.target.value);
+                            if (link) updateLink(ci, li, { globalId: link.id, href: link.href });
+                          }}
+                          title={linkedSocial?.href}
+                        >
+                          {globalLinks.map((l) => (
+                            <option key={l.id} value={l.id}>
+                              {l.name || 'Untitled link'}
+                            </option>
+                          ))}
+                          {!linkedSocial && <option value={lnk.globalId}>Missing link — pick another</option>}
+                        </select>
+                      ) : kind === 'internal' ? (
                         <select
                           className="select"
                           value={sectionId || (lnk.href === '/' ? '/' : '')}

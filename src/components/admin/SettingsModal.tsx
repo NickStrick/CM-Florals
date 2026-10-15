@@ -1,11 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckoutInput, CheckoutInputOption, PaymentsSettings, PromoCode, SiteConfig, SiteDisabledSettings, SocialsSection } from '@/types/site';
+import type { CheckoutInput, CheckoutInputOption, GlobalSocialLink, PaymentsSettings, PromoCode, SiteConfig, SiteDisabledSettings, SocialItem, SocialsSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
-import SocialLinksEditor from './fields/SocialLinksEditor';
+import SocialLinksEditor, { normalizeHref } from './fields/SocialLinksEditor';
+import { SOCIAL_PLATFORMS, SOCIAL_PLATFORM_NAMES, getGlobalSocialLinks } from '@/lib/socialLinks';
 import MediaPicker from './MediaPicker';
 import type { CardProvider, ProviderAvailability } from '@/lib/paymentProviders';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
@@ -146,6 +147,29 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       return { ...prev, settings: { ...(prev.settings ?? {}), general: nextGeneral } };
     });
   }, []);
+
+  // ── Social Media: site-wide links that section editors pick from a dropdown ──
+  // Built-in platforms use the platform as their id; custom links get 'custom-xxxx'.
+  const socialLinks = useMemo(() => getGlobalSocialLinks(draft), [draft]);
+  const customSocialLinks = socialLinks.filter((l) => !SOCIAL_PLATFORMS.includes(l.id as SocialItem['type']));
+  const usableSocialLinks = socialLinks.filter((l) => l.href.trim());
+  const platformHref = (t: SocialItem['type']) => socialLinks.find((l) => l.id === t)?.href ?? '';
+
+  const setPlatformLink = (t: SocialItem['type'], href: string) => {
+    updateGeneral({
+      socialLinks: [
+        ...SOCIAL_PLATFORMS.map((p) => ({ id: p, name: SOCIAL_PLATFORM_NAMES[p], type: p, href: p === t ? href : platformHref(p) }))
+          .filter((l) => l.href),
+        ...customSocialLinks,
+      ],
+    });
+  };
+  const addCustomSocialLink = () =>
+    updateGeneral({ socialLinks: [...socialLinks, { id: `custom-${rid().slice(0, 8)}`, name: '', type: 'website', href: '' }] });
+  const updateCustomSocialLink = (id: string, patch: Partial<GlobalSocialLink>) =>
+    updateGeneral({ socialLinks: socialLinks.map((l) => (l.id === id ? { ...l, ...patch } : l)) });
+  const removeCustomSocialLink = (id: string) =>
+    updateGeneral({ socialLinks: socialLinks.filter((l) => l.id !== id) });
 
   // ── Payment providers configured in this environment (env vars present) ──
   const [providers, setProviders] = useState<ProviderAvailability | null>(null);
@@ -569,9 +593,73 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     <SocialLinksEditor
                       items={siteDisabled.socials ?? []}
                       onChange={(socials) => updateSiteDisabled({ socials })}
+                      globalLinks={usableSocialLinks}
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="card admin-card card-solid card-full p-4 space-y-3">
+                <div className="font-semibold">Social Media</div>
+                <div className="text-sm text-muted">
+                  Enter your links once here. The Socials, Contact and Site Unavailable link lists pick them from a
+                  dropdown, so changing a link here updates it everywhere it&apos;s used.
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  {SOCIAL_PLATFORMS.map((t) => (
+                    <div key={t}>
+                      <label className="block text-sm font-medium">{SOCIAL_PLATFORM_NAMES[t]}</label>
+                      <input
+                        className="input w-full"
+                        value={platformHref(t)}
+                        onChange={(e) => setPlatformLink(t, normalizeHref(t, e.target.value))}
+                        placeholder={t === 'email' ? 'name@example.com' : 'https://...'}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-sm font-medium">Custom links ({customSocialLinks.length})</div>
+                  <button className="btn btn-ghost" onClick={addCustomSocialLink}>
+                    + Add custom link
+                  </button>
+                </div>
+                <div className="text-xs text-muted">
+                  For extra accounts or other sites, e.g. &quot;Instagram 2&quot;. The name is what shows in the dropdowns.
+                </div>
+                {customSocialLinks.map((l) => (
+                  <div key={l.id} className="grid md:grid-cols-[1fr_1fr_2fr_auto] gap-2">
+                    <input
+                      className="input"
+                      value={l.name}
+                      onChange={(e) => updateCustomSocialLink(l.id, { name: e.target.value })}
+                      placeholder="Name, e.g. Instagram 2"
+                    />
+                    <select
+                      className="select"
+                      value={l.type}
+                      onChange={(e) => updateCustomSocialLink(l.id, { type: e.target.value as SocialItem['type'] })}
+                      title="Icon"
+                    >
+                      {SOCIAL_PLATFORMS.map((t) => (
+                        <option key={t} value={t}>
+                          {SOCIAL_PLATFORM_NAMES[t]} icon
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      className="input"
+                      value={l.href}
+                      onChange={(e) => updateCustomSocialLink(l.id, { href: normalizeHref(l.type, e.target.value) })}
+                      placeholder="https://..."
+                    />
+                    <button className="btn btn-ghost text-red-500" onClick={() => removeCustomSocialLink(l.id)} title="Remove">
+                      Remove
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <div className="card admin-card card-solid card-full p-4 space-y-3">

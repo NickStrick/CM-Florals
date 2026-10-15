@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from 'react';
 import type { SiteConfig } from '@/types/site';
+import { linkMatchingSocials } from '@/lib/socialLinks';
 
 // -----------------------------
 // Shared config save: every admin panel PUTs the whole SiteConfig, so a panel
@@ -22,7 +23,8 @@ export async function saveAdminConfig(siteId: string, draft: SiteConfig, origina
   const res = await fetch(`/api/admin/config/${encodeURIComponent(siteId)}?variant=${variant}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'x-local-admin': '1' },
-    body: JSON.stringify(merged),
+    // Custom social rows matching a Settings → Social Media link get connected to it
+    body: JSON.stringify(linkMatchingSocials(merged as SiteConfig)),
   });
   if (!res.ok) {
     const txt = await res.text();

@@ -278,7 +278,7 @@ export type ContactSection = SectionBase & {
   address?: string;
   mapEmbedUrl?: string;
   backgroundUrl?: string; // optional background image
-  socials?: { label: string; href: string; customIcon?: IconDefinition }[];
+  socials?: { label: string; href: string; customIcon?: IconDefinition; globalId?: string }[];
 };
 
 export type SchedulingSection = SectionBase & {
@@ -290,7 +290,8 @@ export type SchedulingSection = SectionBase & {
 
 export type FooterSection = SectionBase & {
   type: 'footer';
-  columns?: { title?: string; links: { label: string; href: string }[] }[];
+  /** A link with `globalId` uses that Settings → General → Social Media link's URL. */
+  columns?: { title?: string; links: { label: string; href: string; globalId?: string }[] }[];
   legal?: string;
 };
 
@@ -325,7 +326,7 @@ export type SiteDisabledSettings = {
 };
 
 export type SiteSettings = {
-  /** Free-form; known keys include businessDisplayName, businessNotificationEmail, siteDisabled (SiteDisabledSettings). */
+  /** Free-form; known keys include businessDisplayName, businessNotificationEmail, siteDisabled (SiteDisabledSettings), socialLinks (GlobalSocialLink[]). */
   general?: Record<string, unknown>;
   payments?: PaymentsSettings;
 };
@@ -574,6 +575,16 @@ export type SocialItem = {
     | 'website';
   href: string; // mailto: allowed for email
   label?: string; // optional label under icon
+  /** When set, type/href come from the matching Settings → General → Social Media link (GlobalSocialLink.id). */
+  globalId?: string;
+};
+
+/** Settings → General → Social Media: a site-wide link that sections pick from a dropdown. */
+export type GlobalSocialLink = {
+  id: string; // platform name for built-ins (e.g. 'instagram'), 'custom-xxxx' for custom links
+  name: string; // shown in the section dropdowns, e.g. "Instagram 2"
+  type: SocialItem['type']; // icon
+  href: string;
 };
 
 export type SocialsSection = SectionBase & {

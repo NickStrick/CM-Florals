@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import type { SiteDisabledSection } from '@/types/site';
 import { SOCIAL_ICONS } from './Socials';
+import { useSite } from '@/context/SiteContext';
+import { getGlobalSocialLinks, resolveSocialItems } from '@/lib/socialLinks';
 
 // Rounded = square crop shown as a circle; plain = fit within the box, never cropped.
 const roundedSizeMap = {
@@ -22,8 +24,11 @@ const plainSizeMap = {
 
 // Rendered on its own (no header/footer) when Settings → General →
 // "Toggle Site Unavailable" is on. See getSiteDisabledSection.
-export default function SiteDisabled({ id, title, message, logoImage, logoRounded, logoSize = 'md', socials = [] }: SiteDisabledSection) {
+export default function SiteDisabled({ id, title, message, logoImage, logoRounded, logoSize = 'md', socials: rawSocials = [] }: SiteDisabledSection) {
   const logoUrl = resolveAssetUrl(logoImage);
+  // Links picked from Settings → General → Social Media use the current Settings URL
+  const { config } = useSite();
+  const socials = resolveSocialItems(rawSocials, getGlobalSocialLinks(config));
 
   return (
     <section

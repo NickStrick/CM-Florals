@@ -5,7 +5,11 @@ import type { ContactSection } from '@/types/site';
 import type { EditorProps } from './types';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faChevronDown, faTrash, faPlus, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
+import { useSite } from '@/context/SiteContext';
+import { SOCIAL_LINKS_HELP, getUsableGlobalSocialLinks } from '@/lib/socialLinks';
+
+const CUSTOM = '__custom';
 
 // tiny immutable helper (kept consistent with your other editors)
 function deepClone<T>(obj: T): T {
@@ -19,6 +23,9 @@ export default function EditContact({
   siteId,
 }: EditorProps<ContactSection>) {
   const socials = section.socials ?? [];
+  // Settings → General → Social Media links offered in each row's dropdown
+  const { config } = useSite();
+  const globalLinks = getUsableGlobalSocialLinks(config);
 
   const setField = useCallback(
     <K extends keyof ContactSection>(key: K, value: ContactSection[K]) => {
@@ -40,9 +47,14 @@ export default function EditContact({
 
   const addSocial = useCallback(() => {
     const copy = deepClone(section);
-    copy.socials = [...(copy.socials ?? []), { label: '', href: '' }];
+    // Default new rows to the first Settings link when there is one
+    const first = globalLinks[0];
+    copy.socials = [
+      ...(copy.socials ?? []),
+      first ? { label: first.name, href: first.href, globalId: first.id } : { label: '', href: '' },
+    ];
     onChange(copy);
-  }, [onChange, section]);
+  }, [onChange, section, globalLinks]);
 
   const removeSocial = useCallback(
     (idx: number) => {
@@ -175,27 +187,64 @@ export default function EditContact({
       {/* Social links */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-medium">Social Links</div>
+          <div className="text-sm font-medium flex items-center gap-2">
+            Social Links
+            <span className="cursor-help text-muted" title={SOCIAL_LINKS_HELP} aria-label={SOCIAL_LINKS_HELP}>
+              <FontAwesomeIcon icon={faCircleQuestion} className="text-sm" />
+            </span>
+          </div>
           <button className="btn btn-ghost" onClick={addSocial}>
             <FontAwesomeIcon icon={faPlus} className="text-xs" />Add social
           </button>
         </div>
 
         <div className="space-y-2">
-          {socials.map((s, i) => (
-            <div key={`social-${i}`} className="grid md:grid-cols-[1fr_1fr_auto_auto_auto] gap-2">
-              <input
-                className="input"
-                placeholder="Label"
-                value={s.label}
-                onChange={(e) => updateSocial(i, { label: e.target.value })}
-              />
-              <input
-                className="input"
-                placeholder="Href (mailto:, https://, /path)"
-                value={s.href}
-                onChange={(e) => updateSocial(i, { href: e.target.value })}
-              />
+          {socials.map((s, i) => {
+            const linked = s.globalId ? globalLinks.find((l) => l.id === s.globalId) : undefined;
+            return (
+            <div key={`social-${i}`} className="grid md:grid-cols-[1fr_1fr_1fr_auto_auto_auto] gap-2">
+              <select
+                className="select"
+                value={s.globalId ?? CUSTOM}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === CUSTOM) {
+                    updateSocial(i, { globalId: undefined });
+                    return;
+                  }
+                  const link = globalLinks.find((l) => l.id === v);
+                  if (link) updateSocial(i, { globalId: link.id, label: link.name, href: link.href });
+                }}
+                title="Pick a link from Settings → General → Social Media, or Custom"
+              >
+                {globalLinks.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name || 'Untitled link'}
+                  </option>
+                ))}
+                {s.globalId && !linked && <option value={s.globalId}>Missing link — pick another</option>}
+                <option value={CUSTOM}>Custom</option>
+              </select>
+              {s.globalId ? (
+                <div className="md:col-span-2 text-sm text-muted self-center truncate" title={linked?.href}>
+                  {linked ? `${linked.name} — ${linked.href}` : 'Not set in Settings — this link is hidden on the site.'}
+                </div>
+              ) : (
+                <>
+                  <input
+                    className="input"
+                    placeholder="Label"
+                    value={s.label}
+                    onChange={(e) => updateSocial(i, { label: e.target.value })}
+                  />
+                  <input
+                    className="input"
+                    placeholder="Href (mailto:, https://, /path)"
+                    value={s.href}
+                    onChange={(e) => updateSocial(i, { href: e.target.value })}
+                  />
+                </>
+              )}
               <button
                 className="btn btn-ghost"
                 onClick={() => moveSocial(i, i - 1)}
@@ -216,7 +265,8 @@ export default function EditContact({
                 <FontAwesomeIcon icon={faTrash} className="text-sm" />
               </button>
             </div>
-          ))}
+            );
+          })}
           {socials.length === 0 && (
             <div className="text-sm text-muted">No socials yet. Click “Add social”.</div>
           )}
