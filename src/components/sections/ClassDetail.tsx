@@ -26,7 +26,7 @@ export default function ClassDetail({
     <>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className="section">
-      <div className="mx-auto max-w-5xl px-4">
+      <div className="mx-auto max-w-5xl xl:max-w-7xl px-4">
         <ClassDetailBody key={classItem.id} classItem={classItem} buyCtaFallback={buyCtaFallback} />
       </div>
     </section>

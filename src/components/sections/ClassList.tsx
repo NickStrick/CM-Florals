@@ -40,7 +40,7 @@ export default function ClassList({
     <>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
     <section id={id} className="section">
-      <div className="mx-auto max-w-5xl px-4">
+      <div className="mx-auto max-w-5xl xl:max-w-7xl px-4">
         {(title || subtitle) && (
           <div className="mb-10 text-center">
             {title && <h2 className="h-display mt-2">{title}</h2>}

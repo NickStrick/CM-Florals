@@ -128,9 +128,11 @@ export default function ClassDetailBody({ classItem, buyCtaFallback = 'Book Now'
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
+    // Layout: mobile stacks; md = image | details with booking under the details
+    // (image spans both rows); xl = image | details | booking side by side.
+    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-y-4 gap-x-8 md:gap-x-12 items-start">
       {/* Media */}
-      <div>
+      <div className="mb-4 md:mb-0 md:row-span-2 xl:row-span-1">
         {mainImage ? (
           <div className="w-full max-h-[560px] flex items-center justify-center overflow-hidden rounded-xl">
             <img
@@ -242,8 +244,10 @@ export default function ClassDetailBody({ classItem, buyCtaFallback = 'Book Now'
             })}
           </div>
         )}
+      </div>
 
-        {/* Time picker / booking */}
+      {/* Time picker / booking — under the details on md, its own column on xl */}
+      <div className="space-y-4 text-[var(--text-1)] md:col-start-2 xl:col-start-3 xl:row-start-1">
         {!cartActive ? (
           <p className="text-sm text-muted">Booking isn&apos;t available on this site yet.</p>
         ) : (
