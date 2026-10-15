@@ -4,6 +4,7 @@ import Link from 'next/link';
 import AnimatedSection from '@/components/AnimatedSection';
 import { useSite } from '@/context/SiteContext';
 import { findGlobalSocialLink, getGlobalSocialLinks } from '@/lib/socialLinks';
+import { findGlobalPhone, getGlobalPhones, phoneHref } from '@/lib/phoneNumbers';
 
 function normalizeNavHref(href: string) {
   if (!href || href === '' || href === '/') {
@@ -23,6 +24,8 @@ export function Footer({ columns = [], legal }: FooterSection) {
   // "Social" links point at Settings → General → Social Media; hidden if that link was cleared.
   const { config } = useSite();
   const globalLinks = getGlobalSocialLinks(config);
+  // "Phone" links point at Settings → General → Phone Numbers; hidden if that number was removed.
+  const globalPhones = getGlobalPhones(config);
 
   return (
     <AnimatedSection className="section bg-gradient-2">
@@ -32,6 +35,17 @@ export function Footer({ columns = [], legal }: FooterSection) {
             {c.title ? <div className="font-semibold mb-3">{c.title}</div> : null}
             <ul className="space-y-2 text-muted">
               {c.links.map((l,i) => {
+                if (l.phoneId) {
+                  const phone = findGlobalPhone(l.phoneId, globalPhones);
+                  if (!phone) return null;
+                  return (
+                    <li key={l.label+i}>
+                      <a className="hover:text-fg transition-colors" href={phoneHref(phone.number)}>
+                        {l.label || phone.number}
+                      </a>
+                    </li>
+                  );
+                }
                 if (l.globalId) {
                   const social = findGlobalSocialLink(l.globalId, globalLinks);
                   if (!social) return null;

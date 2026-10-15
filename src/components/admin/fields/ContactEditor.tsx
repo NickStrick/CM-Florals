@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faTrash, faPlus, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
 import { useSite } from '@/context/SiteContext';
 import { SOCIAL_LINKS_HELP, getUsableGlobalSocialLinks } from '@/lib/socialLinks';
+import { PHONE_NUMBERS_HELP, getUsableGlobalPhones, phoneHref } from '@/lib/phoneNumbers';
 
 const CUSTOM = '__custom';
 
@@ -26,6 +27,9 @@ export default function EditContact({
   // Settings → General → Social Media links offered in each row's dropdown
   const { config } = useSite();
   const globalLinks = getUsableGlobalSocialLinks(config);
+  // Settings → General → Phone Numbers offered in the phone dropdown
+  const globalPhones = getUsableGlobalPhones(config);
+  const linkedPhone = section.phone?.phoneId ? globalPhones.find((p) => p.id === section.phone?.phoneId) : undefined;
 
   const setField = useCallback(
     <K extends keyof ContactSection>(key: K, value: ContactSection[K]) => {
@@ -111,7 +115,45 @@ export default function EditContact({
         </div>
       </div>
 
-      {/* Phone (label + href) */}
+      {/* Phone: a Settings number, or Custom (label + href) */}
+      <div>
+        <label className="text-sm font-medium flex items-center gap-2">
+          Phone
+          <span className="cursor-help text-muted" title={PHONE_NUMBERS_HELP} aria-label={PHONE_NUMBERS_HELP}>
+            <FontAwesomeIcon icon={faCircleQuestion} className="text-sm" />
+          </span>
+        </label>
+        <div className="flex items-center gap-3">
+          <select
+            className="select max-w-xs"
+            value={section.phone?.phoneId ?? CUSTOM}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === CUSTOM) {
+                setField('phone', { label: section.phone?.label ?? '', href: section.phone?.href ?? '' });
+                return;
+              }
+              const phone = globalPhones.find((p) => p.id === v);
+              if (phone) setField('phone', { label: phone.number, href: phoneHref(phone.number), phoneId: phone.id });
+            }}
+          >
+            {globalPhones.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name ? `${p.name} — ${p.number}` : p.number}
+              </option>
+            ))}
+            {section.phone?.phoneId && !linkedPhone && (
+              <option value={section.phone.phoneId}>Missing number — pick another</option>
+            )}
+            <option value={CUSTOM}>Custom</option>
+          </select>
+          {section.phone?.phoneId && !linkedPhone && (
+            <span className="text-sm text-muted">Not set in Settings — the phone is hidden on the site.</span>
+          )}
+        </div>
+      </div>
+
+      {!section.phone?.phoneId && (
       <div className="grid md:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium">Phone Label</label>
@@ -136,6 +178,7 @@ export default function EditContact({
           />
         </div>
       </div>
+      )}
 
       {/* Background image + Map embed */}
       <div className="grid md:grid-cols-2 gap-3">

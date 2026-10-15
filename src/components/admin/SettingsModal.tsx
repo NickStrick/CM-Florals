@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CheckoutInput, CheckoutInputOption, GlobalSocialLink, PaymentsSettings, PromoCode, SiteConfig, SiteDisabledSettings, SocialItem, SocialsSection } from '@/types/site';
+import type { CheckoutInput, CheckoutInputOption, GlobalPhone, GlobalSocialLink, PaymentsSettings, PromoCode, SiteConfig, SiteDisabledSettings, SocialItem, SocialsSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import { getSiteId } from '@/lib/siteId';
 import AdminAIChatPanel from './AdminAIChatPanel';
 import SocialLinksEditor, { normalizeHref } from './fields/SocialLinksEditor';
 import { SOCIAL_PLATFORMS, SOCIAL_PLATFORM_NAMES, getGlobalSocialLinks } from '@/lib/socialLinks';
+import { getGlobalPhones } from '@/lib/phoneNumbers';
 import MediaPicker from './MediaPicker';
 import type { CardProvider, ProviderAvailability } from '@/lib/paymentProviders';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
@@ -170,6 +171,15 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     updateGeneral({ socialLinks: socialLinks.map((l) => (l.id === id ? { ...l, ...patch } : l)) });
   const removeCustomSocialLink = (id: string) =>
     updateGeneral({ socialLinks: socialLinks.filter((l) => l.id !== id) });
+
+  // ── Phone Numbers: site-wide numbers the Contact section and footer pick from ──
+  const phoneNumbers = useMemo(() => getGlobalPhones(draft), [draft]);
+  const addPhoneNumber = () =>
+    updateGeneral({ phoneNumbers: [...phoneNumbers, { id: `phone-${rid().slice(0, 8)}`, name: '', number: '' }] });
+  const updatePhoneNumber = (id: string, patch: Partial<GlobalPhone>) =>
+    updateGeneral({ phoneNumbers: phoneNumbers.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
+  const removePhoneNumber = (id: string) =>
+    updateGeneral({ phoneNumbers: phoneNumbers.filter((p) => p.id !== id) });
 
   // ── Payment providers configured in this environment (env vars present) ──
   const [providers, setProviders] = useState<ProviderAvailability | null>(null);
@@ -660,6 +670,42 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                     </button>
                   </div>
                 ))}
+              </div>
+
+              <div className="card admin-card card-solid card-full p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold">Phone Numbers ({phoneNumbers.length})</div>
+                  <button className="btn btn-ghost" onClick={addPhoneNumber}>
+                    + Add phone number
+                  </button>
+                </div>
+                <div className="text-sm text-muted">
+                  Enter your numbers once here. The Contact section and footer pick them from a dropdown, so changing a
+                  number here updates it everywhere it&apos;s used. Type the number the way it should look on the site.
+                </div>
+                {phoneNumbers.map((p) => (
+                  <div key={p.id} className="grid md:grid-cols-[1fr_2fr_auto] gap-2">
+                    <input
+                      className="input"
+                      value={p.name}
+                      onChange={(e) => updatePhoneNumber(p.id, { name: e.target.value })}
+                      placeholder="Name, e.g. Main or Cell"
+                    />
+                    <input
+                      className="input"
+                      type="tel"
+                      value={p.number}
+                      onChange={(e) => updatePhoneNumber(p.id, { number: e.target.value })}
+                      placeholder="(630) 448-0108"
+                    />
+                    <button className="btn btn-ghost text-red-500" onClick={() => removePhoneNumber(p.id)} title="Remove">
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                {phoneNumbers.length === 0 && (
+                  <div className="text-sm text-muted">No phone numbers yet. Click “Add phone number”.</div>
+                )}
               </div>
 
               <div className="card admin-card card-solid card-full p-4 space-y-3">

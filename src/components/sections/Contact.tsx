@@ -11,6 +11,7 @@ import { resolveAssetUrl } from '@/lib/assetUrl';
 import { useSite } from '@/context/SiteContext';
 import { findGlobalSocialLink, getGlobalSocialLinks } from '@/lib/socialLinks';
 import { SOCIAL_ICONS as PLATFORM_ICONS } from './Socials';
+import { findGlobalPhone, getGlobalPhones, phoneHref } from '@/lib/phoneNumbers';
 
 // ---- typed social keys + icon map ----
 type SocialType = 'linkedin' | 'instagram' | 'facebook' | 'youtube' | 'tiktok' | 'website' | 'linktree';
@@ -52,6 +53,12 @@ export function Contact({
     return link ? [{ ...s, label: link.name, href: link.href, customIcon: PLATFORM_ICONS[link.type] }] : [];
   });
 
+  // A phone picked from Settings → General → Phone Numbers shows the current number; hidden if it was removed.
+  const settingsPhone = phone?.phoneId ? findGlobalPhone(phone.phoneId, getGlobalPhones(config)) : null;
+  const resolvedPhone = phone?.phoneId
+    ? settingsPhone && { label: settingsPhone.number, href: phoneHref(settingsPhone.number) }
+    : phone;
+
   return (
     <section
       id={id}
@@ -79,11 +86,11 @@ export function Contact({
                 <a href={`mailto:${email}`} className="underline">{email}</a>
               </li>
             )}
-            {phone && (
+            {resolvedPhone && (
               <li className="flex items-center gap-3">
                 <FontAwesomeIcon icon={faPhone} className="w-5 h-5" />
-                <a href={phone.href} target="_blank" rel="noopener noreferrer" className="underline">
-                  {phone.label}
+                <a href={resolvedPhone.href} target="_blank" rel="noopener noreferrer" className="underline">
+                  {resolvedPhone.label}
                 </a>
               </li>
             )}

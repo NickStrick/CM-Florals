@@ -274,7 +274,8 @@ export type ContactSection = SectionBase & {
   type: 'contact';
   title?: string;
   email?: string;
-  phone?: { label: string; href: string };
+  /** With `phoneId`, the number comes from Settings → General → Phone Numbers. */
+  phone?: { label: string; href: string; phoneId?: string };
   address?: string;
   mapEmbedUrl?: string;
   backgroundUrl?: string; // optional background image
@@ -290,8 +291,11 @@ export type SchedulingSection = SectionBase & {
 
 export type FooterSection = SectionBase & {
   type: 'footer';
-  /** A link with `globalId` uses that Settings → General → Social Media link's URL. */
-  columns?: { title?: string; links: { label: string; href: string; globalId?: string }[] }[];
+  /**
+   * A link with `globalId` uses that Settings → General → Social Media link's URL;
+   * one with `phoneId` uses that Settings → General → Phone Numbers number.
+   */
+  columns?: { title?: string; links: { label: string; href: string; globalId?: string; phoneId?: string }[] }[];
   legal?: string;
 };
 
@@ -326,7 +330,7 @@ export type SiteDisabledSettings = {
 };
 
 export type SiteSettings = {
-  /** Free-form; known keys include businessDisplayName, businessNotificationEmail, siteDisabled (SiteDisabledSettings), socialLinks (GlobalSocialLink[]). */
+  /** Free-form; known keys include businessDisplayName, businessNotificationEmail, siteDisabled (SiteDisabledSettings), socialLinks (GlobalSocialLink[]), phoneNumbers (GlobalPhone[]). */
   general?: Record<string, unknown>;
   payments?: PaymentsSettings;
 };
@@ -580,6 +584,13 @@ export type SocialItem = {
 };
 
 /** Settings → General → Social Media: a site-wide link that sections pick from a dropdown. */
+/** Settings → General → Phone Numbers: site-wide numbers the Contact section and footer pick from. */
+export type GlobalPhone = {
+  id: string;     // 'phone-xxxx'
+  name: string;   // shown in dropdowns, e.g. "Main" or "Cell"
+  number: string; // shown on the site as typed, e.g. "(630) 448-0108"; the tel: link is built from it
+};
+
 export type GlobalSocialLink = {
   id: string; // platform name for built-ins (e.g. 'instagram'), 'custom-xxxx' for custom links
   name: string; // shown in the section dropdowns, e.g. "Instagram 2"

@@ -7,6 +7,7 @@ import { useSite } from '@/context/SiteContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown, faTrash, faPlus, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
 import { SOCIAL_LINKS_HELP, getUsableGlobalSocialLinks } from '@/lib/socialLinks';
+import { PHONE_NUMBERS_HELP, getUsableGlobalPhones, phoneHref } from '@/lib/phoneNumbers';
 
 // tiny immutable helper (kept consistent with other editors)
 function deepClone<T>(obj: T): T {
@@ -38,6 +39,8 @@ export default function EditFooter({
   const allPages = useMemo(() => config?.pages ?? [], [config?.pages]);
   // Settings → General → Social Media links offered by the "Social" link mode
   const globalLinks = getUsableGlobalSocialLinks(config);
+  // Settings → General → Phone Numbers offered by the "Phone" link mode
+  const globalPhones = getUsableGlobalPhones(config);
 
   const setField = useCallback(
     <K extends keyof FooterSection>(key: K, value: FooterSection[K]) => {
@@ -212,8 +215,8 @@ export default function EditFooter({
                     Links
                     <span
                       className="cursor-help"
-                      title={`Choose "Social" to use a universal link. ${SOCIAL_LINKS_HELP}`}
-                      aria-label={SOCIAL_LINKS_HELP}
+                      title={`Choose "Social" to use a universal link. ${SOCIAL_LINKS_HELP}\n\nChoose "Phone" to use a universal phone number. ${PHONE_NUMBERS_HELP}`}
+                      aria-label={`${SOCIAL_LINKS_HELP} ${PHONE_NUMBERS_HELP}`}
                     >
                       <FontAwesomeIcon icon={faCircleQuestion} className="text-sm" />
                     </span>
@@ -225,8 +228,9 @@ export default function EditFooter({
 
                 {links.map((lnk, li) => {
                   const { kind: hrefMode, sectionId } = hrefKind(lnk.href);
-                  const kind = lnk.globalId ? 'social' : hrefMode;
+                  const kind = lnk.phoneId ? 'phone' : lnk.globalId ? 'social' : hrefMode;
                   const linkedSocial = lnk.globalId ? globalLinks.find((l) => l.id === lnk.globalId) : undefined;
+                  const linkedPhone = lnk.phoneId ? globalPhones.find((p) => p.id === lnk.phoneId) : undefined;
 
                   return (
                     <div
@@ -239,9 +243,17 @@ export default function EditFooter({
                         placeholder={
                           kind === 'social' && linkedSocial
                             ? `${linkedSocial.name || 'Untitled link'} (from Settings)`
-                            : 'Label'
+                            : kind === 'phone' && linkedPhone
+                              ? `${linkedPhone.number} (from Settings)`
+                              : 'Label'
                         }
-                        title={kind === 'social' ? 'Leave empty to always show the Settings link name' : undefined}
+                        title={
+                          kind === 'social'
+                            ? 'Leave empty to always show the Settings link name'
+                            : kind === 'phone'
+                              ? 'Leave empty to always show the Settings phone number'
+                              : undefined
+                        }
                         value={lnk.label}
                         onChange={(e) => updateLink(ci, li, { label: e.target.value })}
                       />
@@ -251,20 +263,26 @@ export default function EditFooter({
                         className="select w-36"
                         value={kind}
                         onChange={(e) => {
-                          const nextKind = e.target.value as 'internal' | 'external' | 'sub-page' | 'social';
+                          const nextKind = e.target.value as 'internal' | 'external' | 'sub-page' | 'social' | 'phone';
+                          const clearIds = { globalId: undefined, phoneId: undefined };
                           if (nextKind === 'internal') {
                             const first = allSections[0]?.id ?? '';
-                            updateLink(ci, li, { href: first ? `/#${first}` : '', globalId: undefined });
+                            updateLink(ci, li, { href: first ? `/#${first}` : '', ...clearIds });
                           } else if (nextKind === 'sub-page') {
                             const first = allPages[0]?.slug ?? '';
-                            updateLink(ci, li, { href: first ? `/${first.replace(/^\/+/, '')}` : '', globalId: undefined });
+                            updateLink(ci, li, { href: first ? `/${first.replace(/^\/+/, '')}` : '', ...clearIds });
                           } else if (nextKind === 'social') {
                             const first = globalLinks[0];
                             if (first) {
-                              updateLink(ci, li, { globalId: first.id, href: first.href });
+                              updateLink(ci, li, { ...clearIds, globalId: first.id, href: first.href });
+                            }
+                          } else if (nextKind === 'phone') {
+                            const first = globalPhones[0];
+                            if (first) {
+                              updateLink(ci, li, { ...clearIds, phoneId: first.id, href: phoneHref(first.number) });
                             }
                           } else {
-                            updateLink(ci, li, { href: '', globalId: undefined });
+                            updateLink(ci, li, { href: '', ...clearIds });
                           }
                         }}
                       >
@@ -274,10 +292,29 @@ export default function EditFooter({
                         <option value="social" disabled={globalLinks.length === 0 && kind !== 'social'}>
                           Social{globalLinks.length === 0 ? ' (add in Settings)' : ''}
                         </option>
+                        <option value="phone" disabled={globalPhones.length === 0 && kind !== 'phone'}>
+                          Phone{globalPhones.length === 0 ? ' (add in Settings)' : ''}
+                        </option>
                       </select>
 
                       {/* Target */}
-                      {kind === 'social' ? (
+                      {kind === 'phone' ? (
+                        <select
+                          className="select"
+                          value={lnk.phoneId}
+                          onChange={(e) => {
+                            const phone = globalPhones.find((p) => p.id === e.target.value);
+                            if (phone) updateLink(ci, li, { phoneId: phone.id, href: phoneHref(phone.number) });
+                          }}
+                        >
+                          {globalPhones.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name ? `${p.name} — ${p.number}` : p.number}
+                            </option>
+                          ))}
+                          {!linkedPhone && <option value={lnk.phoneId}>Missing number — pick another</option>}
+                        </select>
+                      ) : kind === 'social' ? (
                         <select
                           className="select"
                           value={lnk.globalId}
