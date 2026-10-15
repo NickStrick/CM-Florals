@@ -13,6 +13,7 @@ import ProductsModal from './ProductsModal';
 import ClassesModal from './ClassesModal';
 import { applySiteConfigPatch } from '@/lib/siteConfigPatch';
 import { isAdminAiUiEnabled } from '@/lib/adminAi';
+import { flushAdminSaves, useAdminHasUnsaved } from '@/lib/adminAutoSave';
 import type { SiteConfig } from '@/types/site';
 
 type PickerKind = 'generic' | 'video-files' | 'video-posters';
@@ -34,6 +35,8 @@ export default function AdminBar() {
   const [showOrders, setShowOrders] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [showClasses, setShowClasses] = useState(false);
+  const hasUnsaved = useAdminHasUnsaved();
+  const [savingAll, setSavingAll] = useState(false);
 
   const siteId = getSiteId();
   const bucket = process.env.NEXT_PUBLIC_S3_DEFAULT_BUCKET;
@@ -55,7 +58,30 @@ export default function AdminBar() {
   }, [kind, siteId]);
 
   return (
-    <div data-admin-ui="true">
+    <div data-admin-ui="true" className={hasUnsaved ? 'admin-unsaved' : undefined}>
+      {/* Universal save banner: shown whenever any admin panel has unsaved edits */}
+      {hasUnsaved && (
+        <div className="admin-save-banner fixed inset-x-0 bottom-0 z-[13000]">
+          <div className="card admin-card card-solid !max-w-full !rounded-none px-4 py-3 flex flex-wrap items-center justify-center gap-4">
+            <span className="font-bold text-lg">⚠ You have unsaved changes</span>
+            <button
+              className="btn btn-primary btn-save-dirty"
+              disabled={savingAll}
+              onClick={async () => {
+                setSavingAll(true);
+                try {
+                  await flushAdminSaves();
+                } finally {
+                  setSavingAll(false);
+                }
+              }}
+            >
+              {savingAll ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="fixed right-4 top-4 z-[10000]">
         <div className="card admin-card card-solid card-full px-4 py-3 flex flex-wrap items-center gap-3">
           <span className="font-semibold">Admin Mode</span>

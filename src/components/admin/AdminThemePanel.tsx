@@ -121,7 +121,7 @@ export default function AdminThemePanel() {
   useAdminAutoSave(themeDirty, saveTheme);
 
   return (
-    <div className="fixed bottom-2 min-h-[69px] right-0 z-[10000] flex justify-center">
+    <div className="admin-theme-panel fixed bottom-2 min-h-[69px] right-0 z-[10000] flex justify-center">
       <div className="card admin-card card-solid px-4 py-3 flex flex-wrap items-center gap-3">
         <div className="text-sm font-semibold">Theme</div>
         <select

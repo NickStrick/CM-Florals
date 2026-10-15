@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { SiteConfig } from '@/types/site';
 
 // -----------------------------
@@ -41,16 +41,34 @@ export async function saveAdminConfig(siteId: string, draft: SiteConfig, origina
 type Saver = () => Promise<boolean>;
 
 const savers = new Set<Saver>();
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((l) => l());
 
 /** Register `save` while `isDirty` is true. `save` resolves true on success. */
 export function useAdminAutoSave(isDirty: boolean, save: Saver) {
   useEffect(() => {
     if (!isDirty) return;
     savers.add(save);
+    notify();
     return () => {
       savers.delete(save);
+      notify();
     };
   }, [isDirty, save]);
+}
+
+/** True while any admin panel has unsaved edits (drives the bottom save banner). */
+export function useAdminHasUnsaved(): boolean {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => {
+        listeners.delete(l);
+      };
+    },
+    () => savers.size > 0,
+    () => false
+  );
 }
 
 /** Run every pending save (one at a time, since each PUTs the whole config). Resolves true if all succeeded. */

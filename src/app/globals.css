@@ -1181,6 +1181,21 @@ margin-bottom: -1px;
 .admin-card .btn-save-dirty:disabled{
   animation: none;
 }
+/* Universal bottom save banner (AdminBar): extra-large button */
+.admin-save-banner .admin-card .btn-save-dirty{
+  font-size: 1.35rem;
+  padding: 1rem 2.75rem;
+}
+/* While the banner is up, keep admin modals and the theme panel clear of it */
+.admin-unsaved .edit-modal{
+  padding-bottom: 100px;
+}
+.admin-unsaved .edit-modal .card-screen-height{
+  max-height: calc(100vh - 120px);
+}
+.admin-unsaved .admin-theme-panel{
+  bottom: 100px;
+}
 @keyframes save-dirty-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, .75); }
   50%      { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
