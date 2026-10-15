@@ -1185,6 +1185,16 @@ margin-bottom: -1px;
 .admin-save-banner .admin-card .btn-save-dirty{
   font-size: 1.35rem;
   padding: 1rem 2.75rem;
+  width: 60vw;
+  min-width: max-content;
+  justify-content: center;
+}
+.admin-save-banner-text{
+  animation: save-banner-text-flash 1.4s ease-in-out infinite;
+}
+@keyframes save-banner-text-flash {
+  0%, 100% { color: var(--admin-text); }
+  50%      { color: #fca5a5; }
 }
 /* While the banner is up, keep admin modals and the theme panel clear of it */
 .admin-unsaved .edit-modal{

@@ -62,8 +62,9 @@ export default function AdminBar() {
       {/* Universal save banner: shown whenever any admin panel has unsaved edits */}
       {hasUnsaved && (
         <div className="admin-save-banner fixed inset-x-0 bottom-0 z-[13000]">
-          <div className="card admin-card card-solid !max-w-full !rounded-none px-4 py-3 flex flex-wrap items-center justify-center gap-4">
-            <span className="font-bold text-lg">⚠ You have unsaved changes</span>
+          {/* 3 columns: empty | button (screen-centered) | warning text */}
+          <div className="card admin-card card-solid !max-w-full !rounded-none px-4 py-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
+            <span aria-hidden="true" />
             <button
               className="btn btn-primary btn-save-dirty"
               disabled={savingAll}
@@ -78,6 +79,7 @@ export default function AdminBar() {
             >
               {savingAll ? 'Saving…' : 'Save Changes'}
             </button>
+            <span className="admin-save-banner-text font-bold text-lg">⚠ You have unsaved changes</span>
           </div>
         </div>
       )}
