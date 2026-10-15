@@ -91,7 +91,8 @@ export default function AdminBar() {
       {/* Saved prompt: keep editing, or exit admin mode */}
       {showSavedPrompt && (
         <div className="fixed inset-0 z-[14000] bg-black/50 flex items-center justify-center p-4">
-          <div className="card admin-card card-solid p-6 w-full max-w-md text-center">
+          {/* !min-h-0: .card sets min-height:100%, which would stretch this to full height and pin the text to the top */}
+          <div className="card admin-card card-solid p-6 w-full max-w-md !min-h-0 h-fit text-center">
             <div className="font-semibold text-lg">✓ Changes saved</div>
             <div className="text-sm text-muted mt-2">Would you like to keep editing, or exit Admin Mode?</div>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
