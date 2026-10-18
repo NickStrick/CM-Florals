@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import {SeperatorWave} from '@/components/SeperatorWave';
 
-export function Features({ id, title, items, backgroundClass, topWaveType, bottomWaveType }: FeaturesSection) {
+export function Features({ id, title, items, backgroundClass, topWaveType, bottomWaveType, cardLink }: FeaturesSection) {
   const columns = items.length === 2 || items.length === 4 ? '2':'3'
   return (
   <div className='relative'>
@@ -18,9 +18,17 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
           {items.map((f, i) => {
             const fimgUrl = resolveAssetUrl(f.imageUrl);
             const ink = i % 2 === 0; // alternate deep “ink” panels like your screenshots
+            // "Whole card is the link" mode: the card itself becomes the <a>, no Learn more button
+            const wholeCard = cardLink === true && !!f.link;
+            const CardTag = wholeCard ? 'a' : 'div';
             return (
               <AnimatedSection key={i} delay={i * 0.08}>
-                <div className={`overflow-hidden ${ink ? 'card-ink' : 'card'} !max-w-[700px] !mx-auto`}>
+                <CardTag
+                  href={wholeCard ? f.link : undefined}
+                  className={`overflow-hidden ${ink ? 'card-ink' : 'card'} !max-w-[700px] !mx-auto ${
+                    wholeCard ? 'block card-interactive cursor-pointer' : ''
+                  }`}
+                >
                   {fimgUrl ? (
                     <div className="relative w-full min-h-[300px] aspect-[5/3]">
                       <Image
@@ -36,16 +44,16 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
                   <div className="p-7">
                     <div className={`text-2xl font-bold mb-2 ${ink ? 'text-[var(--text-2)]' : 'text-[var(--text-1)]'}`}>{f.title}</div>
                     {f.body ? <p className={`${ink ? 'text-[var(--text-2)]/90' : 'text-[var(--text-1)]'}`}>{f.body}</p> : null}
-                    <div className="mt-6">
-                      {f.link ? (
+                    {f.link && !wholeCard ? (
+                      <div className="mt-6">
                         <a href={f.link} className={ink ? 'btn-gradient-inverted' : 'btn-gradient'}>
                           Learn more
                           <span aria-hidden className="ml-2">↗</span>
                         </a>
-                      ) : null}
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
-                </div>
+                </CardTag>
               </AnimatedSection>
             );
           })}

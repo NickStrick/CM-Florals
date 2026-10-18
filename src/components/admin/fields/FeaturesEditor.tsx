@@ -122,6 +122,17 @@ export default function EditFeatures({
         />
       </div>
 
+      {/* Whole-card links */}
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={section.cardLink === true}
+          onChange={(e) => onChange({ ...section, cardLink: e.target.checked })}
+          className="accent-[var(--admin-primary)]"
+        />
+        Make the whole card the link (hides the &quot;Learn more&quot; buttons)
+      </label>
+
       {/* Items header */}
       <div className="flex items-center justify-between">
         <div className="font-medium">Items ({items.length})</div>

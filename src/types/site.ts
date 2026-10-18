@@ -245,6 +245,8 @@ export type FeatureMeta = { label: string; value: string };
 export type FeaturesSection = SectionBase & {
   type: 'features';
   title?: string;
+  /** When true, each card with a link is clickable as a whole (image included) and the "Learn more" button is hidden. */
+  cardLink?: boolean;
   items: {
     icon?: string;
     title: string;
