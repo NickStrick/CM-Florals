@@ -133,6 +133,19 @@ export default function EditFeatures({
         Make the whole card the link (hides the &quot;Learn more&quot; buttons)
       </label>
 
+      {/* Card text position */}
+      <div>
+        <label className="block text-sm font-medium">Card text position</label>
+        <select
+          className="select w-full max-w-xs"
+          value={section.contentPosition ?? 'below'}
+          onChange={(e) => onChange({ ...section, contentPosition: e.target.value as 'below' | 'above' })}
+        >
+          <option value="below">Title &amp; body below the image</option>
+          <option value="above">Title &amp; body above the image</option>
+        </select>
+      </div>
+
       {/* Items header */}
       <div className="flex items-center justify-between">
         <div className="font-medium">Items ({items.length})</div>

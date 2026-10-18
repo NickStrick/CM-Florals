@@ -5,8 +5,10 @@ import Image from 'next/image';
 import { resolveAssetUrl } from '@/lib/assetUrl';
 import {SeperatorWave} from '@/components/SeperatorWave';
 
-export function Features({ id, title, items, backgroundClass, topWaveType, bottomWaveType, cardLink }: FeaturesSection) {
+export function Features({ id, title, items, backgroundClass, topWaveType, bottomWaveType, cardLink, contentPosition }: FeaturesSection) {
   const columns = items.length === 2 || items.length === 4 ? '2':'3'
+  // Title/body above the image instead of below (cards are flex columns, so this only reorders)
+  const contentAbove = contentPosition === 'above';
   return (
   <div className='relative'>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
@@ -25,8 +27,8 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
               <AnimatedSection key={i} delay={i * 0.08}>
                 <CardTag
                   href={wholeCard ? f.link : undefined}
-                  className={`overflow-hidden ${ink ? 'card-ink' : 'card'} !max-w-[700px] !mx-auto ${
-                    wholeCard ? 'block card-interactive cursor-pointer' : ''
+                  className={`overflow-hidden flex flex-col ${ink ? 'card-ink' : 'card'} !max-w-[700px] !mx-auto ${
+                    wholeCard ? 'card-interactive cursor-pointer' : ''
                   }`}
                 >
                   {fimgUrl ? (
@@ -41,7 +43,7 @@ export function Features({ id, title, items, backgroundClass, topWaveType, botto
                       />
                     </div>
                   ) : null}
-                  <div className="p-7">
+                  <div className={`p-7 ${contentAbove ? 'order-first' : ''}`}>
                     <div className={`text-2xl font-bold mb-2 ${ink ? 'text-[var(--text-2)]' : 'text-[var(--text-1)]'}`}>{f.title}</div>
                     {f.body ? <p className={`${ink ? 'text-[var(--text-2)]/90' : 'text-[var(--text-1)]'}`}>{f.body}</p> : null}
                     {f.link && !wholeCard ? (

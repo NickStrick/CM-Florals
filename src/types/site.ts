@@ -247,6 +247,8 @@ export type FeaturesSection = SectionBase & {
   title?: string;
   /** When true, each card with a link is clickable as a whole (image included) and the "Learn more" button is hidden. */
   cardLink?: boolean;
+  /** Where each card's title/body sit relative to its image (default 'below'). */
+  contentPosition?: 'below' | 'above';
   items: {
     icon?: string;
     title: string;
