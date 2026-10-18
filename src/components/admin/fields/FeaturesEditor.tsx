@@ -1,15 +1,206 @@
 'use client';
 
-import { useCallback } from 'react';
-import type { FeaturesSection, FeatureMeta } from '@/types/site';
+import { useCallback, useMemo } from 'react';
+import type { AnySection, FeaturesSection, FeatureMeta } from '@/types/site';
 import type { EditorProps } from './types';
 import { resolveAssetUrl } from '@/lib/assetUrl';
+import { useSite } from '@/context/SiteContext';
+import { matchesQuery, slugify } from '@/lib/urlQuery';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 // tiny immutable helper
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
+}
+
+// ─── Link picker (section / sub-page / external + shop & class queries) ───────
+
+type LinkMode = 'none' | 'internal' | 'sub-page' | 'external';
+type ParsedLink = { mode: LinkMode; sectionId: string; slug: string; params: URLSearchParams; external: string };
+
+// "/about?class=x", "/#shop", "#shop", "/?category=y#shop", "https://…"
+function parseLink(href: string): ParsedLink {
+  const empty = { sectionId: '', slug: '', params: new URLSearchParams(), external: '' };
+  if (!href) return { mode: 'none', ...empty };
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//')) return { mode: 'external', ...empty, external: href };
+  const [beforeHash, hash = ''] = href.split('#');
+  const [path, qs = ''] = beforeHash.split('?');
+  const params = new URLSearchParams(qs);
+  if (path === '' || path === '/') return { mode: 'internal', ...empty, sectionId: hash, params };
+  if (path.startsWith('/')) return { mode: 'sub-page', ...empty, slug: path.replace(/^\/+/, ''), params };
+  return { mode: 'external', ...empty, external: href };
+}
+
+function buildLink(p: ParsedLink): string {
+  const qs = p.params.toString();
+  const query = qs ? `?${qs}` : '';
+  if (p.mode === 'internal') return `/${query}${p.sectionId ? `#${p.sectionId}` : ''}`;
+  if (p.mode === 'sub-page') return p.slug ? `/${p.slug}${query}` : '';
+  if (p.mode === 'external') return p.external;
+  return '';
+}
+
+/**
+ * Features item link: pick a home-page section, a sub-page, or an external URL. When the
+ * target page has a shop or classes section, offer the ?category / ?search / ?class
+ * queries those sections read on load (see src/lib/urlQuery.ts).
+ */
+function FeatureLinkField({ value, onChange }: { value: string; onChange: (href: string) => void }) {
+  const { config } = useSite();
+  const link = parseLink(value);
+
+  // Dedupe by id: duplicate section ids (bad data) would crash the dropdown on a duplicate key
+  const homeSections = useMemo(() => {
+    const seen = new Set<string>();
+    return (config?.sections ?? []).filter((s) => s.id && (seen.has(s.id) ? false : (seen.add(s.id), true)));
+  }, [config?.sections]);
+  const pages = config?.pages ?? [];
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of config?.products?.items ?? []) if (p.category && !p.hideFromShop) set.add(p.category);
+    return [...set];
+  }, [config?.products?.items]);
+  const classItems = (config?.classes?.classItems ?? []).filter((c) => (c.times ?? []).length > 0);
+
+  // Which queries make sense depends on what's on the target page
+  const targetSections: AnySection[] =
+    link.mode === 'internal'
+      ? homeSections
+      : link.mode === 'sub-page'
+        ? pages.find((pg) => pg.slug.replace(/^\/+/, '') === link.slug)?.sections ?? []
+        : [];
+  const hasShop = targetSections.some((s) => s.type === 'productShop');
+  const hasClasses = targetSections.some((s) => s.type === 'classList' || s.type === 'classDetail');
+
+  const update = (patch: Partial<ParsedLink>) => onChange(buildLink({ ...link, ...patch }));
+  const setParam = (key: string, val: string) => {
+    const params = new URLSearchParams(link.params);
+    if (val) params.set(key, val);
+    else params.delete(key);
+    update({ params });
+  };
+
+  const categoryParam = link.params.get('category') ?? '';
+  const selectedCategory = categories.find((c) => matchesQuery(categoryParam, c)) ?? '';
+  const classParam = link.params.get('class') ?? '';
+  const selectedClass = classItems.find((c) => matchesQuery(classParam, c.id, c.name));
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium">Link (optional)</label>
+      <div className="flex flex-wrap gap-2">
+        <select
+          className="select w-44"
+          value={link.mode}
+          onChange={(e) => {
+            const mode = e.target.value as LinkMode;
+            const fresh = { sectionId: '', slug: '', params: new URLSearchParams(), external: '' };
+            if (mode === 'internal') update({ mode, ...fresh, sectionId: homeSections[0]?.id ?? '' });
+            else if (mode === 'sub-page') update({ mode, ...fresh, slug: pages[0]?.slug.replace(/^\/+/, '') ?? '' });
+            else update({ mode, ...fresh });
+          }}
+        >
+          <option value="none">No link</option>
+          <option value="internal">Home page section</option>
+          <option value="sub-page">Sub-page</option>
+          <option value="external">External URL</option>
+        </select>
+
+        {link.mode === 'internal' && (
+          <select className="select flex-1 min-w-[12rem]" value={link.sectionId} onChange={(e) => update({ sectionId: e.target.value })}>
+            <option value="">Top of page</option>
+            {homeSections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.type.charAt(0).toUpperCase() + s.type.slice(1)} • {s.id}
+              </option>
+            ))}
+          </select>
+        )}
+        {link.mode === 'sub-page' && (
+          <select className="select flex-1 min-w-[12rem]" value={link.slug} onChange={(e) => update({ slug: e.target.value, params: new URLSearchParams() })}>
+            <option value="">— Select page —</option>
+            {pages.map((pg) => {
+              const slug = pg.slug.replace(/^\/+/, '');
+              return (
+                <option key={slug} value={slug}>
+                  {pg.title || slug}
+                </option>
+              );
+            })}
+          </select>
+        )}
+        {link.mode === 'external' && (
+          <input
+            className="input flex-1 min-w-[12rem]"
+            value={link.external}
+            onChange={(e) => update({ external: e.target.value })}
+            placeholder="https://…, mailto:…, tel:…"
+          />
+        )}
+      </div>
+
+      {(hasShop || hasClasses) && (
+        <div className="grid md:grid-cols-3 gap-2">
+          {hasShop && (
+            <>
+              <div>
+                <label className="block text-xs text-muted">Open shop category</label>
+                <select
+                  className="select w-full"
+                  value={selectedCategory}
+                  onChange={(e) => setParam('category', e.target.value ? slugify(e.target.value) : '')}
+                >
+                  <option value="">All products</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-muted">Shop search text</label>
+                <input
+                  className="input w-full"
+                  value={link.params.get('search') ?? ''}
+                  onChange={(e) => setParam('search', e.target.value)}
+                  placeholder="e.g. roses"
+                />
+              </div>
+            </>
+          )}
+          {hasClasses && (
+            <div>
+              <label className="block text-xs text-muted">Open class</label>
+              <select
+                className="select w-full"
+                value={selectedClass?.id ?? ''}
+                onChange={(e) => {
+                  const c = classItems.find((ci) => ci.id === e.target.value);
+                  setParam('class', c ? slugify(c.name) : '');
+                }}
+              >
+                <option value="">First class (default)</option>
+                {classItems.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
+      {value && (
+        <div className="text-xs text-muted truncate" title={value}>
+          Link: <code>{value}</code>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function EditFeatures({
@@ -178,27 +369,18 @@ export default function EditFeatures({
               </div>
             </div>
 
-            {/* Title / Body */}
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium">Title</label>
-                <input
-                  className="input w-full"
-                  value={it.title}
-                  onChange={(e) => updateItem(i, 'title', e.target.value)}
-                  placeholder="Celebration & Event Florals"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Link (optional)</label>
-                <input
-                  className="input w-full"
-                  value={it.link ?? ''}
-                  onChange={(e) => updateItem(i, 'link', e.target.value)}
-                  placeholder="https://… or /contact"
-                />
-              </div>
+            {/* Title / Link */}
+            <div>
+              <label className="block text-sm font-medium">Title</label>
+              <input
+                className="input w-full"
+                value={it.title}
+                onChange={(e) => updateItem(i, 'title', e.target.value)}
+                placeholder="Celebration & Event Florals"
+              />
             </div>
+
+            <FeatureLinkField value={it.link ?? ''} onChange={(href) => updateItem(i, 'link', href)} />
 
             <div>
               <label className="block text-sm font-medium">Body</label>
