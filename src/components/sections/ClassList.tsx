@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getQueryParam, matchesQuery, scrollToSectionSoon } from '@/lib/urlQuery';
 import type { ClassListSection } from '@/types/site';
 import { useSite } from '@/context/SiteContext';
 import ClassDetailBody from './ClassDetailBody';
@@ -32,6 +33,20 @@ export default function ClassList({
     }
   }, [classItems, activeTab]);
 
+  // ?class=<class id or name> (e.g. ?class=fall-fine-arts-class) opens that class's tab and
+  // scrolls here, so other pages can link straight to a class. Applied once on load.
+  const sectionRef = useRef<HTMLElement>(null);
+  const queryAppliedRef = useRef(false);
+  useEffect(() => {
+    if (queryAppliedRef.current || classItems.length === 0) return;
+    queryAppliedRef.current = true;
+    const q = getQueryParam('class');
+    const match = q ? classItems.find((c) => matchesQuery(q, c.id, c.name)) : undefined;
+    if (!match) return;
+    setActiveTab(match.id);
+    scrollToSectionSoon(sectionRef.current);
+  }, [classItems]);
+
   const selected = classItems.find((c) => c.id === activeTab) ?? classItems[0] ?? null;
 
   if (!selected) return null;
@@ -39,7 +54,7 @@ export default function ClassList({
   return (
     <>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
-    <section id={id} className="section">
+    <section id={id} ref={sectionRef} className="section">
       <div className="mx-auto max-w-5xl xl:max-w-7xl px-4">
         {(title || subtitle) && (
           <div className="mb-10 text-center">

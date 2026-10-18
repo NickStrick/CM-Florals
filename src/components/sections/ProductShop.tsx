@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getQueryParam, matchesQuery, scrollToSectionSoon } from '@/lib/urlQuery';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Star, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -322,12 +323,27 @@ export default function ProductShop({ id, title, subtitle, topWaveType, bottomWa
 
   const filterProps = { minPrice, maxPrice, priceRange, setPriceRange, categories, filterCategories, setFilterCategories, activeTab, onReset: handleReset };
 
+  // ?category=<category> opens that category tab and ?search=<text> fills the search box,
+  // then the shop scrolls into view, so other pages can link straight into it. Applied once on load.
+  const sectionRef = useRef<HTMLElement>(null);
+  const queryAppliedRef = useRef(false);
+  useEffect(() => {
+    if (queryAppliedRef.current || !allProducts.length) return;
+    queryAppliedRef.current = true;
+    const categoryQuery = getQueryParam('category');
+    const searchQuery = getQueryParam('search');
+    const category = categoryQuery ? categories.find((c) => matchesQuery(categoryQuery, c)) : undefined;
+    if (category) setActiveTab(category);
+    if (searchQuery) setSearch(searchQuery);
+    if (category || searchQuery) scrollToSectionSoon(sectionRef.current);
+  }, [allProducts.length, categories]);
+
   if (!allProducts.length) return null;
 
   return (
     <>
     <SeperatorWave type={topWaveType} flip={false} color={'var(--bg)'} />
-    <section id={id} className="section">
+    <section id={id} ref={sectionRef} className="section">
       <div className="mx-auto max-w-7xl px-4">
         {/* Header */}
         {(title || subtitle) && (
