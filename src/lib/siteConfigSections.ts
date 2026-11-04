@@ -30,19 +30,18 @@ function isHeaderOrFooter(section: AnySection | undefined | null): section is He
 // against a separate shared `classes.classTimes` pool — this derives `times`
 // from that legacy shape on every read, without touching the legacy fields,
 // so old data keeps working and new code only ever has to look at `times`.
+//
+// The admin UI still edits `classTimeIds` + the pool, and saves the derived
+// `times` back alongside them. So `classTimeIds` wins whenever it's present:
+// trusting a saved `times` would hide every time assigned after that save.
 export function normalizeClassItems(classes: SiteClassesConfig | undefined): ClassItem[] {
   const items = classes?.classItems ?? [];
-  const pool = classes?.classTimes ?? [];
-  if (pool.length === 0) {
-    // Nothing to resolve legacy ids against — still guarantee `times` exists.
-    return items.map((item) => (item.times ? item : { ...item, times: [] }));
-  }
-  const poolById = new Map(pool.map((t) => [t.id, t]));
+  const poolById = new Map((classes?.classTimes ?? []).map((t) => [t.id, t]));
   return items.map((item) => {
-    if (item.times) return item; // already in the new shape
-    const legacyIds = item.classTimeIds ?? [];
-    const times = legacyIds
-      .map((id) => poolById.get(id))
+    if (!Array.isArray(item.classTimeIds)) return item.times ? item : { ...item, times: [] };
+    const ownById = new Map((item.times ?? []).map((t) => [t.id, t]));
+    const times = item.classTimeIds
+      .map((id) => poolById.get(id) ?? ownById.get(id))
       .filter((t): t is ClassTime => !!t);
     return { ...item, times };
   });
